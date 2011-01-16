@@ -104,13 +104,13 @@ Usage
   ------------------------
 
   For optimal rendering speed and minimal space taken by tiles, it's
-  usually better to render tiles with -1 (minimal compresion level),
+  usually better to render tiles with -1 (minimal compression level),
   and compress them by optipng afterwards:
 
   find <outdir> -name "*.png" -print0 |
       xargs -0 -n 64 -P <jobs> optipng -quiet -o1
 
-  where outdir is directory conaining tiles and jobs is desired
+  where outdir is directory containing tiles and jobs is desired
   number of jobs (probably # of cpus + 1).
 
 OpenGL details
