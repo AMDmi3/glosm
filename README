@@ -1,0 +1,196 @@
+                              glosm 0.0.1
+                             =============
+
+  glosm is a framework for developing high-performance geospatial data
+  visualization applications of both interactive and batch nature
+  featuring OpenGL-based 3D first-person and tile renderers.
+
+Features
+========
+
+   * Basic OSM XML loader
+   * Basic geometry generator (renders buildings, barriers and roads
+     in 3D, other polygons as lines at ground level)
+   * Spherical mercator projection
+   * First-person OSM viewer
+   * Command-line ortho tile renderer
+   * Extensible framework for building (other) 3D geodata
+     visualization applications
+
+Requirements
+============
+
+  Required libraries: expat2, OpenGL
+  Optional libraries: GLUT (required for viewer)
+                      libpng, X11 (required for tiler)
+  Required applications: CMake >= 2.6
+
+Installation
+============
+
+  Compilation: cmake . && make
+  Installation: make install
+
+  You can also use curses frontend for cmake (ccmake) to select
+  optional components interactively or specify -DBUILD_TILER=[YES|NO]
+  and -DBUILD_VIEWER=[YES|NO] in cmake arguments to enable/disable
+  building of specific applications. By default, viewer is always
+  built and tiler is only build on UNIX platforms.
+
+  If you plan to hack on glosm source, it's better idea to use
+  so-called off-source build to not pollute source tree with build
+  files. Here's how it's done:
+
+  mkdir build && cd build && cmake .. && make
+
+Usage
+=====
+
+  This package contains two applications: interactive map viewer
+  (glosm-viewer) and .png tile generator (glosm-tiler).
+
+  glosm-viewer
+  ------------
+
+    glosm-viewer <file.osm>
+
+  runs interactive 3D map viewer for a specified map dump. Dumps can
+  be obtained from OpenStreetMap editing applications (jOSM,
+  Mercator), via OpenStreetMap API, from third parties and in many
+  other ways. Sample (fake) .osm file is provided in this package
+  under testdata/ subdirectory.
+
+  Please be careful with large dumps, as the application requires
+  amount of RAM comparable to the .osm file size. It also takes some
+  time (under a minute, however) to load a large dump.
+
+  Controls:
+
+    W or Up     - move forward
+    S or Down   - move backward
+    A or Left   - move left
+    D or Right  - move right
+    C           - move down
+    Space       - move up
+    L           - toggles lock to ground (human-height mode)
+    +           - increase movement speed by 10x
+    -           - decrease movement speed by 10x
+    Q or Escape - close application
+
+  glosm-tiler
+  -----------
+
+    glosm-tiler [options] <file.osm> <outdir>
+
+  runs tile renderer for a specified dump, which are saved into outdir
+  in the same format as mapnik tiles (<outdir>/<zoom>/<x>/<y>.png).
+
+  Options:
+    -0..-9     - set png compression level (default 6)
+
+    -x minlon
+    -X maxlon
+    -y minlat
+    -Y maxlat  - set bounding box for rendering. Units are floating
+                 point degrees (e.g. 55.12345)
+
+    -z minzoom
+    -Z maxzoom - set zoom levels for rendering. Default 0 - 18
+
+    -s skew    - set skew for pseudo-3D effect (default = 1.0, 0 =
+                 no skew = map without 3D effect)
+
+  Note on optimizing tiles
+  ------------------------
+
+  For optimal rendering speed and minimal space taken by tiles, it's
+  usually better to render tiles with -1 (minimal compresion level),
+  and compress them by optipng afterwards:
+
+  find <outdir> -name "*.png" -print0 |
+      xargs -0 -n 64 -P <jobs> optipng -quiet -o1
+
+  where outdir is directory conaining tiles and jobs is desired
+  number of jobs (probably # of cpus + 1).
+
+OpenGL details
+==============
+
+  Application requires OpenGL version >= 1.5. Currently, only notable
+  required feature is buffer objects support (glGenBuffers et al.)
+
+  Additionally, glosm-tiler requires pbuffer support and that is
+  currently only available through GLX, thus X11 installation is
+  required to use glosm-tiler.
+
+  Multisampling support is also highly recommended.
+
+OpenStreetMap tag support
+=========================
+
+  There are some notable tags this software supports:
+
+    * height
+    * min_height
+    * building:levels
+    * building:min_level
+    * building:ground_level
+    * building:skipped_levels (see [2])
+
+  to determine height of 3D objects (buildings, barriers). See [1].
+  Height of one level is taken as 3 meters, for some 1-level buildings
+  1 meter is added for basement.
+
+  [1] http://wiki.openstreetmap.org/wiki/User%3AJongleur/MultiLevel_Building_Shapes
+  [2] http://wiki.openstreetmap.org/wiki/User_talk:Jongleur/MultiLevel_Building_Shapes
+
+    * building:roof:shape
+    * building:roof:orientation
+    * building:roof:angle
+
+  for specific roof shapes support. See [3], [4]. Supported roof
+  shapes are: flat, pitched, hipped, pyramidal, crosspitched.
+
+  [3] http://wiki.openstreetmap.org/wiki/Proposed_features/Building_attributes
+  [4] http://wiki.openstreetmap.org/wiki/Talk:Proposed_features/Building_attributes#Needs_illustrations_for_roof_types
+
+    * width
+    * lanes
+
+  for highway widths.
+
+API stability
+=============
+
+  As the project is on early stages of development, neither API not
+  ABI compatibility is guaranteed, so for now use library on your own
+  risk. Because of that, neither versioned library (.so.N) nor includes
+  are currently installed.
+
+  Primary candidates for API change are:
+
+    * OsmDatasource interface
+    * GeometryGenerator (due to above)
+    * Geometry (material support, optimizations like triangle
+      strip/fan support, serialization)
+    * Whole library will be split into at least two parts:
+      libglosm-server (OsmDatasource and Geometry generation bits) and
+      libglosm-client (OpenGL and related stuff)
+
+Tests
+=====
+
+  There are some test under tests/ subdirectory, you can run them by
+  running `ctest' from your buildtree.
+
+License
+=======
+
+  This software is distributed under the GNU General Public License
+  version 3. Please read the COPYING file for more information.
+
+Credits
+=======
+
+  Author:
+    Dmitry Marakasov <amdmi3@amdmi3.ru>
