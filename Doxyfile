@@ -1,4 +1,47 @@
+# Doxyfile for glosm; please keep tags sourted and grouped as in
+# vanilla Doxyfile generated with `doxygen -g'
+
+# Project related configuration options
 PROJECT                = glosm
-OUTPUT_DIRECTORY       = doc/doxygen
+OUTPUT_DIRECTORY       = doc
+OUTPUT_LANGUAGE        = English
+JAVADOC_AUTOBRIEF      = yes
+TAB_SIZE               = 4
+
+# Build related configuration options
+
+# configuration options related to warning and progress messages
+
+# configuration options related to the input files
 INPUT                  = libglosm
+RECURSIVE              = yes
 EXCLUDE                = libglosm/id_map.hh
+
+# configuration options related to source browsing
+
+# configuration options related to the alphabetical class index
+
+# configuration options related to the HTML output
+
+# configuration options related to the LaTeX output
+GENERATE_LATEX         = NO
+
+# configuration options related to the RTF output
+
+# configuration options related to the man page output
+
+# configuration options related to the XML output
+
+# configuration options for the AutoGen Definitions output
+
+# configuration options related to the Perl module output
+
+# Configuration options related to the preprocessor
+INCLUDE_PATH           =
+
+# Configuration::additions related to external references
+
+# Configuration options related to the dot tool
+HAVE_DOT               = yes
+CALL_GRAPH             = yes
+CALLER_GRAPH           = yes

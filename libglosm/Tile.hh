@@ -22,8 +22,20 @@
 
 #include "Math.hh"
 
+/**
+ * Abstract class for all geodata tiles.
+ *
+ * Tile is just an abstract hunk of geodata ready for rendering.
+ * Each tile has center stored in global fixed-point coords, while
+ * all the actual data is stored in fixed-point format relative to
+ * that center. As the tiles are expected to be small enough, this
+ * prevents floating point errors to be noticeable.
+ */
 class Tile {
 protected:
+	/**
+	 * Global coordinates of tile center.
+	 */
 	const Vector2i reference_;
 
 public:

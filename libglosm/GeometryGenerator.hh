@@ -25,6 +25,9 @@
 class OsmDatasource;
 class Geometry;
 
+/**
+ * A facility which converts OSM ways/nodes/relation into 3D Geometry.
+ */
 class GeometryGenerator {
 protected:
 	const OsmDatasource& datasource_;

@@ -24,6 +24,14 @@
 
 #include <vector>
 
+/**
+ * 3D geometry in global fixed-point coordinates.
+ *
+ * This class represents portable geometry which comes from
+ * GeometryGenerator and may be stored, serialized/deserialized,
+ * transferred via the net and in the end is to be converted to
+ * local floating-point geometry for rendering.
+ */
 class Geometry {
 protected:
 	typedef std::vector<Vector3i> VertexVector;

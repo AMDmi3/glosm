@@ -42,12 +42,12 @@
  * functions may be chosen.
  */
 
-/* Mercator projection */
+/** Mercator projection */
 inline double mercator(double x) {
 	return 0.5*log((1.0+sin(x))/(1.0-sin(x)));
 }
 
-/* Mercator un-projection */
+/** Mercator un-projection */
 inline double unmercator(double x) {
 	return 2.0*atan(tanh(0.5*x));
 }

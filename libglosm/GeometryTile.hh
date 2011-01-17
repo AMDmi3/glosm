@@ -31,6 +31,11 @@ class SimpleVertexBuffer;
 class Projection;
 class GeometryDatasource;
 
+/**
+ * A tile of renderable geometry
+ *
+ * This tile type is used in GeometryLayer
+ */
 class GeometryTile : public Tile, NonCopyable {
 protected:
 	std::auto_ptr<SimpleVertexBuffer> lines_;

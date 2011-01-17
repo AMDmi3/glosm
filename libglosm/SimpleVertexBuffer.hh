@@ -29,6 +29,9 @@
 
 #include <memory>
 
+/**
+ * Static renderable geometry stored in VBOs
+ */
 class SimpleVertexBuffer : public Renderable, NonCopyable {
 protected:
 	std::auto_ptr<VBO> vertices_;

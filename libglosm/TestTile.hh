@@ -25,6 +25,13 @@
 
 class Projection;
 
+/**
+ * A tile for testing
+ *
+ * This kind of tile is planned to be used for testing while
+ * real tiling is implemented in GeometryLayer. It just shows
+ * tile boundaries.
+ */
 class TestTile : public Tile {
 protected:
 	Vector3f data_[4];

@@ -25,6 +25,9 @@
 #include "NonCopyable.hh"
 #include "Math.hh"
 
+/**
+ * Wrapper around OpenGL vertex buffer object
+ */
 class VBO : public NonCopyable {
 protected:
 	GLuint buffer_;

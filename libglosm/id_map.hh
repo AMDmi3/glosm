@@ -22,14 +22,14 @@
 
 #include <vector>
 
-/*
- * Container with std::map - like interface that stores
- * <integer, POD> map in a speed and memory-efficient way.
+/**
+ * Custom std::map-like container for storing OSM data effeciently.
  *
- * Notes:
- * - This container is growing-only - no element deallocation possible
+ * Uses lower bits of object id as a hash for no calculation overhead
+ * and pooled data storage to pack elements effeciently.
+ *
+ * Interface and usage semantics are the same as for std::map
  */
-
 template <typename I, typename T, int BUCKET_COUNT_ORDER = 0, int REHASH_GROWTH_ORDER = 1, int ITEMS_PER_CHUNK = 16*65536>
 class id_map {
 	static const size_t chunk_size = ITEMS_PER_CHUNK;

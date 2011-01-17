@@ -24,10 +24,31 @@
 
 class Projection;
 
+/**
+ * Abstract base class for all viewers.
+ *
+ * Viewer is a way to represent which part of map we need to render.
+ * For example, for first-person viewer that may be eye's position
+ * and look direction. This class is used in rendering process to
+ * properly setup projection matrix and in layers to determine which
+ * objects are close enough to eye to be loaded and displayed.
+ */
 class Viewer {
 public:
-	virtual void SetupViewerMatrix(const Projection&) const = 0;
-	virtual Vector3i GetPos(const Projection&) const = 0;
+	/**
+	 * Setups OpenGL projection matrix for the viewer
+	 *
+	 * @param projection projection used in this world
+	 */
+	virtual void SetupViewerMatrix(const Projection& projection) const = 0;
+
+	/**
+	 * Returns pseudo-position of a viewer.
+	 *
+	 * @param projection projection used in the world
+	 * @return pseudo-position of a viewer
+	 */
+	virtual Vector3i GetPos(const Projection& projection) const = 0;
 };
 
 #endif

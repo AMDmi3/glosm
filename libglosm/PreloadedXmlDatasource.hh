@@ -26,6 +26,13 @@
 
 #include "id_map.hh"
 
+/**
+ * Source of OpenStreetMap data which preloads .osm dump into memory.
+ *
+ * This is a simple OsmDatasource that first parses OSM XML dump
+ * with XML parser and stores node/way/relation information in
+ * memory.
+ */
 class PreloadedXmlDatasource : public OsmDatasource, NonCopyable {
 protected:
 	typedef id_map<osmid_t, Node> NodesMap;
@@ -65,7 +72,19 @@ public:
 	PreloadedXmlDatasource();
 	virtual ~PreloadedXmlDatasource();
 
+	/**
+	 * Loads OSM dump into memory
+	 *
+	 * @param filename path to dump file
+	 */
 	void Load(const char* filename);
+
+	/**
+	 * Drop all loaded data
+	 *
+	 * This is used to free memory used by loaded data when
+	 * it's no longer needed. Datasource may be further reused.
+	 */
 	void Clear();
 
 	virtual Vector2i GetCenter() const;

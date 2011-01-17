@@ -26,6 +26,12 @@
 #include <vector>
 #include <map>
 
+/**
+ * Abstract base class for sources of OpenStreetMap data.
+ *
+ * Provides a way for other components to request map data in the
+ * form of nodes, ways and relations.
+ */
 class OsmDatasource {
 public:
 	typedef std::map<std::string, std::string> TagsMap;
@@ -72,17 +78,24 @@ public:
 	};
 
 public:
+	/** Returns node by its id */
 	virtual const Node& GetNode(osmid_t id) const = 0;
+
+	/** Returns way by its id */
 	virtual const Way& GetWay(osmid_t id) const = 0;
+
+	/** Returns relation by its id */
 	virtual const Relation& GetRelation(osmid_t id) const = 0;
 
-	/* Multiple - object accessors subject to change */
+	/* multiple - object accessors subject to change */
 	virtual void GetAllWays(std::vector<Way>& out) const = 0;
 
+	/** Returns the center of available area */
 	virtual Vector2i GetCenter() const {
 		return Vector2i(0, 0);
 	}
 
+	/** Returns the bounding box of available area */
 	virtual BBoxi GetBBox() const {
 		return BBoxi::Full();
 	}

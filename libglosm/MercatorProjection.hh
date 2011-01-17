@@ -22,6 +22,11 @@
 
 #include "Projection.hh"
 
+/**
+ * Mercator/EPSG:3857 projection
+ *
+ * This represents Spherical Mercator projection common to OpenStreetMap.
+ */
 class MercatorProjection : public Projection {
 protected:
 	static Vector3f ProjectImpl(const Vector3i& point, const Vector3i& ref);

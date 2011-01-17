@@ -32,6 +32,9 @@
 class Viewer;
 class GeometryDatasource;
 
+/**
+ * Layer with 3D OpenStreetMap data.
+ */
 class GeometryLayer : public Layer, NonCopyable {
 protected:
 	const GeometryTile tile_;

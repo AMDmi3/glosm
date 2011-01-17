@@ -28,6 +28,10 @@ class OsmDatasource;
 /* Currently is just a class, but this should really be an interface;
  * possible implementation is caching geometry datasource and/or
  * datasource that downloads from the web */
+
+/**
+ * A source of geometry used by GeometryLayer
+ */
 class GeometryDatasource {
 protected:
 	const OsmDatasource& osm_datasource_;

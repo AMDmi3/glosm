@@ -24,6 +24,11 @@
 
 class Viewer;
 
+/**
+ * Abstact base class for all layers.
+ *
+ * Layer is a renderable representation of a single kind of geodata.
+ */
 class Layer {
 public:
 	virtual ~Layer() {

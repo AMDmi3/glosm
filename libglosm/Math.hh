@@ -26,6 +26,9 @@
 template <typename T>
 struct Vector3;
 
+/**
+ * Template 2D vector class
+ */
 template <typename T>
 struct Vector2 {
 	/* ctors */
@@ -103,6 +106,9 @@ struct Vector2 {
 	T y;
 };
 
+/**
+ * Template 3D vector class
+ */
 template <typename T>
 struct Vector3 {
 	/* ctors */
@@ -189,6 +195,9 @@ typedef Vector3<osmlong_t> Vector3l;
 typedef Vector3<float> Vector3f;
 typedef Vector3<double> Vector3d;
 
+/**
+ * Template axis-aligned bounding box class
+ */
 template <typename T>
 struct BBox {
 	/* ctors */

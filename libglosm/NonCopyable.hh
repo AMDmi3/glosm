@@ -20,6 +20,9 @@
 #ifndef NONCOPYABLE_HH
 #define NONCOPYABLE_HH
 
+/**
+ * A convenient way to disable copying of objects of specific classes
+ */
 class NonCopyable {
 protected:
 	NonCopyable() {

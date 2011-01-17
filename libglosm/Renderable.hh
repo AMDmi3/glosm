@@ -20,6 +20,9 @@
 #ifndef RENDERABLE_HH
 #define RENDERABLE_HH
 
+/**
+ * An abstract renderable object
+ */
 class Renderable {
 public:
 	virtual ~Renderable() {
