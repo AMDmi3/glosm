@@ -7,6 +7,10 @@ Framework
     * Add spherical projection
     * More solid framework for GeometryGenerator (maybe use scripting language like python)
     * Shadows
+    * Switch to new OpenGL world order
+      * glBegin/end/color -> glUniform
+      * Fixed pipeline -> shaders
+      * gl*Pointer, glClient* -> glVertexAttribPointer
   Geometry generation
     * Add lane divisors
     * Figure out if extra nodes for closed polygons get into generator
