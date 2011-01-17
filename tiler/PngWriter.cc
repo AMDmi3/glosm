@@ -41,7 +41,7 @@ PngWriter::PngWriter(const char* filename, int width, int height, int compressio
 
 	if ((file_ = fopen(filename, "wb")) == NULL) {
 		png_destroy_write_struct(&png_ptr_, &info_ptr_);
-		throw PngWriterException("cannot open output png file");
+		throw PngWriterException(std::string("cannot open output png file: ") + filename);
 	}
 
 	png_init_io(png_ptr_, file_);

@@ -65,7 +65,6 @@ int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, Layer& layer, const char*
 			mkdir(path, 0777);
 			for (y = minytile; y <= maxytile; ++y) {
 				snprintf(path, sizeof(path), "%s/%d/%d/%d.png", target, zoom, x, y);
-				mkdir(path, 0777);
 
 				viewer.SetBBoxForTile(x, y, zoom);
 
