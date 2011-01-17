@@ -21,7 +21,6 @@
 
 #include "PixelBuffer.hh"
 
-#include <GL/gl.h>
 #include <png.h>
 
 static void png_error_fn(png_struct*, const char* e) {

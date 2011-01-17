@@ -21,9 +21,15 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
 #include <stdlib.h>
+
+#if defined(__APPLE__)
+#	include <OpenGL/gl.h>
+#	include <GLUT/glut.h>
+#else
+#	include <GL/gl.h>
+#	include <GL/glut.h>
+#endif
 
 #include <vector>
 #include <map>

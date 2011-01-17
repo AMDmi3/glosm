@@ -17,7 +17,11 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <GL/gl.h>
+#if defined(__APPLE__)
+#	include <OpenGL/gl.h>
+#else
+#	include <GL/gl.h>
+#endif
 
 #include "Projection.hh"
 
