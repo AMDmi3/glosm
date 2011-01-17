@@ -28,6 +28,10 @@ Requirements
   since CMake builtin GLUT detection routine requires it for some
   reason, you will also need libXmu and libXi installed.
 
+  Summarizing, for debian-based systems, you'll need to run:
+
+    apt-get install cmake libexpat1-dev libglut3-dev libpng12-dev libxmu-dev libxi-dev
+
 Installation
 ============
 
