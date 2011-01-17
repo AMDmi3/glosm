@@ -98,11 +98,6 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 	Vector3f right = dir.CrossProduct(worldup).Normalized();
 	Vector3f relup = right.CrossProduct(dir).Normalized();
 
-	if (flags & FAST)
-		speed *= 20.0f;
-	if (flags & SLOW)
-		speed *= 0.02f;
-
 	if (flags & FORWARD)
 		pos_ += dirbasis * dir * speed * time;
 	if (flags & BACKWARD)
