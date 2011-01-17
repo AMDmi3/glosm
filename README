@@ -59,13 +59,15 @@ Usage
   glosm-viewer
   ------------
 
-    glosm-viewer <file.osm>
+    glosm-viewer <file.osm|->
 
   runs interactive 3D map viewer for a specified map dump. Dumps can
   be obtained from OpenStreetMap editing applications (jOSM,
   Mercator), via OpenStreetMap API, from third parties and in many
   other ways. Sample (fake) .osm file is provided in this package
   under testdata/ subdirectory.
+
+  If `-' is provided as filename, osm data is read from stdin.
 
   Please be careful with large dumps, as the application requires
   amount of RAM comparable to the .osm file size. It also takes some
@@ -87,10 +89,12 @@ Usage
   glosm-tiler
   -----------
 
-    glosm-tiler [options] <file.osm> <outdir>
+    glosm-tiler [options] <file.osm|-> <outdir>
 
   runs tile renderer for a specified dump, which are saved into outdir
   in the same format as mapnik tiles (<outdir>/<zoom>/<x>/<y>.png).
+
+  If `-' is provided as filename, osm data is read from stdin.
 
   Options:
     -0..-9     - set png compression level (default 6)

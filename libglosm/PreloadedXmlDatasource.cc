@@ -343,7 +343,7 @@ BBoxi PreloadedXmlDatasource::GetBBox() const {
 }
 
 void PreloadedXmlDatasource::Load(const char* filename) {
-	int f = -1;
+	int f = 0;
 	XML_Parser parser = NULL;
 
 	bbox_ = BBoxi::Empty();
@@ -352,7 +352,8 @@ void PreloadedXmlDatasource::Load(const char* filename) {
 		InsideWhich = NONE;
 		tag_level_ = 0;
 
-		if ((f = open(filename, O_RDONLY)) == -1)
+		/* if filename = "-", work with stdin */
+		if (strcmp(filename, "-") != 0 && (f = open(filename, O_RDONLY)) == -1)
 			throw std::runtime_error("cannot open XML file");
 
 		/* Create and setup parser */
