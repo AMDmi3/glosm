@@ -17,9 +17,13 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "GeometryLayer.hh"
+#if defined(__APPLE__)
+#	include <OpenGL/gl.h>
+#else
+#	include <GL/gl.h>
+#endif
 
-#include <GL/gl.h>
+#include "GeometryLayer.hh"
 
 #include "Viewer.hh"
 #include "GeometryDatasource.hh"

@@ -20,7 +20,11 @@
 #ifndef VBO_HH
 #define VBO_HH
 
-#include <GL/gl.h>
+#if defined(__APPLE__)
+#	include <OpenGL/gl.h>
+#else
+#	include <GL/gl.h>
+#endif
 
 #include "NonCopyable.hh"
 #include "Math.hh"
