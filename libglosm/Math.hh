@@ -23,6 +23,18 @@
 #include <cmath>
 #include <limits>
 
+#include "osmtypes.h"
+
+template <typename T>
+struct LongType {
+    typedef T type;
+};
+
+template<>
+struct LongType<osmint_t> {
+    typedef osmlong_t type;
+};
+
 template <typename T>
 struct Vector3;
 
@@ -31,6 +43,8 @@ struct Vector3;
  */
 template <typename T>
 struct Vector2 {
+    typedef typename LongType<T>::type LT;
+
 	/* ctors */
 	Vector2(): x(0), y(0) {}
 	Vector2(T x_, T y_): x(x_), y(y_) {}
@@ -43,6 +57,11 @@ struct Vector2 {
 
 	template <typename TT>
 	Vector2(const Vector2<TT>& v): x(v.x), y(v.y) {}
+
+    /* */
+    Vector2<LT> LongVector() const {
+        return Vector2<LT>(*this);
+    }
 
 	/* operators */
 	Vector2<T> operator- () const { return Vector2<T>(-x, -y); }
@@ -70,11 +89,11 @@ struct Vector2 {
 	bool operator== (const Vector2<T>& other) const { return x == other.x && y == other.y; }
 
 	/* functions */
-	T Length() { return std::sqrt(x*x + y*y); }
-	T Length2() { return x*x + y*y; }
+	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y); }
+	LT Length2() { return (LT)x*(LT)x + (LT)y*(LT)y; }
 
-	T DotProduct(const Vector2<T>& other) const { return x*other.x + y*other.y; }
-	T CrossProduct(const Vector2<T>& other) const { return x*other.y - y*other.x; }
+	LT DotProduct(const Vector2<T>& other) const { return (LT)x*(LT)other.x + (LT)y*(LT)other.y; }
+	LT CrossProduct(const Vector2<T>& other) const { return (LT)x*(LT)other.y - (LT)y*(LT)other.x; }
 
 	void Normalize() {
 		T len = Length();
@@ -94,9 +113,9 @@ struct Vector2 {
 	}
 
 	bool IsInTriangle(const Vector2<T>& v1, const Vector2<T>& v2, const Vector2<T>& v3) {
-		T a = (v2-v1).CrossProduct(*this - v1);
-		T b = (v3-v2).CrossProduct(*this - v2);
-		T c = (v1-v3).CrossProduct(*this - v3);
+		LT a = (v2-v1).CrossProduct(*this - v1);
+		LT b = (v3-v2).CrossProduct(*this - v2);
+		LT c = (v1-v3).CrossProduct(*this - v3);
 
 		return (a < 0 && b < 0 && c < 0) || (a > 0 && b > 0 && c > 0);
 	}
@@ -111,6 +130,8 @@ struct Vector2 {
  */
 template <typename T>
 struct Vector3 {
+    typedef typename LongType<T>::type LT;
+
 	/* ctors */
 	Vector3(): x(0), y(0), z(0) {}
 	Vector3(T x_, T y_): x(x_), y(y_), z(0) {}
@@ -126,6 +147,11 @@ struct Vector3 {
 	/* static ctoroids */
 	template <typename TT>
 	static Vector3<T> FromYawPitch(const TT yaw, const TT pitch) { return Vector3(sin(yaw)*cos(pitch), cos(yaw)*cos(pitch), sin(pitch)); }
+
+    /* */
+    Vector3<LT> LongVector() const {
+        return Vector3<LT>(*this);
+    }
 
 	/* operators */
 	Vector3<T> operator- () const { return Vector3<T>(-x, -y, -z); }
@@ -153,11 +179,11 @@ struct Vector3 {
 	bool operator== (const Vector3<T>& other) const { return x == other.x && y == other.y && z == other.z; }
 
 	/* functions */
-	T Length() { return sqrt(x*x + y*y + z*z); }
-	T Length2() { return x*x + y*y + z*z; }
+	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z); }
+	LT Length2() { return (LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z; }
 
-	T DotProduct(const Vector3<T>& other) const { return x*other.x + y*other.y + z*other.z; }
-	Vector3<T> CrossProduct(const Vector3<T>& other) const { return Vector3<T>(y*other.z - z*other.y, z*other.x - x*other.z, x*other.y - y*other.x); }
+	LT DotProduct(const Vector3<T>& other) const { return (LT)x*(LT)other.x + (LT)y*(LT)other.y + (LT)z*(LT)other.z; }
+	Vector3<LT> CrossProduct(const Vector3<T>& other) const { return Vector3<LT>((LT)y*(LT)other.z - (LT)z*(LT)other.y, (LT)z*(LT)other.x - (LT)x*(LT)other.z, (LT)x*(LT)other.y - (LT)y*(LT)other.x); }
 
 	void Normalize() {
 		T len = Length();
@@ -182,8 +208,6 @@ struct Vector3 {
 	T y;
 	T z;
 };
-
-#include "osmtypes.h"
 
 typedef Vector2<osmint_t> Vector2i;
 typedef Vector2<osmlong_t> Vector2l;
