@@ -58,11 +58,11 @@ Applications
     * Persistent app for continuos database change watching and geometry tile updating - can be a base for other services (useable client, tile rendering infrastructure)
 
 General
-  * Release source code when its ready
   * Build viewer for maemo (or find maintainer)
   * Build viewer for windows (or find maintainer)
 
 Infrastructure
   * Need hosting for png & geometry tiles
   * Need dedicated server with replicated database for realtime rendering
-  * Maybe distributed rendering as 
+  * Maybe distributed tile rendering like Tiles@Home
+  * WebGL viewer for generated portable tiles (after those are done) - as I don't have enough skill in web programming, help is needed here
