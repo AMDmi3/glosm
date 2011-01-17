@@ -46,6 +46,7 @@
 
 #include <stdexcept>
 #include <limits>
+#include <sstream>
 
 #include <fcntl.h>
 
@@ -311,8 +312,11 @@ void PreloadedXmlDatasource::EndElement(void* userData, const char* /*name*/) {
 				osmlong_t area = 0;
 				for (Way::NodesList::const_iterator i = loader->last_way_->second.Nodes.begin(); i != loader->last_way_->second.Nodes.end(); ++i) {
 					cur = loader->nodes_.find(*i);
-					if (cur == loader->nodes_.end())
-						throw std::runtime_error("referenced node not found");
+					if (cur == loader->nodes_.end()) {
+						std::stringstream e;
+						e << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
+						throw std::runtime_error(e.str());
+					}
 					if (i != loader->last_way_->second.Nodes.begin())
 						area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
 					prev = cur;
