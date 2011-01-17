@@ -1,0 +1,4 @@
+PROJECT                = glosm
+OUTPUT_DIRECTORY       = doc/doxygen
+INPUT                  = libglosm
+EXCLUDE                = libglosm/id_map.hh
