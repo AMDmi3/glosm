@@ -25,6 +25,9 @@ Requirements
                       libpng, X11 (required for tiler)
   Required applications: CMake >= 2.6
 
+  since CMake builtin GLUT detection routine requires it for some
+  reason, you will also need libXmu and libXi installed.
+
 Installation
 ============
 
