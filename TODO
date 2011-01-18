@@ -30,9 +30,9 @@ Framework
     * Automatic merger for flat polygons (roads)
     * Idea for another geometry generator - flat generator mimicking mapnik output
   Refactoring
-    * Library should be split into OpenGL and non-OpenGL parts (aka client and server)
     * OsmDatasource should have iterator-based interface with postgres schema in mind (are things like way-by-node possible? - required for geomgen)
     * All external interfaces (especially Viewers) should have double lot/lan/height/angle interface, not obscure internal fixed points
+    * Split default geomgen into topic files (Roofs, Walls, Roads etc.)
   Documentation
     * Document most class methods and members
   New layers
