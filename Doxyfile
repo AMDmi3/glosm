@@ -13,9 +13,9 @@ TAB_SIZE               = 4
 # configuration options related to warning and progress messages
 
 # configuration options related to the input files
-INPUT                  = libglosm
+INPUT                  = libglosm-server libglosm-client libgeomgen-default
 RECURSIVE              = yes
-EXCLUDE                = libglosm/id_map.hh
+EXCLUDE                = libglosm-server/include/glosm/id_map.hh
 
 # configuration options related to source browsing
 
@@ -37,7 +37,7 @@ GENERATE_LATEX         = NO
 # configuration options related to the Perl module output
 
 # Configuration options related to the preprocessor
-INCLUDE_PATH           =
+INCLUDE_PATH           = libglosm-server/include libglosm-client/include libgeomgen-default/include
 
 # Configuration::additions related to external references
 
