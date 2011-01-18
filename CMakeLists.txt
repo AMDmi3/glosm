@@ -17,8 +17,10 @@ OPTION(BUILD_TESTS "Build tests" ON)
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra)
 
-# Framework subdir
-ADD_SUBDIRECTORY(libglosm)
+# Framework subdirs
+ADD_SUBDIRECTORY(libglosm-server)
+ADD_SUBDIRECTORY(libglosm-client)
+ADD_SUBDIRECTORY(libgeomgen-default)
 
 # Application subdirs
 IF(BUILD_VIEWER)

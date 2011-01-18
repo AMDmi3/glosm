@@ -27,7 +27,7 @@
 #include <limits>
 #include <stdlib.h>
 
-#include "MercatorProjection.hh"
+#include <glosm/MercatorProjection.hh>
 
 int ProjTest(Projection projection) {
 	osmint_t xref[] = { -1350000000, -450000000, 0, 450000000, 1350000000 };

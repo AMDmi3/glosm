@@ -28,12 +28,13 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 
-#include "Math.hh"
-#include "MercatorProjection.hh"
-#include "PreloadedXmlDatasource.hh"
-#include "GeometryDatasource.hh"
-#include "FirstPersonViewer.hh"
-#include "GeometryLayer.hh"
+#include <glosm/Math.hh>
+#include <glosm/MercatorProjection.hh>
+#include <glosm/PreloadedXmlDatasource.hh>
+#include <glosm/FirstPersonViewer.hh>
+#include <glosm/GeometryLayer.hh>
+#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/DefaultGeometryGenerator.hh>
 
 Viewer* g_viewer = NULL;
 Layer* g_layer = NULL;
@@ -72,14 +73,14 @@ int main(int argc, char** argv) {
 	osm_datasource.Load(TESTDATA);
 
 	/* 2) Create facility to translate OSM data to geometry */
-	GeometryDatasource geometry_datasource(osm_datasource);
+	DefaultGeometryGenerator geometry_generator(osm_datasource);
 
 	/* 3) Create layer which will render that geometry */
-	GeometryLayer layer(MercatorProjection(), geometry_datasource);
+	GeometryLayer layer(MercatorProjection(), geometry_generator);
 
 	/* 4) Create viewer to control eye position and direction */
 	FirstPersonViewer viewer;
-	viewer.SetPos(Vector3i(geometry_datasource.GetCenter(), 100000 /* 100 meters */));
+	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), 100000 /* 100 meters */));
 	viewer.SetAspect(800.0/600.0);
 	viewer.HardRotate(-135.0 / 180.0 * M_PI, -30.0 / 180.0 * M_PI);
 

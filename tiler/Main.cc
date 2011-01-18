@@ -31,12 +31,12 @@
 #include "PixelBuffer.hh"
 #include "PngWriter.hh"
 
-#include "MercatorProjection.hh"
-#include "PreloadedXmlDatasource.hh"
-#include "GeometryDatasource.hh"
-#include "GeometryLayer.hh"
-#include "OrthoViewer.hh"
-#include "geomath.h"
+#include <glosm/MercatorProjection.hh>
+#include <glosm/PreloadedXmlDatasource.hh>
+#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/GeometryLayer.hh>
+#include <glosm/OrthoViewer.hh>
+#include <glosm/geomath.h>
 
 #include <getopt.h>
 
@@ -141,9 +141,9 @@ int real_main(int argc, char** argv) {
 	osm_datasource.Load(argv[0]);
 
 	fprintf(stderr, "Creating geometry...\n");
-	GeometryDatasource geometry_datasource(osm_datasource);
+	DefaultGeometryGenerator geometry_generator(osm_datasource);
 
-	GeometryLayer layer(MercatorProjection(), geometry_datasource);
+	GeometryLayer layer(MercatorProjection(), geometry_generator);
 
 	/* Rendering */
 	fprintf(stderr, "Rendering...\n");

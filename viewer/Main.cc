@@ -34,13 +34,13 @@
 #include <vector>
 #include <map>
 
-#include "Math.hh"
+#include <glosm/Math.hh>
 
-#include "MercatorProjection.hh"
-#include "PreloadedXmlDatasource.hh"
-#include "GeometryDatasource.hh"
-#include "FirstPersonViewer.hh"
-#include "GeometryLayer.hh"
+#include <glosm/MercatorProjection.hh>
+#include <glosm/PreloadedXmlDatasource.hh>
+#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/FirstPersonViewer.hh>
+#include <glosm/GeometryLayer.hh>
 
 /* as glut has no OO concept and no feature like setUserData,
  * please forgive me using global variables pointing to
@@ -232,8 +232,8 @@ int real_main(int argc, char** argv) {
 	/* glosm init */
 	gettimeofday(&prevtime, NULL);
 
-	GeometryDatasource geometry_datasource(osm_datasource);
-	GeometryLayer layer(MercatorProjection(), geometry_datasource);
+	DefaultGeometryGenerator geometry_generator(osm_datasource);
+	GeometryLayer layer(MercatorProjection(), geometry_generator);
 	layer_p = &layer;
 
 	gettimeofday(&curtime, NULL);
@@ -241,7 +241,7 @@ int real_main(int argc, char** argv) {
 	prevtime = curtime;
 	fpstime = curtime;
 
-	viewer.SetPos(Vector3i(geometry_datasource.GetCenter(), 1750));
+	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), 1750));
 
 	/* with current GeometryLayer implementation, datasources are no longer needed */
 	osm_datasource.Clear();

@@ -30,7 +30,7 @@
 #include <limits>
 #include <iostream>
 
-#include "Math.hh"
+#include <glosm/Math.hh>
 
 int main() {
     Vector2i testi(1800000000, 1800000000);
