@@ -38,19 +38,23 @@ Installation
   Compilation: cmake . && make
   Installation: make install
 
-  Note that you may need to tweak installation prefix.
+  Note that you don't need to install it to run programs, and in case
+  you really want to install it, you may need to tweak installation
+  prefix (either by providing -DCMAKE_INSTALL_PREFIX=... to cmake or
+  with ccmake as below). Also note that cmake doesn't provide
+  uninstall target.
 
-  You can also use curses frontend for cmake (ccmake) to select
-  optional components interactively or specify -DBUILD_TILER=[YES|NO]
-  and -DBUILD_VIEWER=[YES|NO] in cmake arguments to enable/disable
+  You can use curses frontend for cmake (ccmake) to select optional
+  components interactively or specify -DBUILD_TILER=[YES|NO] and
+  -DBUILD_VIEWER=[YES|NO] in cmake arguments to enable/disable
   building of specific applications. By default, viewer is always
   built and tiler is only build on UNIX platforms.
 
   If you plan to hack on glosm source, it's better idea to use
-  so-called off-source build to not pollute source tree with build
+  so-called out-of-source build to not pollute source tree with build
   files. Here's how it's done:
 
-  mkdir build && cd build && cmake .. && make
+    mkdir build && cd build && cmake .. && make
 
 Usage
 =====
@@ -195,6 +199,13 @@ Tests
 
   There are some test under tests/ subdirectory, you can run them by
   running `ctest' from your buildtree.
+
+Documentation
+=============
+
+  Doxygen is supported, just run `doxygen' from this directory to
+  generate class descriptions under doc/html. There's also some more
+  documentation under doc/.
 
 License
 =======
