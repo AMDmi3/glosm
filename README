@@ -38,6 +38,8 @@ Installation
   Compilation: cmake . && make
   Installation: make install
 
+  Note that you may need to tweak installation prefix.
+
   You can also use curses frontend for cmake (ccmake) to select
   optional components interactively or specify -DBUILD_TILER=[YES|NO]
   and -DBUILD_VIEWER=[YES|NO] in cmake arguments to enable/disable
