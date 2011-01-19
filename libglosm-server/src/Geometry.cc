@@ -64,15 +64,27 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	triangles_.reserve(triangles_.size() + other.triangles_.size());
 	quads_.reserve(quads_.size() + other.quads_.size());
 
-/*	for (int i = 0; i < other.lines_.size(); i += 2) {
+	for (int i = 0; i < other.lines_.size(); i += 2) {
 		if (bbox.Contains(other.lines_[i]) && bbox.Contains(other.lines_[i+1])) {
 			lines_.push_back(other.lines_[i]);
 			lines_.push_back(other.lines_[i+1]);
 		}
-	}*/
-	lines_.insert(lines_.end(), other.lines_.begin(), other.lines_.end());
-	triangles_.insert(triangles_.end(), other.triangles_.begin(), other.triangles_.end());
-	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
+	}
+	for (int i = 0; i < other.triangles_.size(); i += 3) {
+		if (bbox.Contains(other.triangles_[i]) && bbox.Contains(other.triangles_[i+1]) && bbox.Contains(other.triangles_[i+2])) {
+			triangles_.push_back(other.triangles_[i]);
+			triangles_.push_back(other.triangles_[i+1]);
+			triangles_.push_back(other.triangles_[i+2]);
+		}
+	}
+	for (int i = 0; i < other.quads_.size(); i += 4) {
+		if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3])) {
+			quads_.push_back(other.quads_[i]);
+			quads_.push_back(other.quads_[i+1]);
+			quads_.push_back(other.quads_[i+2]);
+			quads_.push_back(other.quads_[i+3]);
+		}
+	}
 }
 
 void Geometry::Serialize() const {

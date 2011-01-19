@@ -32,6 +32,18 @@
  * GeometryGenerator and may be stored, serialized/deserialized,
  * transferred via the net and in the end is to be converted to
  * local floating-point geometry for rendering.
+ *
+ * @todo this is pretty non-general approach: triangles and quads
+ * should likely be merged into a single primitive. Need testing for
+ * speed impact on quads vs. indexed triangle strips. If strips don't
+ * bring too buch performance drop, quads should be eliminated. This
+ * will also open door for further geom optimizations like merging
+ * triangle groups into strips and fans.
+ *
+ * @note just for a note: most of polygon geometry generated for urban
+ * area currently are quads (~10x more quads than triangles). Changing
+ * quads to triangle pairs is 12% more geometry generation time, 20%
+ * less fps and more memory, so for now they're quite useful.
  */
 class Geometry {
 protected:
