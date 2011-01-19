@@ -33,17 +33,17 @@
 #include <glosm/Math.hh>
 
 int main() {
-    Vector2i testi(1800000000, 1800000000);
-    Vector2l testl(1800000000, 1800000000);
+	Vector2i testi(1800000000, 1800000000);
+	Vector2l testl(1800000000, 1800000000);
 
-    std::cerr << "sizeof(osmint_t) = " << sizeof(osmint_t) << ", sizeof(osmlong_t) = " << sizeof(osmlong_t) << std::endl;
-    std::cerr << "Vector2i(" << testi.x << "," << testi.y << ").LengthSquare() = " << testi.LengthSquare() << std::endl;
-    std::cerr << "Vector2l(" << testl.x << "," << testl.y << ").LengthSquare() = " << testl.LengthSquare() << std::endl;
+	std::cerr << "sizeof(osmint_t) = " << sizeof(osmint_t) << ", sizeof(osmlong_t) = " << sizeof(osmlong_t) << std::endl;
+	std::cerr << "Vector2i(" << testi.x << "," << testi.y << ").LengthSquare() = " << testi.LengthSquare() << std::endl;
+	std::cerr << "Vector2l(" << testl.x << "," << testl.y << ").LengthSquare() = " << testl.LengthSquare() << std::endl;
 
-    int result = 0;
+	int result = 0;
 
-    result |= !(testi.LengthSquare() == 6480000000000000000LL);
-    result |= !(testl.LengthSquare() == 6480000000000000000LL);
+	result |= !(testi.LengthSquare() == 6480000000000000000LL);
+	result |= !(testl.LengthSquare() == 6480000000000000000LL);
 
 	return result;
 }
