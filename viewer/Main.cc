@@ -52,7 +52,7 @@ int screenw = 1;
 int screenh = 1;
 int movementflags = 0;
 float speed = 200.0f;
-bool locktoground = false;
+int lockheight = 0;
 
 struct timeval prevtime, curtime, fpstime;
 int nframes = 0;
@@ -82,8 +82,8 @@ void Display(void) {
 
 		viewer.Move(movementflags, myspeed, dt);
 	}
-	if (locktoground)
-		viewer.MutablePos().z = 1750;
+	if (lockheight != 0)
+		viewer.MutablePos().z = lockheight;
 
 	/* update FPS */
 	float fpst = (float)(curtime.tv_sec - fpstime.tv_sec) + (float)(curtime.tv_usec - fpstime.tv_usec)/1000000.0f;
@@ -176,7 +176,8 @@ void KeyDown(unsigned char key, int, int) {
 	case 'd': movementflags |= FirstPersonViewer::RIGHT; break;
 	case 'c': movementflags |= FirstPersonViewer::LOWER; break;
 	case ' ': movementflags |= FirstPersonViewer::HIGHER; break;
-	case 'l': locktoground = !locktoground; break;
+	case 'l': lockheight = (lockheight == 0 ? viewer.MutablePos().z : 0); break;
+	case 'h': lockheight = (lockheight == 0 ? 1750 : 0); break;
 	case '+': speed *= 5.0f; break;
 	case '-': speed /= 5.0f; break;
 	default:

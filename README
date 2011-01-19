@@ -87,7 +87,8 @@ Usage
     D or Right  - move right
     C           - move down
     Space       - move up
-    L           - toggles lock to ground (human-height mode)
+    L           - toggle height lock (useful for fly-by's)
+    H           - same as L, but locks you at human height
     +           - increase movement speed by 10x
     -           - decrease movement speed by 10x
     Q or Escape - close application
