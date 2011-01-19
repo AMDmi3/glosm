@@ -59,6 +59,22 @@ void Geometry::Append(const Geometry& other) {
 	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
 }
 
+void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
+	lines_.reserve(lines_.size() + other.lines_.size());
+	triangles_.reserve(triangles_.size() + other.triangles_.size());
+	quads_.reserve(quads_.size() + other.quads_.size());
+
+/*	for (int i = 0; i < other.lines_.size(); i += 2) {
+		if (bbox.Contains(other.lines_[i]) && bbox.Contains(other.lines_[i+1])) {
+			lines_.push_back(other.lines_[i]);
+			lines_.push_back(other.lines_[i+1]);
+		}
+	}*/
+	lines_.insert(lines_.end(), other.lines_.begin(), other.lines_.end());
+	triangles_.insert(triangles_.end(), other.triangles_.begin(), other.triangles_.end());
+	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
+}
+
 void Geometry::Serialize() const {
 	/* XXX: Implement serialization to stream/file/buffer/whatever */
 }

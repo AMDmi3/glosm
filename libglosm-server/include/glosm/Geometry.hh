@@ -21,6 +21,7 @@
 #define GEOMETRY_HH
 
 #include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
 #include <vector>
 
@@ -51,6 +52,7 @@ public:
 	const std::vector<Vector3i>& GetQuads() const;
 
 	void Append(const Geometry& other);
+	void AppendCropped(const Geometry& other, const BBoxi& bbox);
 
 	void Serialize() const;
 	void DeSerialize();

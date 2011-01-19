@@ -553,7 +553,7 @@ void DefaultGeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) co
 		WayDispatcher(temp, datasource_, *w);
 	}
 
-	geom.Append(temp);
+	geom.AppendCropped(temp, bbox);
 }
 
 Vector2i DefaultGeometryGenerator::GetCenter() const {
