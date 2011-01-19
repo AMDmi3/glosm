@@ -63,6 +63,7 @@ void Display(void) {
 	float dt = (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f;
 
 	/* render frame */
+	glClearColor(0.5, 0.5, 0.5, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (layer_p)
@@ -229,15 +230,6 @@ int real_main(int argc, char** argv) {
 	glutKeyboardUpFunc(KeyUp);
 	glutSpecialFunc(SpecialDown);
 	glutSpecialUpFunc(SpecialUp);
-
-	/* opengl init */
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glShadeModel(GL_FLAT);
-
-	glClearColor(0.5, 0.5, 0.5, 0.0);
 
 	/* glosm init */
 	gettimeofday(&prevtime, NULL);
