@@ -53,6 +53,7 @@ Applications
     * getopt_long interface
     * Ability to render single image of arbitary size
     * Need 16x multisampling for proper eyecandy, while hardware only provides 4x. Can think of accum buffer (it's very slow, but rendering likely won't be a bottleneck anyway) or render to texture with following downscaling
+    * Add jpeg saving support (more useful than png when texture support is added)
   Viewer
     * Support loading multiple .osm files (as multiple layers or as multiple tiles)
   New applications
