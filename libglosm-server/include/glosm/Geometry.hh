@@ -50,6 +50,8 @@ public:
 	const std::vector<Vector3i>& GetTriangles() const;
 	const std::vector<Vector3i>& GetQuads() const;
 
+	void Append(const Geometry& other);
+
 	void Serialize() const;
 	void DeSerialize();
 };

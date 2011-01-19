@@ -49,6 +49,16 @@ const std::vector<Vector3i>& Geometry::GetQuads() const {
 	return quads_;
 }
 
+void Geometry::Append(const Geometry& other) {
+	lines_.reserve(lines_.size() + other.lines_.size());
+	triangles_.reserve(triangles_.size() + other.triangles_.size());
+	quads_.reserve(quads_.size() + other.quads_.size());
+
+	lines_.insert(lines_.end(), other.lines_.begin(), other.lines_.end());
+	triangles_.insert(triangles_.end(), other.triangles_.begin(), other.triangles_.end());
+	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
+}
+
 void Geometry::Serialize() const {
 	/* XXX: Implement serialization to stream/file/buffer/whatever */
 }
