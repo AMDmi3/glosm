@@ -45,7 +45,7 @@ void usage(const char* progname) {
 	exit(1);
 }
 
-int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, Layer& layer, const char* target, float minlon, float minlat, float maxlon, float maxlat, int minzoom, int maxzoom, int pnglevel) {
+int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, GeometryLayer& layer, const char* target, float minlon, float minlat, float maxlon, float maxlat, int minzoom, int maxzoom, int pnglevel) {
 	int x, y, zoom, ntiles = 0;
 	PixelBuffer pixels(256, 256, 3);
 

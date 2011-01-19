@@ -35,7 +35,6 @@ public:
 	}
 
 	virtual void RequestVisible(const BBoxi& bbox) = 0;
-	virtual void Render(const Viewer& viewer) const = 0;
 };
 
 #endif

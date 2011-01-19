@@ -37,7 +37,7 @@
 #include <glosm/DefaultGeometryGenerator.hh>
 
 Viewer* g_viewer = NULL;
-Layer* g_layer = NULL;
+GeometryLayer* g_layer = NULL;
 
 void Display(void) {
 	glClearColor(0.5, 0.5, 0.5, 0.0);

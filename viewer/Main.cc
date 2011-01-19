@@ -46,7 +46,7 @@
  * please forgive me using global variables pointing to
  * stack data for now */
 FirstPersonViewer viewer;
-Layer* layer_p = NULL;
+GeometryLayer* layer_p = NULL;
 
 int screenw = 1;
 int screenh = 1;

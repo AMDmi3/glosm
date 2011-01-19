@@ -44,7 +44,8 @@ public:
 	GeometryLayer(const Projection projection, const GeometryDatasource& datasource);
 	virtual ~GeometryLayer();
 	virtual void RequestVisible(const BBoxi& bbox);
-	virtual void Render(const Viewer& viewer) const;
+
+	void Render(const Viewer& viewer) const;
 };
 
 #endif
