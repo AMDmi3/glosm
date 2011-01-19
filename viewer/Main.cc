@@ -62,8 +62,10 @@ void Display(void) {
 	gettimeofday(&curtime, NULL);
 	float dt = (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f;
 
+	float between_eyes = 1.0; /* 0.064 really, but more for better perspective effect */
+	float angle = 0.02;
 	float left_color[3] = { 1.0, 0.0, 0.0 };
-	float right_color[3] = { 0.0, 0.0, 1.0 };
+	float right_color[3] = { 0.0, 1.0, 1.0 };
 
 	glClearAccum(0.5, 0.5, 0.5, 0.0);
 
@@ -74,10 +76,10 @@ void Display(void) {
 		FirstPersonViewer left = viewer;
 		FirstPersonViewer right = viewer;
 
-		left.Move(FirstPersonViewer::LEFT, 0.032, 1);
-		left.HardRotate(0.01, 0.0);
-		right.Move(FirstPersonViewer::RIGHT, 0.032, 1);
-		right.HardRotate(-0.01, 0.0);
+		left.Move(FirstPersonViewer::LEFT, between_eyes*0.5, 1);
+		left.HardRotate(angle, 0.0);
+		right.Move(FirstPersonViewer::RIGHT, between_eyes*0.5, 1);
+		right.HardRotate(-angle, 0.0);
 
 		glClearColor(left_color[0]*0.5, left_color[1]*0.5, left_color[2]*0.5, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
