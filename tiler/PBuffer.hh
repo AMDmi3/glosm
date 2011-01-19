@@ -30,7 +30,7 @@ class PixelBuffer;
 
 class PBufferException: public std::runtime_error {
 public:
-    PBufferException(const std::string& msg): std::runtime_error(msg) {
+	PBufferException(const std::string& msg): std::runtime_error(msg) {
 	}
 };
 

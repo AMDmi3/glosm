@@ -121,7 +121,7 @@ PBuffer::~PBuffer() {
 }
 
 bool PBuffer::IsDirect() const {
-   	return glXIsDirect(display_, context_);
+	return glXIsDirect(display_, context_);
 }
 
 void PBuffer::GetPixels(PixelBuffer& buffer, int x, int y) {

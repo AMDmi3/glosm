@@ -27,12 +27,12 @@
 
 template <typename T>
 struct LongType {
-    typedef T type;
+	typedef T type;
 };
 
 template<>
 struct LongType<osmint_t> {
-    typedef osmlong_t type;
+	typedef osmlong_t type;
 };
 
 template <typename T>
@@ -43,7 +43,7 @@ struct Vector3;
  */
 template <typename T>
 struct Vector2 {
-    typedef typename LongType<T>::type LT;
+	typedef typename LongType<T>::type LT;
 
 	/* ctors */
 	Vector2(): x(0), y(0) {}
@@ -58,10 +58,10 @@ struct Vector2 {
 	template <typename TT>
 	Vector2(const Vector2<TT>& v): x(v.x), y(v.y) {}
 
-    /* */
-    Vector2<LT> LongVector() const {
-        return Vector2<LT>(*this);
-    }
+	/* */
+	Vector2<LT> LongVector() const {
+		return Vector2<LT>(*this);
+	}
 
 	/* operators */
 	Vector2<T> operator- () const { return Vector2<T>(-x, -y); }
@@ -130,7 +130,7 @@ struct Vector2 {
  */
 template <typename T>
 struct Vector3 {
-    typedef typename LongType<T>::type LT;
+	typedef typename LongType<T>::type LT;
 
 	/* ctors */
 	Vector3(): x(0), y(0), z(0) {}
@@ -148,10 +148,10 @@ struct Vector3 {
 	template <typename TT>
 	static Vector3<T> FromYawPitch(const TT yaw, const TT pitch) { return Vector3(sin(yaw)*cos(pitch), cos(yaw)*cos(pitch), sin(pitch)); }
 
-    /* */
-    Vector3<LT> LongVector() const {
-        return Vector3<LT>(*this);
-    }
+	/* */
+	Vector3<LT> LongVector() const {
+		return Vector3<LT>(*this);
+	}
 
 	/* operators */
 	Vector3<T> operator- () const { return Vector3<T>(-x, -y, -z); }
