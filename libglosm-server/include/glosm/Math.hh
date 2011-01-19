@@ -90,7 +90,7 @@ struct Vector2 {
 
 	/* functions */
 	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y); }
-	LT Length2() { return (LT)x*(LT)x + (LT)y*(LT)y; }
+	LT LengthSquare() { return (LT)x*(LT)x + (LT)y*(LT)y; }
 
 	LT DotProduct(const Vector2<T>& other) const { return (LT)x*(LT)other.x + (LT)y*(LT)other.y; }
 	LT CrossProduct(const Vector2<T>& other) const { return (LT)x*(LT)other.y - (LT)y*(LT)other.x; }
@@ -180,7 +180,7 @@ struct Vector3 {
 
 	/* functions */
 	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z); }
-	LT Length2() { return (LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z; }
+	LT LengthSquare() { return (LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z; }
 
 	LT DotProduct(const Vector3<T>& other) const { return (LT)x*(LT)other.x + (LT)y*(LT)other.y + (LT)z*(LT)other.z; }
 	Vector3<LT> CrossProduct(const Vector3<T>& other) const { return Vector3<LT>((LT)y*(LT)other.z - (LT)z*(LT)other.y, (LT)z*(LT)other.x - (LT)x*(LT)other.z, (LT)x*(LT)other.y - (LT)y*(LT)other.x); }
@@ -286,6 +286,10 @@ struct BBox {
 
 	Vector2<T> GetTopRight() const {
 		return Vector2<T>(right, top);
+	}
+
+	bool Contains(const Vector2<T>& v) const {
+		return v.x >= left && v.x <= right && v.y >= bottom && v.y <= top;
 	}
 
 	/* data */
