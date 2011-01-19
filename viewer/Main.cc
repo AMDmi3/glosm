@@ -51,7 +51,7 @@ Layer* layer_p = NULL;
 int screenw = 1;
 int screenh = 1;
 int movementflags = 0;
-float speed = 100.0f;
+float speed = 200.0f;
 bool locktoground = false;
 
 struct timeval prevtime, curtime, fpstime;
@@ -71,8 +71,17 @@ void Display(void) {
 	glFlush();
 	glutSwapBuffers();
 
-	if (movementflags)
-		viewer.Move(movementflags, speed, dt);
+	if (movementflags) {
+		float myspeed = speed;
+		float height = viewer.MutablePos().z / 1000.0;
+
+		if (height > 100.0 && height < 100000.0)
+			myspeed *= height / 100.0;
+		else if (height >= 100000.0)
+			myspeed *= 1000.0;
+
+		viewer.Move(movementflags, myspeed, dt);
+	}
 	if (locktoground)
 		viewer.MutablePos().z = 1750;
 
@@ -168,8 +177,8 @@ void KeyDown(unsigned char key, int, int) {
 	case 'c': movementflags |= FirstPersonViewer::LOWER; break;
 	case ' ': movementflags |= FirstPersonViewer::HIGHER; break;
 	case 'l': locktoground = !locktoground; break;
-	case '+': speed *= 10.0f; break;
-	case '-': speed /= 10.0f; break;
+	case '+': speed *= 5.0f; break;
+	case '-': speed /= 5.0f; break;
 	default:
 		  break;
 	}
@@ -241,7 +250,8 @@ int real_main(int argc, char** argv) {
 	prevtime = curtime;
 	fpstime = curtime;
 
-	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), 1750));
+	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;
+	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
 
 	/* with current GeometryLayer implementation, datasources are no longer needed */
 	osm_datasource.Clear();
