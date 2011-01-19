@@ -27,6 +27,8 @@
  */
 template <typename T>
 struct BBox {
+	typedef typename LongType<T>::type LT;
+
 	/* ctors */
 	BBox(Vector2<T> one, Vector2<T> two) {
 		if (one.x < two.x) {
@@ -80,7 +82,7 @@ struct BBox {
 	}
 
 	Vector2<T> GetCenter() const {
-		return Vector2<T>((left + right)/2, (top + bottom)/2);
+		return Vector2<T>(((LT)left + (LT)right)/2, ((LT)top + (LT)bottom)/2);
 	}
 
 	Vector2<T> GetBottomLeft() const {
