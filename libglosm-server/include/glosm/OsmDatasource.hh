@@ -21,6 +21,7 @@
 #define OSMDATASOURCE_HH
 
 #include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
 #include <string>
 #include <vector>

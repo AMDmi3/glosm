@@ -20,6 +20,7 @@
 #ifndef ORTHOVIEWER_HH
 #define ORTHOVIEWER_HH
 
+#include <glosm/BBox.hh>
 #include <glosm/Viewer.hh>
 
 /**

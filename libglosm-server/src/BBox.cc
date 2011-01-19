@@ -17,7 +17,7 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
 template<>
 BBox<osmint_t> BBox<osmint_t>::Full() {

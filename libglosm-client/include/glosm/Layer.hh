@@ -20,7 +20,7 @@
 #ifndef LAYER_HH
 #define LAYER_HH
 
-#include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
 class Viewer;
 

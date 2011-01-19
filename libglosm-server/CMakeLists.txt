@@ -31,7 +31,7 @@ ENDIF(TRUSTED_XML)
 # Targets
 SET(SOURCES
 	src/Geometry.cc
-	src/Math.cc
+	src/BBox.cc
 	src/PreloadedXmlDatasource.cc
 )
 

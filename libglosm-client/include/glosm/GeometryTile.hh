@@ -21,8 +21,8 @@
 #define GEOMETRYTILE_HH
 
 #include <glosm/Tile.hh>
-
 #include <glosm/NonCopyable.hh>
+#include <glosm/BBox.hh>
 
 #include <memory>
 

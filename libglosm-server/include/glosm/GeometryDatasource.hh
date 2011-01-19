@@ -21,6 +21,7 @@
 #define GEOMETRYDATASOURCE_HH
 
 #include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
 class Geometry;
 
