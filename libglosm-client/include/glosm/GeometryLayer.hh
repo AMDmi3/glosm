@@ -45,7 +45,7 @@ public:
 	virtual ~GeometryLayer();
 	virtual void RequestVisible(const BBoxi& bbox);
 
-	void Render(const Viewer& viewer) const;
+	void Render(const Viewer& viewer, float r, float g, float b) const;
 };
 
 #endif

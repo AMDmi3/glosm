@@ -62,11 +62,27 @@ void Display(void) {
 	gettimeofday(&curtime, NULL);
 	float dt = (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f;
 
-	/* render frame */
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	float left_color[3] = { 1.0, 0.0, 0.0 };
+	float right_color[3] = { 0.0, 0.0, 1.0 };
 
-	if (layer_p)
-		layer_p->Render(viewer);
+	glClearAccum(0.5, 0.5, 0.5, 0.0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+
+	/* render frame */
+	if (layer_p) {
+		glClearColor(left_color[0]*0.5, left_color[1]*0.5, left_color[2]*0.5, 0.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		layer_p->Render(viewer, left_color[0], left_color[1], left_color[2]);
+		glAccum(GL_LOAD, 1.0);
+
+		glClearColor(right_color[0]*0.5, right_color[1]*0.5, right_color[2]*0.5, 0.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		layer_p->Render(viewer, right_color[0], right_color[1], right_color[2]);
+		glAccum(GL_ACCUM, 1.0);
+	}
+
+	glAccum(GL_RETURN, 1.0);
 
 	glFlush();
 	glutSwapBuffers();
@@ -214,7 +230,7 @@ int real_main(int argc, char** argv) {
 	prevtime = curtime;
 
 	/* glut init */
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE | GLUT_ACCUM);
 	glutInitWindowSize(800, 600);
 	glutCreateWindow("glosm viewer");
 
@@ -236,8 +252,6 @@ int real_main(int argc, char** argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glShadeModel(GL_FLAT);
-
-	glClearColor(0.5, 0.5, 0.5, 0.0);
 
 	/* glosm init */
 	gettimeofday(&prevtime, NULL);
