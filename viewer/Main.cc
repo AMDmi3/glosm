@@ -71,14 +71,22 @@ void Display(void) {
 
 	/* render frame */
 	if (layer_p) {
+		FirstPersonViewer left = viewer;
+		FirstPersonViewer right = viewer;
+
+		left.Move(FirstPersonViewer::LEFT, 0.032, 1);
+		left.HardRotate(0.01, 0.0);
+		right.Move(FirstPersonViewer::RIGHT, 0.032, 1);
+		right.HardRotate(-0.01, 0.0);
+
 		glClearColor(left_color[0]*0.5, left_color[1]*0.5, left_color[2]*0.5, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		layer_p->Render(viewer, left_color[0], left_color[1], left_color[2]);
+		layer_p->Render(left, left_color[0], left_color[1], left_color[2]);
 		glAccum(GL_LOAD, 1.0);
 
 		glClearColor(right_color[0]*0.5, right_color[1]*0.5, right_color[2]*0.5, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		layer_p->Render(viewer, right_color[0], right_color[1], right_color[2]);
+		layer_p->Render(right, right_color[0], right_color[1], right_color[2]);
 		glAccum(GL_ACCUM, 1.0);
 	}
 
