@@ -490,6 +490,57 @@ static float GetHighwayWidth(const std::string& highway, const OsmDatasource::Wa
 	}
 }
 
+static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
+	osmint_t minz = GetMinHeight(way)*1000.0;
+	osmint_t maxz = GetMaxHeight(way)*1000.0;
+
+	if (minz < 0)
+		minz = 0;
+	if (maxz < minz) {
+		fprintf(stderr, "warning: max height < min height for object\n");
+		maxz = minz = 0;
+	}
+
+	OsmDatasource::TagsMap::const_iterator t;
+
+	VertexList vertices;
+	for (OsmDatasource::Way::NodesList::const_iterator n = way.Nodes.begin(); n != way.Nodes.end(); ++n)
+		vertices.push_back(datasource.GetNode(*n).Pos);
+
+	if ((way.Tags.find("building") != way.Tags.end() || way.Tags.find("building:part") != way.Tags.end()) && minz != maxz) {
+		CreateWalls(geom, vertices, minz, maxz, way);
+		CreateRoof(geom, vertices, maxz, way);
+
+		CreateLines(geom, vertices, minz, way);
+		CreateLines(geom, vertices, maxz, way);
+		CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
+
+		if (minz > 1) {
+			CreateArea(geom, vertices, true, minz, way);
+			CreateLines(geom, vertices, minz, way);
+		}
+	} else if (way.Tags.find("barrier") != way.Tags.end()) {
+		if (maxz == minz)
+			maxz += 2000;
+		CreateWall(geom, vertices, minz, maxz, way);
+
+		CreateLines(geom, vertices, minz, way);
+		CreateLines(geom, vertices, maxz, way);
+		CreateVerticalLines(geom, vertices, minz, maxz, way);
+	} else if ((t = way.Tags.find("highway")) != way.Tags.end()) {
+		OsmDatasource::TagsMap::const_iterator t1;
+
+		if ((t1 = way.Tags.find("area")) != way.Tags.end() && t1->second != "no") {
+			/* area */
+			CreateArea(geom, vertices, false, 0, way);
+		} else {
+			CreateRoad(geom, vertices, GetHighwayWidth(t->second, way), way);
+		}
+	} else {
+		CreateLines(geom, vertices, minz, way);
+	}
+}
+
 DefaultGeometryGenerator::DefaultGeometryGenerator(const OsmDatasource& datasource) : datasource_(datasource) {
 }
 
@@ -497,57 +548,12 @@ void DefaultGeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) co
 	std::vector<OsmDatasource::Way> ways;
 	datasource_.GetAllWays(ways);
 
-	Vector2i prev;
+	Geometry temp;
 	for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w) {
-		osmint_t minz = GetMinHeight(*w)*1000.0;
-		osmint_t maxz = GetMaxHeight(*w)*1000.0;
-
-		if (minz < 0)
-			minz = 0;
-		if (maxz < minz) {
-			fprintf(stderr, "warning: max height < min height for object\n");
-			maxz = minz = 0;
-		}
-
-		OsmDatasource::TagsMap::const_iterator t;
-
-		VertexList vertices;
-		for (OsmDatasource::Way::NodesList::const_iterator n = w->Nodes.begin(); n != w->Nodes.end(); ++n)
-			vertices.push_back(datasource_.GetNode(*n).Pos);
-
-		if ((w->Tags.find("building") != w->Tags.end() || w->Tags.find("building:part") != w->Tags.end()) && minz != maxz) {
-			CreateWalls(geom, vertices, minz, maxz, *w);
-			CreateRoof(geom, vertices, maxz, *w);
-
-			CreateLines(geom, vertices, minz, *w);
-			CreateLines(geom, vertices, maxz, *w);
-			CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, *w);
-
-			if (minz > 1) {
-				CreateArea(geom, vertices, true, minz, *w);
-				CreateLines(geom, vertices, minz, *w);
-			}
-		} else if (w->Tags.find("barrier") != w->Tags.end()) {
-			if (maxz == minz)
-				maxz += 2000;
-			CreateWall(geom, vertices, minz, maxz, *w);
-
-			CreateLines(geom, vertices, minz, *w);
-			CreateLines(geom, vertices, maxz, *w);
-			CreateVerticalLines(geom, vertices, minz, maxz, *w);
-		} else if ((t = w->Tags.find("highway")) != w->Tags.end()) {
-			OsmDatasource::TagsMap::const_iterator t1;
-
-			if ((t1 = w->Tags.find("area")) != w->Tags.end() && t1->second != "no") {
-				/* area */
-				CreateArea(geom, vertices, false, 0, *w);
-			} else {
-				CreateRoad(geom, vertices, GetHighwayWidth(t->second, *w), *w);
-			}
-		} else {
-			CreateLines(geom, vertices, minz, *w);
-		}
+		WayDispatcher(temp, datasource_, *w);
 	}
+
+	geom.Append(temp);
 }
 
 Vector2i DefaultGeometryGenerator::GetCenter() const {
