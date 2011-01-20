@@ -60,11 +60,13 @@ class Exception: public Private::Exception {
 
 class SystemError: public Exception {
 protected:
+	mutable std::stringstream full_message_;
 	int errno_;
-	mutable bool appended_;
 
 public:
 	SystemError();
+	SystemError(const SystemError& e);
+	virtual ~SystemError() throw();
 	virtual const char* what() const throw();
 };
 

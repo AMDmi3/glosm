@@ -26,7 +26,7 @@ namespace Private {
 	Exception::Exception(): message_(std::ios_base::out | std::ios_base::app) {
 	}
 
-	Exception::Exception(const Exception& e): std::exception(), message_(e.what(), std::ios_base::out | std::ios_base::app) {
+	Exception::Exception(const Exception& e): message_(e.message_.str(), std::ios_base::out | std::ios_base::app) {
 	}
 
 	Exception::~Exception() throw() {
@@ -37,12 +37,17 @@ namespace Private {
 	}
 };
 
-SystemError::SystemError(): errno_(errno), appended_(false) {
+SystemError::SystemError(): full_message_(std::ios_base::out | std::ios_base::app), errno_(errno) {
+}
+
+SystemError::SystemError(const SystemError& e): full_message_(std::ios_base::out | std::ios_base::app), Exception(e), errno_(e.errno_) {
+}
+
+SystemError::~SystemError() throw() {
 }
 
 const char* SystemError::what() const throw() {
-	if (!appended_)
-		message_ << strerror(errno_);
-	appended_ = true;
-	return message_.str().c_str();
+	full_message_.clear();
+	full_message_ << message_.str() << ": " << strerror(errno_);
+	return full_message_.str().c_str();
 }
