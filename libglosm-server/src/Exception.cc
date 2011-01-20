@@ -26,7 +26,7 @@ namespace Private {
 	Exception::Exception(): message_(std::ios_base::out | std::ios_base::app) {
 	}
 
-	Exception::Exception(const Exception& e): message_(e.message_.str(), std::ios_base::out | std::ios_base::app) {
+	Exception::Exception(const Exception& e): std::exception(), message_(e.message_.str(), std::ios_base::out | std::ios_base::app) {
 	}
 
 	Exception::~Exception() throw() {
@@ -40,7 +40,7 @@ namespace Private {
 SystemError::SystemError(): full_message_(std::ios_base::out | std::ios_base::app), errno_(errno) {
 }
 
-SystemError::SystemError(const SystemError& e): full_message_(std::ios_base::out | std::ios_base::app), Exception(e), errno_(e.errno_) {
+SystemError::SystemError(const SystemError& e): Exception(e), full_message_(std::ios_base::out | std::ios_base::app), errno_(e.errno_) {
 }
 
 SystemError::~SystemError() throw() {
