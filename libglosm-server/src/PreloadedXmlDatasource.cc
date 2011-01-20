@@ -373,7 +373,7 @@ void PreloadedXmlDatasource::Load(const char* filename) {
 			if (XML_Parse(parser, buf, len, len == 0) == XML_STATUS_ERROR)
 				throw ParsingException() << XML_ErrorString(XML_GetErrorCode(parser));
 		} while (len != 0);
-	} catch (Exception &e) {
+	} catch (ParsingException &e) {
 		ParsingException verbose;
 		verbose << "input parsing error: " << e.what() << " at line " << XML_GetCurrentLineNumber(parser) << " pos " << XML_GetCurrentColumnNumber(parser);
 		close(f);

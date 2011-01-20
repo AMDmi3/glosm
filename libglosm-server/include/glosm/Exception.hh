@@ -23,28 +23,39 @@
 #include <exception>
 #include <sstream>
 
-/**
- * Convenient exception class which supports stream-like appending
- *
- * Example:
- * @code throw Exception("foo") << ", also baz and " << 1 << 2 << 3; @endcode
- */
-class Exception: public std::exception {
-protected:
-	mutable std::stringstream message_;
+namespace Private {
+	/**
+	 * Convenient exception class which supports stream-like appending
+	 *
+	 * Example:
+	 * @code throw Exception("foo") << ", also baz and " << 1 << 2 << 3; @endcode
+	 */
+	class Exception: public std::exception {
+	protected:
+		mutable std::stringstream message_;
 
-public:
-	Exception();
-	Exception(const Exception& e);
-	virtual ~Exception() throw();
+	public:
+		Exception();
+		Exception(const Exception& e);
+		virtual ~Exception() throw();
 
-	virtual const char* what() const throw();
+		template <class T>
+		void Append(const T& t) const {
+			(std::ostream&)message_ << t;
+		}
 
-	template <class T>
-	Exception& operator<<(const T& t) {
-		message_ << t;
-		return *this;
+		virtual const char* what() const throw();
+	};
+
+	template <class E, class T>
+	static inline const E& operator<<(const E& e, const T& t) {
+		e.Append(t);
+
+		return e;
 	}
+};
+
+class Exception: public Private::Exception {
 };
 
 class SystemError: public Exception {
