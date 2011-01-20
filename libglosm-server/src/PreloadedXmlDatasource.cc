@@ -109,20 +109,19 @@ static int ParseCoord(const char* str) {
 	for (; *cur != '\0'; ++cur) {
 		if (*cur >= '0' && *cur <= '9') {
 			value = value * 10 + *cur - '0';
+			if (!haddot && value > 180)
+				throw ParsingException() << "bad coordinate format (value too large)";
 			if (haddot && ++fracdig == 7)
 				break;
 		} else if (*cur == '.') {
 			haddot++;
 		} else {
-			throw std::runtime_error("bad coordinate format (unexpected symbol)");
+			throw ParsingException() << "bad coordinate format (unexpected symbol)";
 		}
 	}
 
 	if (haddot > 1)
-		throw std::runtime_error("bad coordinate format (multiple dots)");
-
-	if (fracdig > 7)
-		throw std::runtime_error("bad coordinate format (too long)");
+		throw ParsingException() << "bad coordinate format (multiple dots)";
 
 	for (; fracdig < 7; ++fracdig)
 		value *= 10;
@@ -161,6 +160,9 @@ static BBoxi ParseBounds(const char** atts) {
 			++att;
 	}
 
+	if (bbox.IsEmpty())
+		throw ParsingException() << "incorrect bounding box";
+
 	return bbox;
 }
 
@@ -173,11 +175,11 @@ static BBoxi ParseBound(const char** atts) {
 			/* comma positions */
 			size_t cpos1, cpos2, cpos3;
 			if ((cpos1 = s.find(',')) == std::string::npos)
-				throw std::runtime_error("bad bbox format");
+				throw ParsingException() << "bad bbox format";
 			if ((cpos2 = s.find(',', cpos1+1)) == std::string::npos)
-				throw std::runtime_error("bad bbox format");
+				throw ParsingException() << "bad bbox format";
 			if ((cpos3 = s.find(',', cpos2+1)) == std::string::npos)
-				throw std::runtime_error("bad bbox format");
+				throw ParsingException() << "bad bbox format";
 
 			bbox.bottom = ParseCoord(s.substr(0, cpos1).c_str());
 			bbox.left = ParseCoord(s.substr(cpos1+1, cpos2-cpos1-1).c_str());
@@ -241,7 +243,7 @@ void PreloadedXmlDatasource::StartElement(void* userData, const char* name, cons
 //			}
 //			ParseTag(loader->last_node_tags_->second, atts);
 		} else {
-			throw std::runtime_error("unexpected tag in node");
+			throw ParsingException() << "unexpected tag in node";
 		}
 	} else if (loader->tag_level_ == 2 && loader->InsideWhich == WAY) {
 		if (StrEq<1>(name, "tag")) {
@@ -252,11 +254,11 @@ void PreloadedXmlDatasource::StartElement(void* userData, const char* name, cons
 			if (**atts && StrEq<0>(*atts, "ref"))
 				id = strtol(*(atts+1), NULL, 10);
 			else
-				throw std::runtime_error("no ref attribute for nd tag");
+				throw ParsingException() << "no ref attribute for nd tag";
 
 			loader->last_way_->second.Nodes.push_back(id);
 		} else {
-			throw std::runtime_error("unexpected tag in way");
+			throw ParsingException() << "unexpected tag in way";
 		}
 	} else if (loader->tag_level_ == 2 && loader->InsideWhich == RELATION) {
 		if (StrEq<1>(name, "tag")) {
@@ -278,20 +280,20 @@ void PreloadedXmlDatasource::StartElement(void* userData, const char* name, cons
 					else if (StrEq<1>(*att, "relation"))
 						type = Relation::Member::RELATION;
 					else
-						throw std::runtime_error("bad relation member role");
+						throw ParsingException() << "bad relation member role";
 				} else if (StrEq<2>(*att, "role")) {
 					role = *(++att);
 				} else {
-					throw std::runtime_error("unexpected attribute in relation member");
+					throw ParsingException() << "unexpected attribute in relation member";
 				}
 			}
 
 			loader->last_relation_->second.Members.push_back(Relation::Member(type, ref, role));
 		} else {
-			throw std::runtime_error("unexpected tag in relation");
+			throw ParsingException() << "unexpected tag in relation";
 		}
 	} else if (loader->tag_level_ >= 2) {
-		throw std::runtime_error("unexpected tag");
+		throw ParsingException() << "unexpected tag";
 	}
 
 	++loader->tag_level_;
@@ -312,11 +314,8 @@ void PreloadedXmlDatasource::EndElement(void* userData, const char* /*name*/) {
 				osmlong_t area = 0;
 				for (Way::NodesList::const_iterator i = loader->last_way_->second.Nodes.begin(); i != loader->last_way_->second.Nodes.end(); ++i) {
 					cur = loader->nodes_.find(*i);
-					if (cur == loader->nodes_.end()) {
-						std::stringstream e;
-						e << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
-						throw std::runtime_error(e.str());
-					}
+					if (cur == loader->nodes_.end())
+						throw ParsingException() << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
 					if (i != loader->last_way_->second.Nodes.begin())
 						area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
 					prev = cur;
@@ -348,38 +347,44 @@ void PreloadedXmlDatasource::Load(const char* filename) {
 
 	bbox_ = BBoxi::Empty();
 
+	/* if filename = "-", work with stdin */
+	if (strcmp(filename, "-") != 0 && (f = open(filename, O_RDONLY)) == -1)
+		throw SystemError() << "cannot open input file";
+
+	/* Create and setup parser */
+	if ((parser = XML_ParserCreate(NULL)) == NULL) {
+		close(f);
+		throw Exception() << "cannot create XML parser";
+	}
+
+	XML_SetElementHandler(parser, StartElement, EndElement);
+	XML_SetUserData(parser, this);
+
+	InsideWhich = NONE;
+	tag_level_ = 0;
+
+	/* Parse file */
 	try {
-		InsideWhich = NONE;
-		tag_level_ = 0;
-
-		/* if filename = "-", work with stdin */
-		if (strcmp(filename, "-") != 0 && (f = open(filename, O_RDONLY)) == -1)
-			throw std::runtime_error("cannot open XML file");
-
-		/* Create and setup parser */
-		if ((parser = XML_ParserCreate(NULL)) == NULL)
-			throw std::runtime_error("cannot create XML parser");
-
-		XML_SetElementHandler(parser, StartElement, EndElement);
-		XML_SetUserData(parser, this);
-
-		/* Parse file */
 		char buf[65536];
-		size_t len;
+		ssize_t len;
 		do {
-			len = read(f, buf, sizeof(buf));
+			if ((len = read(f, buf, sizeof(buf))) < 0)
+				throw SystemError() << "input read error";
 			if (XML_Parse(parser, buf, len, len == 0) == XML_STATUS_ERROR)
-				throw std::runtime_error("parsing error");
+				throw ParsingException() << XML_ErrorString(XML_GetErrorCode(parser));
 		} while (len != 0);
-	} catch(...) {
-		if (f != -1)
-			close(f);
-		if (parser != NULL)
-			XML_ParserFree(parser);
+	} catch (Exception &e) {
+		ParsingException verbose;
+		verbose << "input parsing error: " << e.what() << " at line " << XML_GetCurrentLineNumber(parser) << " pos " << XML_GetCurrentColumnNumber(parser);
+		close(f);
+		XML_ParserFree(parser);
+		throw verbose;
+	} catch (...) {
+		close(f);
+		XML_ParserFree(parser);
 		throw;
 	}
 
-	/* Cleanup */
 	XML_ParserFree(parser);
 	close(f);
 

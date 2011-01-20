@@ -21,7 +21,6 @@
 #define EXCEPTION_HH
 
 #include <exception>
-#include <string>
 #include <sstream>
 
 /**
@@ -35,27 +34,27 @@ protected:
 	mutable std::stringstream message_;
 
 public:
-	Exception(): message_(std::ios_base::out | std::ios_base::app) {
-	}
+	Exception();
+	Exception(const Exception& e);
+	virtual ~Exception() throw();
 
-	Exception(const Exception& e): std::exception(), message_(e.what(), std::ios_base::out | std::ios_base::app) {
-	}
-
-	Exception(const std::string& message): message_(message, std::ios_base::out | std::ios_base::app) {
-	}
-
-	virtual ~Exception() throw() {
-	}
-
-	virtual const char* what() const throw() {
-		return message_.str().c_str();
-	}
+	virtual const char* what() const throw();
 
 	template <class T>
 	Exception& operator<<(const T& t) {
 		message_ << t;
 		return *this;
 	}
+};
+
+class SystemError: public Exception {
+protected:
+	int errno_;
+	mutable bool appended_;
+
+public:
+	SystemError();
+	virtual const char* what() const throw();
 };
 
 #endif

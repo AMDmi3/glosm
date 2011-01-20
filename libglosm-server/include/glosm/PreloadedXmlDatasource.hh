@@ -21,10 +21,13 @@
 #define PRELOADEDXMLDATASOURCE_HH
 
 #include <glosm/OsmDatasource.hh>
-
+#include <glosm/Exception.hh>
 #include <glosm/NonCopyable.hh>
 
 #include <glosm/id_map.hh>
+
+class ParsingException : public Exception {
+};
 
 /**
  * Source of OpenStreetMap data which preloads .osm dump into memory.
