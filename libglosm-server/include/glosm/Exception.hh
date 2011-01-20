@@ -48,16 +48,22 @@ namespace Private {
 	};
 
 	template <class E, class T>
-	static inline const E& operator<<(const E& e, const T& t) {
+	static const E& operator<<(const E& e, const T& t) {
 		e.Append(t);
 
 		return e;
 	}
 };
 
+/**
+ * Generic exception
+ */
 class Exception: public Private::Exception {
 };
 
+/**
+ * System error that automatically appends strerror
+ */
 class SystemError: public Exception {
 protected:
 	mutable std::stringstream full_message_;
