@@ -301,6 +301,8 @@ protected:
 			::operator delete(*c);
 		}
 
+		chunks.clear();
+
 		delete[] buckets;
 	}
 
