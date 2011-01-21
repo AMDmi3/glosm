@@ -17,4 +17,4 @@ ADD_EXECUTABLE(glosm-tiler ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-tiler glosm-client glosm-server geomgen-default ${X11_X11_LIB} ${OPENGL_gl_LIBRARY} ${PNG_LIBRARIES})
 
 # Installation
-INSTALL(TARGETS glosm-tiler RUNTIME DESTINATION bin)
+INSTALL(TARGETS glosm-tiler RUNTIME DESTINATION ${BINDIR})

@@ -14,6 +14,10 @@ OPTION(BUILD_TILER "Build tile generator" ${BUILD_TILER_DEFAULT})
 OPTION(BUILD_EXAMPLES "Build examples" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
 
+# Global variables (still overridable via cmake -D ..)
+SET(BINDIR "bin" CACHE STRING "Install subdirectory for binaries")
+SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
+
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra)
 

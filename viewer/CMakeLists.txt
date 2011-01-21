@@ -12,4 +12,4 @@ ADD_EXECUTABLE(glosm-viewer ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-viewer glosm-client glosm-server geomgen-default ${GLUT_LIBRARY})
 
 # Installation
-INSTALL(TARGETS glosm-viewer RUNTIME DESTINATION bin)
+INSTALL(TARGETS glosm-viewer RUNTIME DESTINATION ${BINDIR})
