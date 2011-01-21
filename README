@@ -208,6 +208,9 @@ Documentation
   generate class descriptions under doc/html. There's also some more
   documentation under doc/.
 
+  There are also some simple examples of working with glosm under
+  examples/ subdirectory.
+
 License
 =======
 
