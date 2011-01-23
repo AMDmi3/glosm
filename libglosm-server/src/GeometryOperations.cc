@@ -54,17 +54,17 @@ bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmi
 }
 
 bool IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
-	return IntersectSegmentWithHorizontal(one, two, bbox.top, out) ||
-	       IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) ||
-	       IntersectSegmentWithVertical(one, two, bbox.left, out) ||
-	       IntersectSegmentWithVertical(one, two, bbox.right, out);
+	return (IntersectSegmentWithHorizontal(one, two, bbox.top, out) && bbox.Contains(out)) ||
+	       (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out)  && bbox.Contains(out)) ||
+	       (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out)) ||
+	       (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out));
 }
 
 bool IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
-	return IntersectSegmentWithVertical(one, two, bbox.right, out) ||
-	       IntersectSegmentWithVertical(one, two, bbox.left, out) ||
-	       IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) ||
-	       IntersectSegmentWithHorizontal(one, two, bbox.top, out);
+	return (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out)) ||
+	       (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out)) ||
+	       (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) && bbox.Contains(out)) ||
+	       (IntersectSegmentWithHorizontal(one, two, bbox.top, out) && bbox.Contains(out));
 }
 
 bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& outone, Vector3i& outtwo) {
@@ -85,7 +85,7 @@ bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bb
 	}
 
 	/* both points are outside, find two points of intersection */
-	return IntersectSegmentWithBBox(one, two, bbox, outone) && IntersectSegmentWithBBox2(one, two, bbox, outtwo) && bbox.Contains(outone) && bbox.Contains(outtwo);
+	return IntersectSegmentWithBBox(one, two, bbox, outone) && IntersectSegmentWithBBox2(one, two, bbox, outtwo);
 }
 
 Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
