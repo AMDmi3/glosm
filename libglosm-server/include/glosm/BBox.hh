@@ -27,6 +27,14 @@
  */
 template <typename T>
 struct BBox {
+	enum Side {
+		NONE = 0,
+		LEFT = 1,
+		BOTTOM = 2,
+		RIGHT = 3,
+		TOP = 4
+	};
+
 	typedef typename LongType<T>::type LT;
 
 	/* ctors */
