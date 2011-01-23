@@ -102,6 +102,14 @@ struct BBox {
 		return Vector2<T>(left, bottom);
 	}
 
+	Vector2<T> GetBottomRight() const {
+		return Vector2<T>(right, bottom);
+	}
+
+	Vector2<T> GetTopLeft() const {
+		return Vector2<T>(left, top);
+	}
+
 	Vector2<T> GetTopRight() const {
 		return Vector2<T>(right, top);
 	}
