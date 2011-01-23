@@ -30,11 +30,30 @@ template<>
 BBox<osmint_t> BBox<osmint_t>::ForMercatorTile(int zoom, int x, int y) {
 	BBox<osmint_t> bbox(
 			(osmint_t)round(((double)x) / pow(2.0, zoom) * 3600000000.0 - 1800000000.0),
-			(osmint_t)round(-unmercator(((float)y) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0),
+			(osmint_t)round(-unmercator(((float)y) / pow(2.0, zoom) * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0),
 			(osmint_t)round(((double)x + 1.0) / pow(2.0, zoom) * 3600000000.0 - 1800000000.0),
-			(osmint_t)round(-unmercator(((float)y + 1.0) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0)
+			(osmint_t)round(-unmercator(((float)y + 1.0) / pow(2.0, zoom) * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0)
 		);
 
+	return bbox;
+}
+
+template<>
+BBox<osmint_t> BBox<osmint_t>::ForGeoTile(int zoom, int x, int y) {
+	BBox<osmint_t> bbox(
+			(osmint_t)round(
+					(double)x / pow(2.0, zoom) * 3600000000.0 - 1800000000.0
+				),
+			(osmint_t)round(
+					-((double)y + 1.0) / pow(2.0, zoom) * 1800000000.0 + 900000000.0
+				),
+			(osmint_t)round(
+					((double)x + 1.0) / pow(2.0, zoom) * 3600000000.0 - 1800000000.0
+				),
+			(osmint_t)round(
+					-(double)y / pow(2.0, zoom) * 1800000000.0 + 900000000.0
+				)
+		);
 
 	return bbox;
 }

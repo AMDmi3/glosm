@@ -30,7 +30,7 @@ struct BBox {
 	typedef typename LongType<T>::type LT;
 
 	/* ctors */
-	BBox(Vector2<T> one, Vector2<T> two) {
+	BBox(const Vector2<T>& one, const Vector2<T>& two) {
 		if (one.x < two.x) {
 			left = one.x;
 			right = two.x;
@@ -66,6 +66,7 @@ struct BBox {
 	/* specialized only for <osmint_t>, see BBox.cc */
 	static BBox<T> ForEarth();
 	static BBox<T> ForMercatorTile(int zoom, int x, int y);
+	static BBox<T> ForGeoTile(int zoom, int x, int y);
 
 	/* operators - may be added later if needed: addition/substraction/intersection */
 
