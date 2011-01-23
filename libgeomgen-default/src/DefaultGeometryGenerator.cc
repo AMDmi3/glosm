@@ -21,6 +21,7 @@
 
 #include <glosm/OsmDatasource.hh>
 #include <glosm/Geometry.hh>
+#include <glosm/GeometryOperations.hh>
 
 #include <glosm/geomath.h>
 
@@ -32,26 +33,6 @@
 
 typedef std::list<Vector2i> VertexList;
 typedef std::vector<Vector2i> VertexVector;
-
-Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
-	double lat = ref.y/1800000000.0*M_PI;
-
-	double dx = (double)(what.x - ref.x)/3600000000.0*WGS84_EARTH_EQ_LENGTH*cos(lat);
-	double dy = (double)(what.y - ref.y)/3600000000.0*WGS84_EARTH_EQ_LENGTH;
-	double dz = (double)(what.z - ref.z)/1000.0;
-
-	return Vector3f(dx, dy, dz);
-}
-
-Vector3i FromLocalMetric(Vector3d what, Vector3i ref) {
-	double lat = ref.y/1800000000.0*M_PI;
-
-	int x = ref.x + what.x*3600000000.0/WGS84_EARTH_EQ_LENGTH/cos(lat);
-	int y = ref.y + what.y*3600000000.0/WGS84_EARTH_EQ_LENGTH;
-	int z = ref.z + what.z*1000.0;
-
-	return Vector3i(x, y, z);
-}
 
 static void CreateLines(Geometry& geom, const VertexList& vertices, int z, const OsmDatasource::Way& way) {
 	if (vertices.size() < 2)
