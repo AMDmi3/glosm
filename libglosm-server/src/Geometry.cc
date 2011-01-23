@@ -18,6 +18,7 @@
  */
 
 #include <glosm/Geometry.hh>
+#include <glosm/GeometryOperations.hh>
 
 void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
 	lines_.push_back(a);
@@ -64,10 +65,14 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	triangles_.reserve(triangles_.size() + other.triangles_.size());
 	quads_.reserve(quads_.size() + other.quads_.size());
 
+	Vector3i a, b, c;
 	for (int i = 0; i < other.lines_.size(); i += 2) {
 		if (bbox.Contains(other.lines_[i]) && bbox.Contains(other.lines_[i+1])) {
 			lines_.push_back(other.lines_[i]);
 			lines_.push_back(other.lines_[i+1]);
+		} else if (CropSegmentByBBox(other.lines_[i], other.lines_[i+1], bbox, a, b)) {
+			lines_.push_back(a);
+			lines_.push_back(b);
 		}
 	}
 	for (int i = 0; i < other.triangles_.size(); i += 3) {
