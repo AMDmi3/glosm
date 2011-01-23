@@ -21,9 +21,68 @@
 #define GEOMETRYOPERATIONS_HH
 
 #include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
-bool IntersectLineWithHorizontal(const Vector3i& one, const Vector3i& two, osmint_t y, Vector3i& out);
-bool IntersectLineWithVertical(const Vector3i& one, const Vector3i& two, osmint_t x, Vector3i& out);
+/**
+ * Intersect segment with horizontal line
+ *
+ * @param one first point of segment
+ * @param two second point of segment
+ * @param y y-coordinate for line
+ * @param out reference to output value
+ * @return whether there was an intersection
+ */
+bool IntersectSegmentWithHorizontal(const Vector3i& one, const Vector3i& two, osmint_t y, Vector3i& out);
+
+/**
+ * Intersect segment with vertical line
+ *
+ * @param one first point of segment
+ * @param two second point of segment
+ * @param x x-coordinate of line
+ * @param out reference to output value
+ * @return whether there was an intersection
+ */
+bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmint_t x, Vector3i& out);
+
+/**
+ * Intersect segment with bounding box
+ *
+ * @param one first point of segment
+ * @param two second point of segment
+ * @param bbox bounding box
+ * @param out reference to output value
+ * @return whether there was an intersection
+ */
+bool IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out);
+
+/**
+ * Intersect segment with bounding box
+ *
+ * This function checks intersection with sides of the bounding box
+ * in the reverse order compared to IntersectSegmentWithBBox, so if
+ * there are two intersection points, IntersectSegmentWithBBox2 will
+ * find another one
+ *
+ * @param one first point of segment
+ * @param two second point of segment
+ * @param bbox bounding box
+ * @param out reference to output value
+ * @return whether there was an intersection
+ */
+bool IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out);
+
+/**
+ * Crops segment with bounding box
+ *
+ * @param one first point of segment
+ * @param two second point of segment
+ * @param bbox bounding box
+ * @param outone (output) first point of cropped segment
+ * @param outone (output) second point of cropped segment
+ * @return whether there was an intersection
+ */
+bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& outone, Vector3i& outtwo);
 
 Vector3d ToLocalMetric(Vector3i what, Vector3i ref);
 Vector3i FromLocalMetric(Vector3d what, Vector3i ref);

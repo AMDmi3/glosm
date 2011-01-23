@@ -21,7 +21,7 @@
 #include <glosm/geomath.h>
 #include <math.h>
 
-bool IntersectLineWithHorizontal(const Vector3i& one, const Vector3i& two, osmint_t y, Vector3i& out) {
+bool IntersectSegmentWithHorizontal(const Vector3i& one, const Vector3i& two, osmint_t y, Vector3i& out) {
 	if (one.y < y && two.y < y)
 		return false;
 
@@ -37,7 +37,7 @@ bool IntersectLineWithHorizontal(const Vector3i& one, const Vector3i& two, osmin
 	return true;
 }
 
-bool IntersectLineWithVertical(const Vector3i& one, const Vector3i& two, osmint_t x, Vector3i& out) {
+bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmint_t x, Vector3i& out) {
 	if (one.x < x && two.x < x)
 		return false;
 
@@ -51,6 +51,41 @@ bool IntersectLineWithVertical(const Vector3i& one, const Vector3i& two, osmint_
 
 	out = Vector3i(x, one.y + round(y), one.z + round(z));
 	return true;
+}
+
+bool IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
+	return IntersectSegmentWithHorizontal(one, two, bbox.top, out) ||
+	       IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) ||
+	       IntersectSegmentWithVertical(one, two, bbox.left, out) ||
+	       IntersectSegmentWithVertical(one, two, bbox.right, out);
+}
+
+bool IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
+	return IntersectSegmentWithVertical(one, two, bbox.right, out) ||
+	       IntersectSegmentWithVertical(one, two, bbox.left, out) ||
+	       IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) ||
+	       IntersectSegmentWithHorizontal(one, two, bbox.top, out);
+}
+
+bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& outone, Vector3i& outtwo) {
+	if (bbox.Contains(one)) {
+		/* one is in the bbox */
+		outone = one;
+		if (bbox.Contains(two)) {
+			/* both points are in the bbox */
+			outtwo = two;
+		} else {
+			/* other point is outside - find intersection */
+			return IntersectSegmentWithBBox(one, two, bbox, outtwo);
+		}
+	} else if (bbox.Contains(two)) {
+		/* two is inside, one is outside */
+		outtwo = two;
+		return IntersectSegmentWithBBox(one, two, bbox, outone);
+	}
+
+	/* both points are outside, find two points of intersection */
+	return IntersectSegmentWithBBox(one, two, bbox, outone) && IntersectSegmentWithBBox2(one, two, bbox, outtwo);
 }
 
 Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
