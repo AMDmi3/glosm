@@ -45,7 +45,6 @@ Framework
     * Add profiling support to viewer (or separate test); FindModules for google perftools
   Tiling
     * Asynchronous tile loading
-    * Datasource should return data based on bbox
     * Dropping LRU tiles (may use other drop policy)
     * Correct cropping (do split polygons)
 

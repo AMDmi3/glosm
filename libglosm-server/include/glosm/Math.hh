@@ -71,6 +71,8 @@ struct Vector2 {
 	Vector2<T> operator* (const Vector2<T>& other) const { return Vector2<T>(x * other.x, y * other.y); }
 	Vector2<T> operator/ (const Vector2<T>& other) const { return Vector2<T>(x / other.x, y / other.y); }
 
+	Vector2<T> operator+ (const T v) const { return Vector2<T>(x + v, y + v); }
+	Vector2<T> operator- (const T v) const { return Vector2<T>(x - v, y - v); }
 	Vector2<T> operator* (const T v) const { return Vector2<T>(x * v, y * v); }
 	Vector2<T> operator/ (const T v) const { return Vector2<T>(x / v, y / v); }
 
@@ -82,6 +84,8 @@ struct Vector2 {
 	Vector2<T>& operator*= (const Vector2<T>& other) { x *= other.x; y *= other.y; return *this; }
 	Vector2<T>& operator/= (const Vector2<T>& other) { x /= other.x; y /= other.y; return *this; }
 
+	Vector2<T>& operator+= (const T& v) { x += v; y += v; return *this; }
+	Vector2<T>& operator-= (const T& v) { x -= v; y -= v; return *this; }
 	Vector2<T>& operator*= (const T& v) { x *= v; y *= v; return *this; }
 	Vector2<T>& operator/= (const T& v) { x /= v; y /= v; return *this; }
 

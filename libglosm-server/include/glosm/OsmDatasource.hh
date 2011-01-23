@@ -54,7 +54,9 @@ public:
 		bool Closed;
 		bool Clockwise;
 
-		Way() : Closed(false), Clockwise(false) {
+		BBoxi BBox;
+
+		Way() : Closed(false), Clockwise(false), BBox(BBoxi::Empty()) {
 		}
 	};
 
@@ -89,7 +91,7 @@ public:
 	virtual const Relation& GetRelation(osmid_t id) const = 0;
 
 	/* multiple - object accessors subject to change */
-	virtual void GetAllWays(std::vector<Way>& out) const = 0;
+	virtual void GetWays(std::vector<Way>& out, const BBoxi& bbox) const = 0;
 
 	/** Returns the center of available area */
 	virtual Vector2i GetCenter() const {
