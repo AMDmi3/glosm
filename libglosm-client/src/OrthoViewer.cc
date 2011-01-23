@@ -29,7 +29,7 @@
 
 #include <glosm/geomath.h>
 
-OrthoViewer::OrthoViewer() : bbox_(BBoxi::Full()), skew_(0.0f) {
+OrthoViewer::OrthoViewer() : bbox_(BBoxi::ForEarth()), skew_(0.0f) {
 }
 
 void OrthoViewer::SetupViewerMatrix(const Projection& projection) const {

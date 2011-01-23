@@ -32,7 +32,7 @@
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/SimpleVertexBuffer.hh>
 
-GeometryTile::GeometryTile(const Projection& projection, const GeometryDatasource& ds, const Vector2i& ref, const BBoxi& bbox = BBoxi::Full()) : Tile(ref) {
+GeometryTile::GeometryTile(const Projection& projection, const GeometryDatasource& ds, const Vector2i& ref, const BBoxi& bbox = BBoxi::ForEarth()) : Tile(ref) {
 	Geometry g;
 	ds.GetGeometry(g, bbox);
 

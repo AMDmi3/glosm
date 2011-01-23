@@ -98,7 +98,7 @@ public:
 
 	/** Returns the bounding box of available area */
 	virtual BBoxi GetBBox() const {
-		return BBoxi::Full();
+		return BBoxi::ForEarth();
 	}
 };
 

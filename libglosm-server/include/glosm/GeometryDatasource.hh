@@ -31,7 +31,7 @@ class Geometry;
  */
 class GeometryDatasource {
 public:
-	virtual void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::Full()) const = 0;
+	virtual void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::ForEarth()) const = 0;
 
 	/** Returns the center of available area */
 	virtual Vector2i GetCenter() const {
@@ -40,7 +40,7 @@ public:
 
 	/** Returns the bounding box of available area */
 	virtual BBoxi GetBBox() const {
-		return BBoxi::Full();
+		return BBoxi::ForEarth();
 	}
 };
 
