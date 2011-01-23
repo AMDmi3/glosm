@@ -85,7 +85,7 @@ bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bb
 	}
 
 	/* both points are outside, find two points of intersection */
-	return IntersectSegmentWithBBox(one, two, bbox, outone) && IntersectSegmentWithBBox2(one, two, bbox, outtwo);
+	return IntersectSegmentWithBBox(one, two, bbox, outone) && IntersectSegmentWithBBox2(one, two, bbox, outtwo) && bbox.Contains(outone) && bbox.Contains(outtwo);
 }
 
 Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
