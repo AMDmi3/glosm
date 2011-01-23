@@ -42,6 +42,10 @@ protected:
 	std::auto_ptr<SimpleVertexBuffer> triangles_;
 	std::auto_ptr<SimpleVertexBuffer> quads_;
 
+#ifdef TILE_DEBUG
+	Vector2f bound_[4];
+#endif
+
 public:
 	GeometryTile(const Projection& p, const GeometryDatasource& ds, const Vector2i& ref, const BBoxi& bbox);
 	virtual ~GeometryTile();
