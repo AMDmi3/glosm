@@ -33,8 +33,6 @@ class Layer {
 public:
 	virtual ~Layer() {
 	}
-
-	virtual void RequestVisible(const BBoxi& bbox) = 0;
 };
 
 #endif

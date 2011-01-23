@@ -66,8 +66,10 @@ void Display(void) {
 	glClearColor(0.5, 0.5, 0.5, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (layer_p)
+	if (layer_p) {
+		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(100, 100), viewer.GetPos(MercatorProjection()) + Vector2i(100, 100)));
 		layer_p->Render(viewer);
+	}
 
 	glFlush();
 	glutSwapBuffers();

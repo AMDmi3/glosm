@@ -17,36 +17,51 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GEOMETRYLAYER_HH
-#define GEOMETRYLAYER_HH
+#ifndef STATICQUADTREE_HH
+#define STATICQUADTREE_HH
 
-#include <glosm/Math.hh>
-#include <glosm/Misc.hh>
-#include <glosm/Layer.hh>
+#include <glosm/BBox.hh>
 #include <glosm/Projection.hh>
-#include <glosm/GeometryTile.hh>
-#include <glosm/NonCopyable.hh>
-#include <glosm/StaticQuadtree.hh>
-
-#include <memory.h>
 
 class Viewer;
-class GeometryDatasource;
+class Tile;
 
-/**
- * Layer with 3D OpenStreetMap data.
- */
-class GeometryLayer : public Layer, public StaticQuadtree, NonCopyable {
+class StaticQuadtree {
+protected:
+	struct Node {
+		Node* nw;
+		Node* ne;
+		Node* se;
+		Node* sw;
+
+		Tile* tile;
+
+		Node(): nw(NULL), ne(NULL), se(NULL), sw(NULL), tile(NULL) {
+		}
+	};
+
 protected:
 	const Projection projection_;
-	const GeometryDatasource &datasource_;
+	Node* root_;
+	int target_level_;
 
-public:
-	GeometryLayer(const Projection projection, const GeometryDatasource& datasource);
-	virtual ~GeometryLayer();
+protected:
+	void DestroyNodes(Node* node);
+	void RenderNodes(Node* node, const Viewer& viewer) const;
+	void LoadNodes(Node* node, const BBoxi& bbox, int level = 0, int x = 0, int y = 0);
+
+protected:
+	StaticQuadtree(const Projection projection);
+	virtual ~StaticQuadtree();
+
+	void SetTargetLevel(int level);
 
 	void Render(const Viewer& viewer) const;
-	virtual Tile* SpawnTile(const BBoxi& bbox) const;
+
+	virtual Tile* SpawnTile(const BBoxi& bbox) const = 0;
+
+public:
+	void RequestVisible(const BBoxi& bbox);
 };
 
 #endif

@@ -29,14 +29,10 @@
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/Projection.hh>
 
-GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): tile_(projection, datasource, datasource.GetCenter(), datasource.GetBBox()), projection_(projection) {
+GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): StaticQuadtree(projection), projection_(projection), datasource_(datasource) {
 }
 
 GeometryLayer::~GeometryLayer() {
-}
-
-void GeometryLayer::RequestVisible(const BBoxi& bbox) {
-	/* noop, tile with all data is already constructed */
 }
 
 void GeometryLayer::Render(const Viewer& viewer) const {
@@ -68,14 +64,9 @@ void GeometryLayer::Render(const Viewer& viewer) const {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
 
 	/* Render tile(s) */
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	StaticQuadtree::Render(viewer);
+}
 
-	Vector3f offset = projection_.Project(tile_.GetReference(), viewer.GetPos(projection_));
-	glTranslatef(offset.x, offset.y, offset.z);
-
-	tile_.Render();
-
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+Tile* GeometryLayer::SpawnTile(const BBoxi& bbox) const {
+	return new GeometryTile(projection_, datasource_, bbox.GetCenter(), bbox);
 }
