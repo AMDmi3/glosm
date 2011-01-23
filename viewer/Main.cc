@@ -246,9 +246,6 @@ int real_main(int argc, char** argv) {
 	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
 
-	/* with current GeometryLayer implementation, datasources are no longer needed */
-	osm_datasource.Clear();
-
 	/* main loop */
 	/* note that this never returns and objects created above
 	 * are never properly destroyed; should dump GLUT ASAP */
