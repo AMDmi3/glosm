@@ -216,6 +216,7 @@ int real_main(int argc, char** argv) {
 	gettimeofday(&curtime, NULL);
 	fprintf(stderr, "Loaded XML in %.3f seconds\n", (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f);
 	prevtime = curtime;
+	fpstime = curtime;
 
 	/* glut init */
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
@@ -235,16 +236,9 @@ int real_main(int argc, char** argv) {
 	glutSpecialUpFunc(SpecialUp);
 
 	/* glosm init */
-	gettimeofday(&prevtime, NULL);
-
 	DefaultGeometryGenerator geometry_generator(osm_datasource);
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
 	layer_p = &layer;
-
-	gettimeofday(&curtime, NULL);
-	fprintf(stderr, "Prepared geometry in %.3f seconds\n", (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f);
-	prevtime = curtime;
-	fpstime = curtime;
 
 	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
