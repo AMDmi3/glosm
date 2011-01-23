@@ -54,7 +54,7 @@ bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmi
  * @param out reference to output value
  * @return whether there was an intersection
  */
-bool IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out);
+BBoxi::Side IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out);
 
 /**
  * Intersect segment with bounding box
@@ -70,7 +70,7 @@ bool IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BB
  * @param out reference to output value
  * @return whether there was an intersection
  */
-bool IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out);
+BBoxi::Side IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out);
 
 /**
  * Crops segment with bounding box

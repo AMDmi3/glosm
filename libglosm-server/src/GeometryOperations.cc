@@ -53,18 +53,36 @@ bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmi
 	return true;
 }
 
-bool IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
-	return (IntersectSegmentWithHorizontal(one, two, bbox.top, out) && bbox.Contains(out)) ||
-	       (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out)  && bbox.Contains(out)) ||
-	       (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out)) ||
-	       (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out));
+BBoxi::Side IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
+	if (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out))
+		return BBoxi::LEFT;
+
+	if (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out)  && bbox.Contains(out))
+		return BBoxi::BOTTOM;
+
+	if (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out))
+		return BBoxi::RIGHT;
+
+	if (IntersectSegmentWithHorizontal(one, two, bbox.top, out) && bbox.Contains(out))
+		return BBoxi::TOP;
+
+	return BBoxi::NONE;
 }
 
-bool IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
-	return (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out)) ||
-	       (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out)) ||
-	       (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) && bbox.Contains(out)) ||
-	       (IntersectSegmentWithHorizontal(one, two, bbox.top, out) && bbox.Contains(out));
+BBoxi::Side IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
+	if (IntersectSegmentWithHorizontal(one, two, bbox.top, out) && bbox.Contains(out))
+		return BBoxi::TOP;
+
+	if (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out))
+		return BBoxi::RIGHT;
+
+	if (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out)  && bbox.Contains(out))
+		return BBoxi::BOTTOM;
+
+	if (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out))
+		return BBoxi::LEFT;
+
+	return BBoxi::NONE;
 }
 
 bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& outone, Vector3i& outtwo) {
