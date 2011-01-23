@@ -67,7 +67,8 @@ void Display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (layer_p) {
-		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(100, 100), viewer.GetPos(MercatorProjection()) + Vector2i(100, 100)));
+		int radius = 0;
+		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)));
 		layer_p->Render(viewer);
 	}
 
