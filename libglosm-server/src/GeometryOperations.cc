@@ -30,10 +30,10 @@ bool IntersectLineWithHorizontal(const Vector3i& one, const Vector3i& two, osmin
 
 	float t = (float)(one.y - y) / (float)(one.y - two.y);
 
-	float x = (float)one.x * t + (float)two.x * (1.0 - t);
-	float z = (float)one.z * t + (float)two.z * (1.0 - t);
+	float x = (float)(two.x - one.x) * t;
+	float z = (float)(two.z - one.z) * t;
 
-	out = one + Vector3i(round(x), y, round(z));
+	out = Vector3i(one.x + round(x), y, one.z + round(z));
 	return true;
 }
 
@@ -46,10 +46,10 @@ bool IntersectLineWithVertical(const Vector3i& one, const Vector3i& two, osmint_
 
 	float t = (float)(one.x - x) / (float)(one.x - two.x);
 
-	float y = (float)one.y * t + (float)two.y * (1.0 - t);
-	float z = (float)one.z * t + (float)two.z * (1.0 - t);
+	float y = (float)(two.y - one.y) * t;
+	float z = (float)(two.z - one.z) * t;
 
-	out = one + Vector3i(x, round(y), round(z));
+	out = Vector3i(x, one.y + round(y), one.z + round(z));
 	return true;
 }
 
