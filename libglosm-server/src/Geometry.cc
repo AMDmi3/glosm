@@ -60,6 +60,9 @@ void Geometry::Append(const Geometry& other) {
 	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
 }
 
+void Geometry::AppendCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
+}
+
 void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	lines_.reserve(lines_.size() + other.lines_.size());
 	triangles_.reserve(triangles_.size() + other.triangles_.size());
@@ -76,10 +79,13 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 		}
 	}
 	for (int i = 0; i < other.triangles_.size(); i += 3) {
+		int vertices_in = bbox.Contains(other.triangles_[i]) + bbox.Contains(other.triangles_[i+1]) + bbox.Contains(other.triangles_[i+2]);
 		if (bbox.Contains(other.triangles_[i]) && bbox.Contains(other.triangles_[i+1]) && bbox.Contains(other.triangles_[i+2])) {
 			triangles_.push_back(other.triangles_[i]);
 			triangles_.push_back(other.triangles_[i+1]);
 			triangles_.push_back(other.triangles_[i+2]);
+		} else {
+			AppendCroppedTriangle(other.triangles_[i], other.triangles_[i+1], other.triangles_[i+2], bbox);
 		}
 	}
 	for (int i = 0; i < other.quads_.size(); i += 4) {
@@ -88,6 +94,20 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 			quads_.push_back(other.quads_[i+1]);
 			quads_.push_back(other.quads_[i+2]);
 			quads_.push_back(other.quads_[i+3]);
+		} else {
+			if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2])) {
+				triangles_.push_back(other.quads_[i]);
+				triangles_.push_back(other.quads_[i+1]);
+				triangles_.push_back(other.quads_[i+2]);
+			} else
+				AppendCroppedTriangle(other.quads_[i], other.quads_[i+1], other.quads_[i+2], bbox);
+
+			if (bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3]) && bbox.Contains(other.quads_[i])) {
+				triangles_.push_back(other.quads_[i+2]);
+				triangles_.push_back(other.quads_[i+3]);
+				triangles_.push_back(other.quads_[i]);
+			} else
+				AppendCroppedTriangle(other.quads_[i+2], other.quads_[i+3], other.quads_[i], bbox);
 		}
 	}
 }

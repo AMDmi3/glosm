@@ -65,6 +65,7 @@ public:
 
 	void Append(const Geometry& other);
 	void AppendCropped(const Geometry& other, const BBoxi& bbox);
+	void AppendCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox);
 
 	void Serialize() const;
 	void DeSerialize();
