@@ -62,61 +62,6 @@ void Geometry::Append(const Geometry& other) {
 	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
 }
 
-void Geometry::AppendCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
-	int mask = 0;
-	mask |= bbox.Contains(a) ? 1 : 0;
-	mask |= bbox.Contains(b) ? 2 : 0;
-	mask |= bbox.Contains(c) ? 4 : 0;
-
-	switch (mask) {
-	case 0: /* all out */
-		break;
-	case 1: /* a in, b out, c out */
-		AppendCroppedTriangleIOO(a, b, c, bbox);
-		break;
-	case 2: /* a out, b in, c out */
-		AppendCroppedTriangleIOO(b, c, a, bbox);
-		break;
-	case 3: /* a in, b in, c out */
-		AppendCroppedTriangleIIO(a, b, c, bbox);
-		break;
-	case 4: /* a out, b out, c in */
-		AppendCroppedTriangleIOO(c, a, b, bbox);
-		break;
-	case 5: /* a in, b out, c in */
-		AppendCroppedTriangleIIO(c, a, b, bbox);
-		break;
-	case 6: /* a out, b in, c in */
-		AppendCroppedTriangleIIO(b, c, a, bbox);
-		break;
-	case 7: /* all in */
-		AddTriangle(a, b, c);
-		break;
-	}
-}
-
-void Geometry::AppendCroppedTriangleIIO(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
-	Vector3i cb, ca;
-
-	/* canculate expected intersections */
-	if (!IntersectSegmentWithBBox(c, a, bbox, ca))
-		assert(false);
-
-	if (!IntersectSegmentWithBBox(c, b, bbox, cb))
-		assert(false);
-
-	if (ca.x == cb.x || ca.y == cb.y) {
-		/* case 1: intersection points lie on a single bbox side */
-		AddTriangle(a, b, cb);
-		AddTriangle(a, cb, ca);
-	} else {
-		/* case 2: intersection points lie on different bbox sides */
-	}
-}
-
-void Geometry::AppendCroppedTriangleIOO(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
-}
-
 void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	lines_.reserve(lines_.size() + other.lines_.size());
 	triangles_.reserve(triangles_.size() + other.triangles_.size());
@@ -131,16 +76,81 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	}
 
 	for (size_t i = 0; i < other.triangles_.size(); i += 3)
-		AppendCroppedTriangle(other.triangles_[i], other.triangles_[i+1], other.triangles_[i+2], bbox);
+		AddCroppedTriangle(other.triangles_[i], other.triangles_[i+1], other.triangles_[i+2], bbox);
 
 	for (size_t i = 0; i < other.quads_.size(); i += 4) {
 		if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3])) {
 			AddQuad(other.quads_[i], other.quads_[i+1], other.quads_[i+2], other.quads_[i+3]);
 		} else {
-			AppendCroppedTriangle(other.quads_[i], other.quads_[i+1], other.quads_[i+2], bbox);
-			AppendCroppedTriangle(other.quads_[i+2], other.quads_[i+3], other.quads_[i], bbox);
+			AddCroppedTriangle(other.quads_[i], other.quads_[i+1], other.quads_[i+2], bbox);
+			AddCroppedTriangle(other.quads_[i+2], other.quads_[i+3], other.quads_[i], bbox);
 		}
 	}
+}
+
+void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
+	struct VList {
+		Vector3i vertex;
+		VList* prev;
+		VList* next;
+		bool last;
+
+		VList() {}
+		VList(const Vector3i& v, VList* p, VList* n): vertex(v), prev(p), next(n), last(false) {}
+	};
+
+	VList vertices[6];
+	vertices[0] = VList(a, &vertices[2], &vertices[1]);
+	vertices[1] = VList(b, &vertices[0], &vertices[2]);
+	vertices[2] = VList(c, &vertices[1], &vertices[0]);
+	int nvertices = 3;
+
+	/* crop left */
+	Vector3i prevint, nextint;
+	VList* p = &vertices[0];
+	VList* first;
+	for (int i = 1; i <= 4; ++i) {
+		first = p;
+		do {
+			/* check all vertices and crop them by bound */
+			if (bbox.IsPointOutAtSide(p->vertex, (BBoxi::Side)i)) {
+				if (IntersectSegmentWithBBoxSideNI(p->vertex, p->prev->vertex, bbox, (BBoxi::Side)i, prevint)) {
+					if (IntersectSegmentWithBBoxSideNI(p->vertex, p->next->vertex, bbox, (BBoxi::Side)i, nextint)) {
+						/* both edges have intersection -> add extra vertex; trapezoid case */
+						assert(nvertices < 6);
+						vertices[nvertices] = VList(nextint, p, p->next);
+						p->vertex = prevint;
+						p->next->prev = &vertices[nvertices];
+						p->next = &vertices[nvertices];
+						nvertices++;
+					} else {
+						/* only prev edge has intersection - just move vertex */
+						p->vertex = prevint;
+					}
+				} else {
+					if (IntersectSegmentWithBBoxSideNI(p->vertex, p->next->vertex, bbox, (BBoxi::Side)i, nextint)) {
+						/* only next edge has intersection - just move vertex */
+						p->vertex = nextint;
+					} else {
+						/* no intersections - vertex may just be dropped */
+						if (p->prev == p->next)
+							return;
+
+						p->prev->next = p->next;
+						p->next->prev = p->prev;
+						/* after this, p->next is still valid */
+					}
+				}
+			}
+		} while ((p = p->next) != first);
+	}
+
+	first = p;
+	p = p->next->next;
+	do {
+		AddTriangle(first->vertex, p->prev->vertex, p->vertex);
+		p = p->next;
+	} while (p != first);
 }
 
 void Geometry::Serialize() const {
