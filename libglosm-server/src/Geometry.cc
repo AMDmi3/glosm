@@ -110,38 +110,45 @@ void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Ve
 	VList* p = &vertices[0];
 	VList* first;
 	for (int i = 1; i <= 4; ++i) {
-		first = p;
+		first = NULL; /* will be set to the first non-outbound vertex */
 		do {
 			/* check all vertices and crop them by bound */
 			if (bbox.IsPointOutAtSide(p->vertex, (BBoxi::Side)i)) {
 				if (IntersectSegmentWithBBoxSideNI(p->vertex, p->prev->vertex, bbox, (BBoxi::Side)i, prevint)) {
 					if (IntersectSegmentWithBBoxSideNI(p->vertex, p->next->vertex, bbox, (BBoxi::Side)i, nextint)) {
-						/* both edges have intersection -> add extra vertex; trapezoid case */
+						/* both edges have intersection -> add extra vertex (trapezoid case) */
 						assert(nvertices < 6);
-						vertices[nvertices] = VList(nextint, p, p->next);
-						p->vertex = prevint;
-						p->next->prev = &vertices[nvertices];
-						p->next = &vertices[nvertices];
+						vertices[nvertices] = VList(prevint, p->prev, p);
+						p->vertex = nextint;
+						p->prev->next = &vertices[nvertices];
+						p->prev = &vertices[nvertices];
 						nvertices++;
+						if (!first)
+							first = p->prev;
 					} else {
 						/* only prev edge has intersection - just move vertex */
 						p->vertex = prevint;
+						if (!first)
+							first = p;
 					}
 				} else {
 					if (IntersectSegmentWithBBoxSideNI(p->vertex, p->next->vertex, bbox, (BBoxi::Side)i, nextint)) {
 						/* only next edge has intersection - just move vertex */
 						p->vertex = nextint;
+						if (!first)
+							first = p;
 					} else {
 						/* no intersections - vertex may just be dropped */
 						if (p->prev == p->next)
-							return;
+							return; /* triangle is completely outside of bbox */
 
 						p->prev->next = p->next;
 						p->next->prev = p->prev;
-						/* after this, p->next is still valid */
+						p = p->prev;
 					}
 				}
-			}
+			} else if (!first)
+				first = p;
 		} while ((p = p->next) != first);
 	}
 
