@@ -14,14 +14,6 @@ Framework
   Geometry generation
     * Add lane divisors
     * Support landuse/natural polygons in geomgen - will need a large table for that, maybe geomgen should be split (requires materials)
-    * Implement data tiling
-      * Implement geometry clipping in geometry generator
-      * Consider using various clipping techniques:
-        * Strong clipping (object on the edge is cut into parts)
-        * Weak clipping (small objects are not cut, but are put only into one tile)
-      * Consider a case where old and new tiles coexist (fun stuff will appear on the edge)
-      * Check if tiles connect without problems (seams will likely appear, and that'd be pretty tricky to fix)
-      * Tiles can be of different (still 2^n) sizes; it makes sense to use Z15-Z16 tiles for urban area, but larged tiles for wilderness with has much less objcets 
     * Multipolygon support
     * We will probably end up with generic geometry class with support for all possible OpenGL primitives ({tri, quad} * {,strip,fan} + indexes) sorted by material (or by other properties)
     * Basic CSG - don't draw edges on flat joined walls
@@ -46,7 +38,6 @@ Framework
   Tiling
     * Asynchronous tile loading
     * Dropping LRU tiles (may use other drop policy)
-    * Correct cropping (do split polygons)
 
 Applications
   Tiler
