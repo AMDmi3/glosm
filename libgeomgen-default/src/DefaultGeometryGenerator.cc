@@ -74,6 +74,8 @@ static void CreateVerticalLines(Geometry& geom, const VertexList& vertices, int 
 }
 
 static void CreateSmartVerticalLines(Geometry& geom, const VertexList& vertices, int minz, int maxz, float minslope, const OsmDatasource::Way& way) {
+	return CreateVerticalLines(geom, vertices, minz, maxz, way);
+
 	VertexList::const_iterator i, prev, next;
 
 	double cosminslope = cos(minslope/180.0*M_PI);
