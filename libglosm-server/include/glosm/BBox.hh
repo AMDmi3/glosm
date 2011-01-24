@@ -135,6 +135,16 @@ struct BBox {
 		return !(bbox.right < left || bbox.left > right || bbox.top < bottom || bbox.bottom > top);
 	}
 
+	bool IsPointOutAtSide(const Vector2i& p, Side s) const {
+		switch (s) {
+		case LEFT: return p.x < left;
+		case RIGHT: return p.x > right;
+		case TOP: return p.y > top;
+		case BOTTOM: return p.y < bottom;
+		default: return false;
+		}
+	}
+
 	/* data */
 	T left, bottom, right, top;
 };
