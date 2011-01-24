@@ -53,6 +53,55 @@ bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmi
 	return true;
 }
 
+bool IntersectPlaneWithVertical(const Vector3i& a, const Vector3i& b, const Vector3i& c, const Vector2i& xy, Vector3i& out) {
+	/* Equation of a plane:
+	 * |  x-x1  y-y1  z-z1 |
+	 * | x2-x1 y2-y1 z2-y1 | = 0
+	 * | x3-x1 y3-y1 z3-y1 |
+	 *
+	 * Determinant:
+	 * | a11 a12 a13 |
+	 * | a21 a22 a23 | = a11a22a33 − a11a23a32 − a12a21a33 + a12a23a31 + a13a21a32 − a13a22a31
+	 * | a31 a32 a33 |
+	 *
+	 * In terms of array:
+	 * | 0 1 2 |
+	 * | 3 4 5 | = 0*4*8 - 0*5*7 - 1*3*8 + 1*5*6 + 2*3*7 - 2*4*6
+	 * | 6 7 8 |
+	 */
+	float m[9] = {
+		(float)(xy.x - a.x), (float)(xy.y - a.y), 0.0 /* to find */,
+		(float)(b.x - a.x), (float)(b.y - a.y), (float)(b.z - a.z),
+		(float)(c.x - a.x), (float)(c.y - a.y), (float)(c.z - a.z)
+	};
+
+	float divisor = m[3]*m[7] - m[4]*m[6];
+
+	if (fabsf(divisor) < std::numeric_limits<float>::epsilon())
+		return false;
+
+	float divided = -m[0]*m[4]*m[8] + m[0]*m[5]*m[7] + m[1]*m[3]*m[8] - m[1]*m[5]*m[6];
+
+	out = Vector3i(xy.x, xy.y, (osmint_t)round(divided/divisor) + a.z);
+	return true;
+}
+
+bool IntersectSegmentWithBBoxSide(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, BBoxi::Side side, Vector3i& out) {
+	switch (side) {
+	case BBoxi::LEFT:
+		return IntersectSegmentWithVertical(one, two, bbox.left, out);
+	case BBoxi::BOTTOM:
+		return IntersectSegmentWithHorizontal(one, two, bbox.bottom, out);
+	case BBoxi::RIGHT:
+		return IntersectSegmentWithVertical(one, two, bbox.right, out);
+	case BBoxi::TOP:
+		return IntersectSegmentWithHorizontal(one, two, bbox.top, out);
+	default:
+		return false;
+	}
+}
+
+
 BBoxi::Side IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& out) {
 	if (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out))
 		return BBoxi::LEFT;

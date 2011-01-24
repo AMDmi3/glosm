@@ -46,6 +46,27 @@ bool IntersectSegmentWithHorizontal(const Vector3i& one, const Vector3i& two, os
 bool IntersectSegmentWithVertical(const Vector3i& one, const Vector3i& two, osmint_t x, Vector3i& out);
 
 /**
+ * Intersect segment with one of bounding box sides
+ *
+ * @param one first point of segment
+ * @param two second point of segment
+ * @param bbox bounding box
+ * @param side side of bounding box
+ * @param out reference to output value
+ * @return whether there was an intersection
+ */
+bool IntersectSegmentWithBBoxSide(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, BBoxi::Side side, Vector3i& out);
+
+/**
+ * Intersect segment with one of bounding box sides (non-inclusive version)
+ *
+ * @see IntersectSegmentWithBBoxSide
+ */
+static inline bool IntersectSegmentWithBBoxSideNI(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, BBoxi::Side side, Vector3i& out) {
+	return IntersectSegmentWithBBoxSide(one, two, bbox, side, out) && out != one && out != two;
+}
+
+/**
  * Intersect segment with bounding box
  *
  * @param one first point of segment
