@@ -91,6 +91,7 @@ struct Vector2 {
 
 	/* comparison */
 	bool operator== (const Vector2<T>& other) const { return x == other.x && y == other.y; }
+	bool operator!= (const Vector2<T>& other) const { return x != other.x || y != other.y; }
 
 	/* functions */
 	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y); }
@@ -181,6 +182,7 @@ struct Vector3 {
 
 	/* comparison */
 	bool operator== (const Vector3<T>& other) const { return x == other.x && y == other.y && z == other.z; }
+	bool operator!= (const Vector3<T>& other) const { return x != other.x || y != other.y || z != other.z; }
 
 	/* functions */
 	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z); }
