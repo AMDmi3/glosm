@@ -54,6 +54,10 @@ protected:
 	VertexVector triangles_;
 	VertexVector quads_;
 
+protected:
+	void AppendCroppedTriangleIOO(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox);
+	void AppendCroppedTriangleIIO(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox);
+
 public:
 	void AddLine(const Vector3i& a, const Vector3i& b);
 	void AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c);

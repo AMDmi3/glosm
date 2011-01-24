@@ -20,6 +20,8 @@
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryOperations.hh>
 
+#include <cassert>
+
 void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
 	lines_.push_back(a);
 	lines_.push_back(b);
@@ -61,6 +63,58 @@ void Geometry::Append(const Geometry& other) {
 }
 
 void Geometry::AppendCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
+	int mask = 0;
+	mask |= bbox.Contains(a) ? 1 : 0;
+	mask |= bbox.Contains(b) ? 2 : 0;
+	mask |= bbox.Contains(c) ? 4 : 0;
+
+	switch (mask) {
+	case 0: /* all out */
+		break;
+	case 1: /* a in, b out, c out */
+		AppendCroppedTriangleIOO(a, b, c, bbox);
+		break;
+	case 2: /* a out, b in, c out */
+		AppendCroppedTriangleIOO(b, c, a, bbox);
+		break;
+	case 3: /* a in, b in, c out */
+		AppendCroppedTriangleIIO(a, b, c, bbox);
+		break;
+	case 4: /* a out, b out, c in */
+		AppendCroppedTriangleIOO(c, a, b, bbox);
+		break;
+	case 5: /* a in, b out, c in */
+		AppendCroppedTriangleIIO(c, a, b, bbox);
+		break;
+	case 6: /* a out, b in, c in */
+		AppendCroppedTriangleIIO(b, c, a, bbox);
+		break;
+	case 7: /* all in */
+		AddTriangle(a, b, c);
+		break;
+	}
+}
+
+void Geometry::AppendCroppedTriangleIIO(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
+	Vector3i cb, ca;
+
+	/* canculate expected intersections */
+	if (!IntersectSegmentWithBBox(c, a, bbox, ca))
+		assert(false);
+
+	if (!IntersectSegmentWithBBox(c, b, bbox, cb))
+		assert(false);
+
+	if (ca.x == cb.x || ca.y == cb.y) {
+		/* case 1: intersection points lie on a single bbox side */
+		AddTriangle(a, b, cb);
+		AddTriangle(a, cb, ca);
+	} else {
+		/* case 2: intersection points lie on different bbox sides */
+	}
+}
+
+void Geometry::AppendCroppedTriangleIOO(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
 }
 
 void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
@@ -69,45 +123,22 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	quads_.reserve(quads_.size() + other.quads_.size());
 
 	Vector3i a, b, c;
-	for (int i = 0; i < other.lines_.size(); i += 2) {
-		if (bbox.Contains(other.lines_[i]) && bbox.Contains(other.lines_[i+1])) {
-			lines_.push_back(other.lines_[i]);
-			lines_.push_back(other.lines_[i+1]);
-		} else if (CropSegmentByBBox(other.lines_[i], other.lines_[i+1], bbox, a, b)) {
-			lines_.push_back(a);
-			lines_.push_back(b);
-		}
+	for (size_t i = 0; i < other.lines_.size(); i += 2) {
+		if (bbox.Contains(other.lines_[i]) && bbox.Contains(other.lines_[i+1]))
+			AddLine(other.lines_[i], other.lines_[i+1]);
+		else if (CropSegmentByBBox(other.lines_[i], other.lines_[i+1], bbox, a, b))
+			AddLine(a, b);
 	}
-	for (int i = 0; i < other.triangles_.size(); i += 3) {
-		int vertices_in = bbox.Contains(other.triangles_[i]) + bbox.Contains(other.triangles_[i+1]) + bbox.Contains(other.triangles_[i+2]);
-		if (bbox.Contains(other.triangles_[i]) && bbox.Contains(other.triangles_[i+1]) && bbox.Contains(other.triangles_[i+2])) {
-			triangles_.push_back(other.triangles_[i]);
-			triangles_.push_back(other.triangles_[i+1]);
-			triangles_.push_back(other.triangles_[i+2]);
-		} else {
-			AppendCroppedTriangle(other.triangles_[i], other.triangles_[i+1], other.triangles_[i+2], bbox);
-		}
-	}
-	for (int i = 0; i < other.quads_.size(); i += 4) {
-		if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3])) {
-			quads_.push_back(other.quads_[i]);
-			quads_.push_back(other.quads_[i+1]);
-			quads_.push_back(other.quads_[i+2]);
-			quads_.push_back(other.quads_[i+3]);
-		} else {
-			if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2])) {
-				triangles_.push_back(other.quads_[i]);
-				triangles_.push_back(other.quads_[i+1]);
-				triangles_.push_back(other.quads_[i+2]);
-			} else
-				AppendCroppedTriangle(other.quads_[i], other.quads_[i+1], other.quads_[i+2], bbox);
 
-			if (bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3]) && bbox.Contains(other.quads_[i])) {
-				triangles_.push_back(other.quads_[i+2]);
-				triangles_.push_back(other.quads_[i+3]);
-				triangles_.push_back(other.quads_[i]);
-			} else
-				AppendCroppedTriangle(other.quads_[i+2], other.quads_[i+3], other.quads_[i], bbox);
+	for (size_t i = 0; i < other.triangles_.size(); i += 3)
+		AppendCroppedTriangle(other.triangles_[i], other.triangles_[i+1], other.triangles_[i+2], bbox);
+
+	for (size_t i = 0; i < other.quads_.size(); i += 4) {
+		if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3])) {
+			AddQuad(other.quads_[i], other.quads_[i+1], other.quads_[i+2], other.quads_[i+3]);
+		} else {
+			AppendCroppedTriangle(other.quads_[i], other.quads_[i+1], other.quads_[i+2], bbox);
+			AppendCroppedTriangle(other.quads_[i+2], other.quads_[i+3], other.quads_[i], bbox);
 		}
 	}
 }
