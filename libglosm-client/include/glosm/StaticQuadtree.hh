@@ -29,14 +29,14 @@ class Tile;
 class StaticQuadtree {
 protected:
 	struct Node {
-		Node* nw;
-		Node* ne;
-		Node* se;
-		Node* sw;
+		Node* child[4];
 
 		Tile* tile;
 
-		Node(): nw(NULL), ne(NULL), se(NULL), sw(NULL), tile(NULL) {
+		int generation;
+
+		Node():  tile(NULL), generation(0) {
+			child[0] = child[1] = child[2] = child[3] = NULL;
 		}
 	};
 
@@ -44,11 +44,13 @@ protected:
 	const Projection projection_;
 	Node* root_;
 	int target_level_;
+	int generation_;
 
 protected:
 	void DestroyNodes(Node* node);
 	void RenderNodes(Node* node, const Viewer& viewer) const;
 	void LoadNodes(Node* node, const BBoxi& bbox, int level = 0, int x = 0, int y = 0);
+	void SweepNodes(Node* node);
 
 protected:
 	StaticQuadtree(const Projection projection);
@@ -62,6 +64,7 @@ protected:
 
 public:
 	void RequestVisible(const BBoxi& bbox);
+	void GarbageCollect();
 };
 
 #endif

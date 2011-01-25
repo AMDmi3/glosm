@@ -31,19 +31,17 @@
 void StaticQuadtree::DestroyNodes(Node* node) {
 	delete node->tile;
 
-	if (node->nw)
-		DestroyNodes(node->nw);
-	if (node->ne)
-		DestroyNodes(node->ne);
-	if (node->se)
-		DestroyNodes(node->se);
-	if (node->sw)
-		DestroyNodes(node->sw);
+	for (int d = 0; d < 4; ++d)
+		if (node->child[d])
+			DestroyNodes(node->child[d]);
 
 	delete node;
 }
 
 void StaticQuadtree::RenderNodes(Node* node, const Viewer& viewer) const {
+	if (node->generation != generation_)
+		return;
+
 	if (node->tile) {
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
@@ -55,44 +53,50 @@ void StaticQuadtree::RenderNodes(Node* node, const Viewer& viewer) const {
 
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
+		return;
 	}
 
-	if (node->nw)
-		RenderNodes(node->nw, viewer);
-	if (node->ne)
-		RenderNodes(node->ne, viewer);
-	if (node->se)
-		RenderNodes(node->se, viewer);
-	if (node->sw)
-		RenderNodes(node->sw, viewer);
+	for (int d = 0; d < 4; ++d)
+		if (node->child[d])
+			RenderNodes(node->child[d], viewer);
 }
 
 void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, int level, int x, int y) {
-	BBoxi thisbbox = BBoxi::ForGeoTile(level, x, y);
-	if (!bbox.Intersects(thisbbox))
-		return;
+	node->generation = generation_;
 
 	if (level == target_level_) {
+		/* leaf */
 		if (node->tile == NULL)
-			node->tile = SpawnTile(thisbbox);
-	} else {
-		if (!node->nw)
-			node->nw = new Node;
-		if (!node->ne)
-			node->ne = new Node;
-		if (!node->se)
-			node->se = new Node;
-		if (!node->sw)
-			node->sw = new Node;
+			node->tile = SpawnTile(BBoxi::ForGeoTile(level, x, y));
+		return;
+	}
 
-		LoadNodes(node->nw, bbox, level + 1, x * 2, y * 2);
-		LoadNodes(node->ne, bbox, level + 1, x * 2 + 1, y * 2);
-		LoadNodes(node->se, bbox, level + 1, x * 2 + 1, y * 2 + 1);
-		LoadNodes(node->sw, bbox, level + 1, x * 2, y * 2 + 1);
+	/* children */
+	for (int d = 0; d < 4; ++d) {
+		int xx = x * 2 + d % 2;
+		int yy = y * 2 + d / 2;
+		if (BBoxi::ForGeoTile(level + 1, xx, yy).Intersects(bbox)) {
+			if (!node->child[d])
+				node->child[d] = new Node;
+			LoadNodes(node->child[d], bbox, level + 1, xx, yy);
+		}
 	}
 }
 
-StaticQuadtree::StaticQuadtree(const Projection projection): projection_(projection), root_(new Node()), target_level_(16) {
+void StaticQuadtree::SweepNodes(Node* node) {
+	for (int d = 0; d < 4; ++d) {
+		if (node->child[d]) {
+			if (node->child[d]->generation != generation_) {
+				DestroyNodes(node->child[d]);
+				node->child[d] = NULL;
+			} else {
+				SweepNodes(node->child[d]);
+			}
+		}
+	}
+}
+
+StaticQuadtree::StaticQuadtree(const Projection projection): projection_(projection), root_(new Node()), target_level_(16), generation_(0) {
 }
 
 StaticQuadtree::~StaticQuadtree() {
@@ -108,5 +112,10 @@ void StaticQuadtree::Render(const Viewer& viewer) const {
 }
 
 void StaticQuadtree::RequestVisible(const BBoxi& bbox) {
+	++generation_;
 	LoadNodes(root_, bbox);
+}
+
+void StaticQuadtree::GarbageCollect() {
+	SweepNodes(root_);
 }

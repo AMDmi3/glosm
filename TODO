@@ -37,7 +37,9 @@ Framework
     * Add profiling support to viewer (or separate test); FindModules for google perftools
   Tiling
     * Asynchronous tile loading
-    * Dropping LRU tiles (may use other drop policy)
+    * Don't drop invisible tiles right away, implement queue, drop LRU
+    * Scale visible area dependent on height
+    * Implement LOD's
 
 Applications
   Tiler
