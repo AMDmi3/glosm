@@ -28,6 +28,43 @@
 #include <glosm/Viewer.hh>
 #include <glosm/Tile.hh>
 
+#include <stdexcept>
+
+StaticQuadtree::StaticQuadtree(const Projection projection): projection_(projection), root_(new Node()) {
+	if (pthread_mutex_init(&loading_queue_mutex_, 0) != 0)
+		throw std::runtime_error("pthread_mutex_init failed");
+
+	if (pthread_cond_init(&loading_queue_cond_, 0) != 0) {
+		pthread_mutex_destroy(&loading_queue_mutex_);
+		throw std::runtime_error("pthread_cond_init failed");
+	}
+
+	if (pthread_create(&loading_thread_, NULL, LoadingThreadFuncWrapper, (void*)this) != 0) {
+		pthread_cond_destroy(&loading_queue_cond_);
+		pthread_mutex_destroy(&loading_queue_mutex_);
+		throw std::runtime_error("pthread_create failed");
+	}
+
+	target_level_ = 16;
+	generation_ = 0;
+	loading_thread_die_ = false;
+}
+
+StaticQuadtree::~StaticQuadtree() {
+	loading_thread_die_ = true;
+	pthread_cond_signal(&loading_queue_cond_);
+
+	pthread_join(loading_thread_, NULL);
+	pthread_cond_destroy(&loading_queue_cond_);
+	pthread_mutex_destroy(&loading_queue_mutex_);
+
+	DestroyNodes(root_);
+}
+
+/*
+ * recursive quadtree processing
+ */
+
 void StaticQuadtree::DestroyNodes(Node* node) {
 	delete node->tile;
 
@@ -67,7 +104,7 @@ void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, int level, int x, 
 	if (level == target_level_) {
 		/* leaf */
 		if (node->tile == NULL)
-			node->tile = SpawnTile(BBoxi::ForGeoTile(level, x, y));
+			EnqueueTile(node, level, x, y);
 		return;
 	}
 
@@ -86,7 +123,7 @@ void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, int level, int x, 
 void StaticQuadtree::SweepNodes(Node* node) {
 	for (int d = 0; d < 4; ++d) {
 		if (node->child[d]) {
-			if (node->child[d]->generation != generation_) {
+			if (node->child[d]->generation != generation_ && !node->child[d]->queued) {
 				DestroyNodes(node->child[d]);
 				node->child[d] = NULL;
 			} else {
@@ -96,19 +133,66 @@ void StaticQuadtree::SweepNodes(Node* node) {
 	}
 }
 
-StaticQuadtree::StaticQuadtree(const Projection projection): projection_(projection), root_(new Node()), target_level_(16), generation_(0) {
+/*
+ * loading queue - related
+ */
+
+void StaticQuadtree::EnqueueTile(Node* node, int level, int x, int y) {
+	pthread_mutex_lock(&loading_queue_mutex_);
+
+	size_t size = loading_queue_.size();
+
+	loading_queue_.push(LoadingTask(level, x, y, node));
+
+	if (size == 0)
+		pthread_cond_signal(&loading_queue_cond_);
+
+	pthread_mutex_unlock(&loading_queue_mutex_);
 }
 
-StaticQuadtree::~StaticQuadtree() {
-	DestroyNodes(root_);
+void StaticQuadtree::LoadingThreadFunc() {
+	while (!loading_thread_die_) {
+		pthread_mutex_lock(&loading_queue_mutex_);
+
+		if (loading_queue_.size() == 0)
+			pthread_cond_wait(&loading_queue_cond_, &loading_queue_mutex_);
+
+		if (loading_queue_.size() == 0)
+			continue;
+
+		printf("Loading queue wakeup!\n");
+
+		LoadingTask task = loading_queue_.front();
+        loading_queue_.pop();
+
+        pthread_mutex_unlock(&loading_queue_mutex_);
+
+		//task.node->tile = SpawnTile(BBoxi::ForGeoTile(task.level, task.x, task.y));
+		task.node->queued = false;
+
+		printf("Loading finished\n");
+	}
 }
 
-void StaticQuadtree::SetTargetLevel(int level) {
-	target_level_ = level;
+void* StaticQuadtree::LoadingThreadFuncWrapper(void* arg) {
+	static_cast<StaticQuadtree*>(arg)->LoadingThreadFunc();
+	return NULL;
 }
+
+/*
+ * protected interface
+ */
 
 void StaticQuadtree::Render(const Viewer& viewer) const {
 	RenderNodes(root_, viewer);
+}
+
+/*
+ * public interface
+ */
+
+void StaticQuadtree::SetTargetLevel(int level) {
+	target_level_ = level;
 }
 
 void StaticQuadtree::RequestVisible(const BBoxi& bbox) {
