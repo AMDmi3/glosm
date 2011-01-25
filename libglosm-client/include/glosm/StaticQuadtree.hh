@@ -26,8 +26,10 @@
 #include <pthread.h>
 #include <queue>
 
-class Viewer;
+class Geometry;
+class GeometryDatasource;
 class Tile;
+class Viewer;
 
 class StaticQuadtree {
 protected:
@@ -57,6 +59,7 @@ protected:
 
 protected:
 	const Projection projection_;
+	const GeometryDatasource& datasource_;
 	Node* root_;
 	int target_level_;
 	int generation_;
@@ -68,10 +71,10 @@ protected:
 	volatile bool loading_thread_die_;
 
 protected:
-	StaticQuadtree(const Projection projection);
+	StaticQuadtree(const Projection projection, const GeometryDatasource& ds);
 	virtual ~StaticQuadtree();
 
-	virtual Tile* SpawnTile(const BBoxi& bbox) const = 0;
+	virtual Tile* SpawnTile(const Geometry& geom, const BBoxi& bbox) const = 0;
 
 	void DestroyNodes(Node* node);
 	void RenderNodes(Node* node, const Viewer& viewer) const;

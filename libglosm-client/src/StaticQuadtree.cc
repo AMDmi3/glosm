@@ -26,11 +26,13 @@
 #endif
 
 #include <glosm/Viewer.hh>
+#include <glosm/Geometry.hh>
+#include <glosm/GeometryDatasource.hh>
 #include <glosm/Tile.hh>
 
 #include <stdexcept>
 
-StaticQuadtree::StaticQuadtree(const Projection projection): projection_(projection), root_(new Node()) {
+StaticQuadtree::StaticQuadtree(const Projection projection, const GeometryDatasource& ds): projection_(projection), datasource_(ds), root_(new Node()) {
 	if (pthread_mutex_init(&loading_queue_mutex_, 0) != 0)
 		throw std::runtime_error("pthread_mutex_init failed");
 
@@ -157,20 +159,22 @@ void StaticQuadtree::LoadingThreadFunc() {
 		if (loading_queue_.size() == 0)
 			pthread_cond_wait(&loading_queue_cond_, &loading_queue_mutex_);
 
-		if (loading_queue_.size() == 0)
+		if (loading_queue_.size() == 0) {
+			pthread_mutex_unlock(&loading_queue_mutex_);
 			continue;
-
-		printf("Loading queue wakeup!\n");
+		}
 
 		LoadingTask task = loading_queue_.front();
-        loading_queue_.pop();
+		loading_queue_.pop();
 
-        pthread_mutex_unlock(&loading_queue_mutex_);
+		pthread_mutex_unlock(&loading_queue_mutex_);
 
-		//task.node->tile = SpawnTile(BBoxi::ForGeoTile(task.level, task.x, task.y));
+		BBoxi bbox = BBoxi::ForGeoTile(task.level, task.x, task.y);
+		Geometry geom;
+		datasource_.GetGeometry(geom, bbox);
+
+		//task.node->tile = SpawnTile(geom, bbox);
 		task.node->queued = false;
-
-		printf("Loading finished\n");
 	}
 }
 

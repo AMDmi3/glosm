@@ -76,6 +76,7 @@ void Display(void) {
 	glFlush();
 	glutSwapBuffers();
 
+	/* movement */
 	if (movementflags) {
 		float myspeed = speed;
 		float height = viewer.MutablePos().z / 1000.0;

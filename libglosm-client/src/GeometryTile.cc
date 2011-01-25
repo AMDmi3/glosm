@@ -32,20 +32,17 @@
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/SimpleVertexBuffer.hh>
 
-GeometryTile::GeometryTile(const Projection& projection, const GeometryDatasource& ds, const Vector2i& ref, const BBoxi& bbox = BBoxi::ForEarth()) : Tile(ref) {
-	Geometry g;
-	ds.GetGeometry(g, bbox);
-
+GeometryTile::GeometryTile(const Projection& projection, const Geometry& geom, const Vector2i& ref, const BBoxi& bbox = BBoxi::ForEarth()) : Tile(ref) {
 	std::vector<Vector3f> translated;
-	projection.ProjectPoints(g.GetLines(), ref, translated);
+	projection.ProjectPoints(geom.GetLines(), ref, translated);
 	lines_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::LINES, translated.data(), translated.size()));
 
 	translated.clear();
-	projection.ProjectPoints(g.GetTriangles(), ref, translated);
+	projection.ProjectPoints(geom.GetTriangles(), ref, translated);
 	triangles_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::TRIANGLES, translated.data(), translated.size()));
 
 	translated.clear();
-	projection.ProjectPoints(g.GetQuads(), ref, translated);
+	projection.ProjectPoints(geom.GetQuads(), ref, translated);
 	quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, translated.data(), translated.size()));
 
 #ifdef TILE_DEBUG
