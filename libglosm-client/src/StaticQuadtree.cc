@@ -100,13 +100,21 @@ void StaticQuadtree::RenderNodes(Node* node, const Viewer& viewer) const {
 			RenderNodes(node->child[d], viewer);
 }
 
-void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, int level, int x, int y) {
+void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, bool sync, int level, int x, int y) {
 	node->generation = generation_;
 
 	if (level == target_level_) {
 		/* leaf */
-		if (node->tile == NULL)
-			EnqueueTile(node, level, x, y);
+		if (node->tile == NULL) {
+			if (sync) {
+				BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
+				Geometry geom;
+				datasource_.GetGeometry(geom, bbox);
+				node->tile = SpawnTile(geom, bbox);
+			} else {
+				EnqueueTile(node, level, x, y);
+			}
+		}
 		return;
 	}
 
@@ -117,7 +125,7 @@ void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, int level, int x, 
 		if (BBoxi::ForGeoTile(level + 1, xx, yy).Intersects(bbox)) {
 			if (!node->child[d])
 				node->child[d] = new Node;
-			LoadNodes(node->child[d], bbox, level + 1, xx, yy);
+			LoadNodes(node->child[d], bbox, sync, level + 1, xx, yy);
 		}
 	}
 }
@@ -125,7 +133,7 @@ void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, int level, int x, 
 void StaticQuadtree::SweepNodes(Node* node) {
 	for (int d = 0; d < 4; ++d) {
 		if (node->child[d]) {
-			if (node->child[d]->generation != generation_ && !node->child[d]->queued) {
+			if (node->child[d]->generation != generation_) {
 				DestroyNodes(node->child[d]);
 				node->child[d] = NULL;
 			} else {
@@ -144,10 +152,20 @@ void StaticQuadtree::EnqueueTile(Node* node, int level, int x, int y) {
 
 	size_t size = loading_queue_.size();
 
-	loading_queue_.push(LoadingTask(level, x, y, node));
+	loading_queue_.push_front(LoadingTask(level, x, y, generation_));
 
+	/* wakeup thread */
 	if (size == 0)
 		pthread_cond_signal(&loading_queue_cond_);
+
+	pthread_mutex_unlock(&loading_queue_mutex_);
+}
+
+void StaticQuadtree::CleanupQueue() {
+	pthread_mutex_lock(&loading_queue_mutex_);
+
+	while (loading_queue_.size() > 0 && loading_queue_.back().generation != generation_)
+		loading_queue_.pop_back();
 
 	pthread_mutex_unlock(&loading_queue_mutex_);
 }
@@ -165,7 +183,7 @@ void StaticQuadtree::LoadingThreadFunc() {
 		}
 
 		LoadingTask task = loading_queue_.front();
-		loading_queue_.pop();
+		loading_queue_.pop_front();
 
 		pthread_mutex_unlock(&loading_queue_mutex_);
 
@@ -174,7 +192,6 @@ void StaticQuadtree::LoadingThreadFunc() {
 		datasource_.GetGeometry(geom, bbox);
 
 		//task.node->tile = SpawnTile(geom, bbox);
-		task.node->queued = false;
 	}
 }
 
@@ -199,9 +216,10 @@ void StaticQuadtree::SetTargetLevel(int level) {
 	target_level_ = level;
 }
 
-void StaticQuadtree::RequestVisible(const BBoxi& bbox) {
+void StaticQuadtree::RequestVisible(const BBoxi& bbox, bool sync) {
 	++generation_;
-	LoadNodes(root_, bbox);
+	LoadNodes(root_, bbox, sync);
+	CleanupQueue();
 }
 
 void StaticQuadtree::GarbageCollect() {

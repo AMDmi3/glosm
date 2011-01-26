@@ -24,7 +24,7 @@
 #include <glosm/Projection.hh>
 
 #include <pthread.h>
-#include <queue>
+#include <list>
 
 class Geometry;
 class GeometryDatasource;
@@ -39,7 +39,6 @@ protected:
 		Tile* tile;
 
 		int generation;
-		volatile int queued;
 
 		Node(): tile(NULL), generation(0) {
 			child[0] = child[1] = child[2] = child[3] = NULL;
@@ -51,11 +50,14 @@ protected:
 		int x;
 		int y;
 
-		Node* node;
+		int generation;
 
-		LoadingTask(int l, int xx, int yy, Node* n): level(l), x(xx), y(yy), node(n) {
+		LoadingTask(int l, int xx, int yy, int gen): level(l), x(xx), y(yy), generation(gen) {
 		}
 	};
+
+protected:
+	typedef std::list<LoadingTask> LoadingQueue;
 
 protected:
 	const Projection projection_;
@@ -64,7 +66,7 @@ protected:
 	int target_level_;
 	int generation_;
 
-	std::queue<LoadingTask> loading_queue_;
+	LoadingQueue loading_queue_;
 	pthread_t loading_thread_;
 	pthread_mutex_t loading_queue_mutex_;
 	pthread_cond_t loading_queue_cond_;
@@ -78,10 +80,11 @@ protected:
 
 	void DestroyNodes(Node* node);
 	void RenderNodes(Node* node, const Viewer& viewer) const;
-	void LoadNodes(Node* node, const BBoxi& bbox, int level = 0, int x = 0, int y = 0);
+	void LoadNodes(Node* node, const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
 	void SweepNodes(Node* node);
 
 	void EnqueueTile(Node* node, int level, int x, int y);
+	void CleanupQueue();
 
 	void LoadingThreadFunc();
 	static void* LoadingThreadFuncWrapper(void* arg);
@@ -90,7 +93,7 @@ protected:
 
 public:
 	void SetTargetLevel(int level);
-	void RequestVisible(const BBoxi& bbox);
+	void RequestVisible(const BBoxi& bbox, bool sync);
 	void GarbageCollect();
 };
 
