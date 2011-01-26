@@ -67,32 +67,47 @@ StaticQuadtree::~StaticQuadtree() {
  * recursive quadtree processing
  */
 
-void StaticQuadtree::DestroyNodes(Node* node) {
-	delete node->tile;
+int StaticQuadtree::DestroyNodes(Node* node) {
+	if (node->pending)
+		return 1;
 
+	delete node->tile;
+	delete node->geometry;
+
+	int not_deleted = 0;
 	for (int d = 0; d < 4; ++d)
-		if (node->child[d])
-			DestroyNodes(node->child[d]);
+		if (node->child[d]) {
+			not_deleted += DestroyNodes(node->child[d]);
+			node->child[d] = NULL;
+		}
 
 	delete node;
+
+	return not_deleted;
 }
 
 void StaticQuadtree::RenderNodes(Node* node, const Viewer& viewer) const {
 	if (node->generation != generation_)
 		return;
 
-	if (node->tile) {
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
+	if (!node->pending) {
+		if (!node->tile && node->geometry) {
+			node->tile = SpawnTile(*(node->geometry), BBoxi::Full() /* XXX! */);
+			delete node->geometry;
+		}
+		if (node->tile) {
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
 
-		Vector3f offset = projection_.Project(node->tile->GetReference(), viewer.GetPos(projection_));
-		glTranslatef(offset.x, offset.y, offset.z);
+			Vector3f offset = projection_.Project(node->tile->GetReference(), viewer.GetPos(projection_));
+			glTranslatef(offset.x, offset.y, offset.z);
 
-		node->tile->Render();
+			node->tile->Render();
 
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		return;
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
+			return;
+		}
 	}
 
 	for (int d = 0; d < 4; ++d)
@@ -105,7 +120,7 @@ void StaticQuadtree::LoadNodes(Node* node, const BBoxi& bbox, bool sync, int lev
 
 	if (level == target_level_) {
 		/* leaf */
-		if (node->tile == NULL) {
+		if (!node->pending && !node->tile && !node->geometry) {
 			if (sync) {
 				BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
 				Geometry geom;
@@ -152,7 +167,9 @@ void StaticQuadtree::EnqueueTile(Node* node, int level, int x, int y) {
 
 	size_t size = loading_queue_.size();
 
-	loading_queue_.push_front(LoadingTask(level, x, y, generation_));
+	node->pending = true;
+
+	loading_queue_.push_back(std::make_pair(TileId(level, x, y), node));
 
 	/* wakeup thread */
 	if (size == 0)
@@ -164,8 +181,14 @@ void StaticQuadtree::EnqueueTile(Node* node, int level, int x, int y) {
 void StaticQuadtree::CleanupQueue() {
 	pthread_mutex_lock(&loading_queue_mutex_);
 
-	while (loading_queue_.size() > 0 && loading_queue_.back().generation != generation_)
-		loading_queue_.pop_back();
+	for (LoadingQueue::iterator i = loading_queue_.begin(); i != loading_queue_.end() && i->second->generation != generation_; ) {
+		if (!i->second->pending) {
+			LoadingQueue::iterator temp = i++;
+			loading_queue_.erase(temp);
+		} else {
+			++i;
+		}
+	}
 
 	pthread_mutex_unlock(&loading_queue_mutex_);
 }
@@ -183,15 +206,15 @@ void StaticQuadtree::LoadingThreadFunc() {
 		}
 
 		LoadingTask task = loading_queue_.front();
-		loading_queue_.pop_front();
+		loading_queue_.pop_back();
 
 		pthread_mutex_unlock(&loading_queue_mutex_);
 
-		BBoxi bbox = BBoxi::ForGeoTile(task.level, task.x, task.y);
-		Geometry geom;
-		datasource_.GetGeometry(geom, bbox);
+		BBoxi bbox = BBoxi::ForGeoTile(task.first.level, task.first.x, task.first.y);
+		task.second->geometry = new Geometry();
+		datasource_.GetGeometry(*(task.second->geometry), bbox);
 
-		//task.node->tile = SpawnTile(geom, bbox);
+		task.second->pending = false;
 	}
 }
 

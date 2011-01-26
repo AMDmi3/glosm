@@ -25,6 +25,7 @@
 
 #include <pthread.h>
 #include <list>
+#include <map>
 
 class Geometry;
 class GeometryDatasource;
@@ -37,27 +38,39 @@ protected:
 		Node* child[4];
 
 		Tile* tile;
+		Geometry* geometry;
 
 		int generation;
 
-		Node(): tile(NULL), generation(0) {
+		volatile bool pending;
+
+		Node(): tile(NULL), geometry(NULL), generation(0) {
 			child[0] = child[1] = child[2] = child[3] = NULL;
 		}
 	};
 
-	struct LoadingTask {
+	struct TileId {
 		int level;
 		int x;
 		int y;
 
-		int generation;
+		TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
+		}
 
-		LoadingTask(int l, int xx, int yy, int gen): level(l), x(xx), y(yy), generation(gen) {
+		bool operator<(const TileId& other) const {
+			if (level < other.level) return true;
+			if (level > other.level) return false;
+			if (x < other.x) return true;
+			if (x > other.x) return false;
+			return y < other.y;
 		}
 	};
 
+	typedef std::pair<TileId, Node*> LoadingTask;
+
 protected:
 	typedef std::list<LoadingTask> LoadingQueue;
+	//typedef std::map<TileId, Node*> OrphanNodeMap;
 
 protected:
 	const Projection projection_;
@@ -78,7 +91,7 @@ protected:
 
 	virtual Tile* SpawnTile(const Geometry& geom, const BBoxi& bbox) const = 0;
 
-	void DestroyNodes(Node* node);
+	int DestroyNodes(Node* node);
 	void RenderNodes(Node* node, const Viewer& viewer) const;
 	void LoadNodes(Node* node, const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
 	void SweepNodes(Node* node);
