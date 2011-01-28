@@ -1,5 +1,6 @@
 # Depends
 FIND_PACKAGE(OpenGL REQUIRED)
+FIND_PACKAGE(Threads REQUIRED)
 
 # Targets
 SET(SOURCES
@@ -20,7 +21,7 @@ SET(HEADERS
 INCLUDE_DIRECTORIES(include ../libglosm-server/include ${EXPAT_INCLUDE_DIR})
 
 ADD_LIBRARY(glosm-client SHARED ${SOURCES})
-TARGET_LINK_LIBRARIES(glosm-client glosm-server ${OPENGL_LIBRARIES})
+TARGET_LINK_LIBRARIES(glosm-client glosm-server ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # Installation
 # We don't have even a sight of stable API, so don't use soversion
