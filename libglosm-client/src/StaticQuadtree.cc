@@ -200,7 +200,9 @@ void StaticQuadtree::Render(const Viewer& viewer) const {
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
-		Vector3f offset = projection_.Project((*i)->GetReference(), viewer.GetPos(projection_));
+		Vector3f offset = projection_.Project((*i)->GetReference(), Vector2i(viewer.GetPos(projection_))) +
+				projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
+		Vector3f voffset = projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
 		glTranslatef(offset.x, offset.y, offset.z);
 
 		(*i)->Render();
