@@ -29,61 +29,49 @@
 
 class Geometry;
 class GeometryDatasource;
-class Tile;
 class Viewer;
+class Tile;
 
 class StaticQuadtree {
 protected:
-	struct Node {
-		Node* child[4];
-
-		Tile* tile;
-		Geometry* geometry;
-
-		int generation;
-
-		volatile bool pending;
-
-		Node(): tile(NULL), geometry(NULL), generation(0) {
-			child[0] = child[1] = child[2] = child[3] = NULL;
-		}
+	enum TileLoadingFlags {
 	};
 
+protected:
 	struct TileId {
 		int level;
 		int x;
 		int y;
 
-		TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
-		}
-
-		bool operator<(const TileId& other) const {
-			if (level < other.level) return true;
-			if (level > other.level) return false;
-			if (x < other.x) return true;
-			if (x > other.x) return false;
-			return y < other.y;
-		}
+		TileId(int lev, int xx, int yy);
+		bool operator<(const TileId& other) const;
 	};
 
-	typedef std::pair<TileId, Node*> LoadingTask;
+	struct TileData {
+		Tile* tile;
+		Geometry* geometry;
+		int generation;
+		volatile bool loading;
+
+		TileData();
+		~TileData();
+	};
 
 protected:
-	typedef std::list<LoadingTask> LoadingQueue;
-	//typedef std::map<TileId, Node*> OrphanNodeMap;
+	typedef std::map<TileId, TileData> TilesMap;
 
 protected:
 	const Projection projection_;
 	const GeometryDatasource& datasource_;
-	Node* root_;
 	int target_level_;
 	int generation_;
 
-	LoadingQueue loading_queue_;
+	TilesMap tiles_;
+	mutable pthread_mutex_t tiles_mutex_;
+	pthread_cond_t tiles_cond_;
+
 	pthread_t loading_thread_;
-	pthread_mutex_t loading_queue_mutex_;
-	pthread_cond_t loading_queue_cond_;
-	volatile bool loading_thread_die_;
+	volatile bool thread_die_flag_;
 
 protected:
 	StaticQuadtree(const Projection projection, const GeometryDatasource& ds);
@@ -91,13 +79,7 @@ protected:
 
 	virtual Tile* SpawnTile(const Geometry& geom, const BBoxi& bbox) const = 0;
 
-	int DestroyNodes(Node* node);
-	void RenderNodes(Node* node, const Viewer& viewer) const;
-	void LoadNodes(Node* node, const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
-	void SweepNodes(Node* node);
-
-	void EnqueueTile(Node* node, int level, int x, int y);
-	void CleanupQueue();
+	void LoadTiles(const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
 
 	void LoadingThreadFunc();
 	static void* LoadingThreadFuncWrapper(void* arg);
