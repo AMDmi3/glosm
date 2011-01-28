@@ -23,47 +23,72 @@
 #include <glosm/BBox.hh>
 #include <glosm/Projection.hh>
 
+#include <pthread.h>
+#include <list>
+#include <map>
+
+class Geometry;
+class GeometryDatasource;
 class Viewer;
 class Tile;
 
 class StaticQuadtree {
 protected:
-	struct Node {
-		Node* child[4];
-
-		Tile* tile;
-
-		int generation;
-
-		Node():  tile(NULL), generation(0) {
-			child[0] = child[1] = child[2] = child[3] = NULL;
-		}
+	enum TileLoadingFlags {
 	};
 
 protected:
+	struct TileId {
+		int level;
+		int x;
+		int y;
+
+		TileId(int lev, int xx, int yy);
+		bool operator<(const TileId& other) const;
+	};
+
+	struct TileData {
+		Tile* tile;
+		Geometry* geometry;
+		int generation;
+		volatile bool loading;
+
+		TileData();
+		~TileData();
+	};
+
+protected:
+	typedef std::map<TileId, TileData> TilesMap;
+
+protected:
 	const Projection projection_;
-	Node* root_;
+	const GeometryDatasource& datasource_;
 	int target_level_;
 	int generation_;
 
-protected:
-	void DestroyNodes(Node* node);
-	void RenderNodes(Node* node, const Viewer& viewer) const;
-	void LoadNodes(Node* node, const BBoxi& bbox, int level = 0, int x = 0, int y = 0);
-	void SweepNodes(Node* node);
+	TilesMap tiles_;
+	mutable pthread_mutex_t tiles_mutex_;
+	pthread_cond_t tiles_cond_;
+
+	pthread_t loading_thread_;
+	volatile bool thread_die_flag_;
 
 protected:
-	StaticQuadtree(const Projection projection);
+	StaticQuadtree(const Projection projection, const GeometryDatasource& ds);
 	virtual ~StaticQuadtree();
 
-	void SetTargetLevel(int level);
+	virtual Tile* SpawnTile(const Geometry& geom, const BBoxi& bbox) const = 0;
+
+	void LoadTiles(const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
+
+	void LoadingThreadFunc();
+	static void* LoadingThreadFuncWrapper(void* arg);
 
 	void Render(const Viewer& viewer) const;
 
-	virtual Tile* SpawnTile(const BBoxi& bbox) const = 0;
-
 public:
-	void RequestVisible(const BBoxi& bbox);
+	void SetTargetLevel(int level);
+	void RequestVisible(const BBoxi& bbox, bool sync);
 	void GarbageCollect();
 };
 

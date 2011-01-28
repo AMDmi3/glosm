@@ -67,8 +67,8 @@ void Display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (layer_p) {
-		int radius = 100000;
-		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)));
+		int radius = 50000000;
+		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), false);
 		layer_p->GarbageCollect();
 		layer_p->Render(viewer);
 	}
@@ -76,6 +76,7 @@ void Display(void) {
 	glFlush();
 	glutSwapBuffers();
 
+	/* movement */
 	if (movementflags) {
 		float myspeed = speed;
 		float height = viewer.MutablePos().z / 1000.0;
