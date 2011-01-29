@@ -33,17 +33,23 @@
 #include <glosm/SimpleVertexBuffer.hh>
 
 GeometryTile::GeometryTile(const Projection& projection, const Geometry& geom, const Vector2i& ref, const BBoxi& bbox = BBoxi::ForEarth()) : Tile(ref) {
-	std::vector<Vector3f> translated;
-	projection.ProjectPoints(geom.GetLines(), ref, translated);
-	lines_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::LINES, translated.data(), translated.size()));
+	if (geom.GetLines().size() != 0) {
+		std::vector<Vector3f> translated;
+		projection.ProjectPoints(geom.GetLines(), ref, translated);
+		lines_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::LINES, translated.data(), translated.size()));
+	}
 
-	translated.clear();
-	projection.ProjectPoints(geom.GetTriangles(), ref, translated);
-	triangles_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::TRIANGLES, translated.data(), translated.size()));
+	if (geom.GetTriangles().size() != 0) {
+		std::vector<Vector3f> translated;
+		projection.ProjectPoints(geom.GetTriangles(), ref, translated);
+		triangles_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::TRIANGLES, translated.data(), translated.size()));
+	}
 
-	translated.clear();
-	projection.ProjectPoints(geom.GetQuads(), ref, translated);
-	quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, translated.data(), translated.size()));
+	if (geom.GetQuads().size() != 0) {
+		std::vector<Vector3f> translated;
+		projection.ProjectPoints(geom.GetQuads(), ref, translated);
+		quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, translated.data(), translated.size()));
+	}
 
 #ifdef TILE_DEBUG
 	bound_[0] = projection.Project(bbox.GetTopLeft(), ref);
@@ -57,40 +63,45 @@ GeometryTile::~GeometryTile() {
 }
 
 void GeometryTile::Render() const {
-	glDepthFunc(GL_LESS);
+	if (lines_.get()) {
+		glDepthFunc(GL_LESS);
 
-	/* lines */
-	glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
+		glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
 
-	/*glEnable(GL_LINE_STIPPLE);
-	glLineStipple(1.0, 0xCCCC);
-	glDisable(GL_LINE_STIPPLE);
-	*/
+		/*glEnable(GL_LINE_STIPPLE);
+		glLineStipple(1.0, 0xCCCC);
+		glDisable(GL_LINE_STIPPLE);
+		*/
 
-	lines_->Render();
+		lines_->Render();
+	}
 
-	/* polygons */
-	glPolygonOffset(1.0, 1.0);
-	glEnable(GL_POLYGON_OFFSET_FILL);
+	if (triangles_.get() || quads_.get()) {
+		/* polygons */
+		glPolygonOffset(1.0, 1.0);
+		glEnable(GL_POLYGON_OFFSET_FILL);
 
-	/* zpass */
-	/*glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-	triangles_->Render();
-	quads_->Render();
+		/* zpass */
+		/*glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+		triangles_->Render();
+		quads_->Render();
 
-	glDepthFunc(GL_EQUAL);*/
+		glDepthFunc(GL_EQUAL);*/
 
-	/* objects */
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+		/* objects */
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
 
-	triangles_->Render();
-	quads_->Render();
+		if (triangles_.get())
+			triangles_->Render();
+		if (quads_.get())
+			quads_->Render();
 
-	glDisable(GL_LIGHT0);
-	glDisable(GL_LIGHTING);
+		glDisable(GL_LIGHT0);
+		glDisable(GL_LIGHTING);
 
-	glDisable(GL_POLYGON_OFFSET_FILL);
+		glDisable(GL_POLYGON_OFFSET_FILL);
+	}
 
 #ifdef TILE_DEBUG
 	glColor3f(1.0, 0.0, 0.0);

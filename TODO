@@ -11,6 +11,7 @@ Framework
       * glBegin/end/color -> glUniform
       * Fixed pipeline -> shaders
       * gl*Pointer, glClient* -> glVertexAttribPointer
+    * State changes eat some ticks, so rendering grouped by-state (e.g. all lines, then all triangles/quads). Also helps with z-order
   Geometry generation
     * Add lane divisors
     * Support landuse/natural polygons in geomgen - will need a large table for that, maybe geomgen should be split (requires materials)
