@@ -7,6 +7,7 @@ SET(SOURCES
 	src/GeometryLayer.cc
 	src/GeometryTile.cc
 	src/MercatorProjection.cc
+	src/SphericalProjection.cc
 	src/OrthoViewer.cc
 	src/Projection.cc
 	src/SimpleVertexBuffer.cc
