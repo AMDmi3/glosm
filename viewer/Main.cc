@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
@@ -36,6 +37,7 @@
 
 #include <glosm/Math.hh>
 
+#include <glosm/SphericalProjection.hh>
 #include <glosm/MercatorProjection.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/DefaultGeometryGenerator.hh>
@@ -199,17 +201,36 @@ void KeyUp(unsigned char key, int, int) {
 	}
 }
 
+void usage(const char* progname) {
+	fprintf(stderr, "Usage: %s [-s] file.osm\n", progname);
+	exit(1);
+}
+
 int real_main(int argc, char** argv) {
 	glutInit(&argc, argv);
 
-	if (argc != 2)
-		errx(1, "Usage: %s file.osm", argv[0]);
+	int c;
+	const char* progname = argv[0];
+	Projection proj = MercatorProjection();
+	while ((c = getopt(argc, argv, "s")) != -1) {
+		switch (c) {
+		case 's': proj = SphericalProjection(); break;
+		default:
+			usage(progname);
+		}
+	}
+
+	argc -= optind;
+	argv += optind;
+
+	if (argc != 1)
+		usage(progname);
 
 	/* load data */
 	fprintf(stderr, "Loading...\n");
 	PreloadedXmlDatasource osm_datasource;
 	gettimeofday(&prevtime, NULL);
-	osm_datasource.Load(argv[1]);
+	osm_datasource.Load(argv[0]);
 	gettimeofday(&curtime, NULL);
 	fprintf(stderr, "Loaded XML in %.3f seconds\n", (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f);
 	prevtime = curtime;
@@ -235,7 +256,7 @@ int real_main(int argc, char** argv) {
 	gettimeofday(&prevtime, NULL);
 
 	DefaultGeometryGenerator geometry_generator(osm_datasource);
-	GeometryLayer layer(MercatorProjection(), geometry_generator);
+	GeometryLayer layer(proj, geometry_generator);
 	layer_p = &layer;
 
 	gettimeofday(&curtime, NULL);
