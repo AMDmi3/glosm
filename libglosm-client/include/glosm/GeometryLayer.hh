@@ -26,7 +26,7 @@
 #include <glosm/Projection.hh>
 #include <glosm/GeometryTile.hh>
 #include <glosm/NonCopyable.hh>
-#include <glosm/StaticQuadtree.hh>
+#include <glosm/TileManager.hh>
 
 #include <memory.h>
 
@@ -36,10 +36,9 @@ class GeometryDatasource;
 /**
  * Layer with 3D OpenStreetMap data.
  */
-class GeometryLayer : public Layer, public StaticQuadtree, NonCopyable {
+class GeometryLayer : public Layer, public TileManager, NonCopyable {
 protected:
 	const Projection projection_;
-	const GeometryDatasource &datasource_;
 
 public:
 	GeometryLayer(const Projection projection, const GeometryDatasource& datasource);

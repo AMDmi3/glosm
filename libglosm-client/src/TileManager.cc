@@ -17,7 +17,7 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glosm/StaticQuadtree.hh>
+#include <glosm/TileManager.hh>
 
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
@@ -33,10 +33,10 @@
 #include <stdexcept>
 #include <cassert>
 
-StaticQuadtree::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
+TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
 }
 
-bool StaticQuadtree::TileId::operator<(const TileId& other) const {
+bool TileManager::TileId::operator<(const TileId& other) const {
 	if (level < other.level) return true;
 	if (level > other.level) return false;
 	if (x < other.x) return true;
@@ -44,15 +44,15 @@ bool StaticQuadtree::TileId::operator<(const TileId& other) const {
 	return y < other.y;
 }
 
-StaticQuadtree::TileData::TileData(): tile(NULL), geometry(NULL), generation(0), loading(false) {
+TileManager::TileData::TileData(): tile(NULL), geometry(NULL), generation(0), loading(false) {
 }
 
-StaticQuadtree::TileData::~TileData() {
+TileManager::TileData::~TileData() {
 	delete tile;
 	delete geometry;
 }
 
-StaticQuadtree::StaticQuadtree(const Projection projection, const GeometryDatasource& ds): projection_(projection), datasource_(ds) {
+TileManager::TileManager(const Projection projection, const GeometryDatasource& ds): projection_(projection), datasource_(ds) {
 	if (pthread_mutex_init(&tiles_mutex_, 0) != 0)
 		throw std::runtime_error("pthread_mutex_init failed");
 
@@ -67,12 +67,12 @@ StaticQuadtree::StaticQuadtree(const Projection projection, const GeometryDataso
 		throw std::runtime_error("pthread_create failed");
 	}
 
-	target_level_ = 14;
+	target_level_ = 10;
 	generation_ = 0;
 	thread_die_flag_ = false;
 }
 
-StaticQuadtree::~StaticQuadtree() {
+TileManager::~TileManager() {
 	thread_die_flag_ = true;
 	pthread_cond_signal(&tiles_cond_);
 
@@ -87,7 +87,7 @@ StaticQuadtree::~StaticQuadtree() {
 
 int n = 0;
 
-void StaticQuadtree::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, int y) {
+void TileManager::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, int y) {
 	n++;
 	if (level == target_level_) {
 		TilesMap::iterator thistile = tiles_.find(TileId(level, x, y));
@@ -143,7 +143,7 @@ void StaticQuadtree::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, i
  * loading queue - related
  */
 
-void StaticQuadtree::LoadingThreadFunc() {
+void TileManager::LoadingThreadFunc() {
 	while (!thread_die_flag_) {
 		pthread_mutex_lock(&tiles_mutex_);
 
@@ -175,8 +175,8 @@ void StaticQuadtree::LoadingThreadFunc() {
 	}
 }
 
-void* StaticQuadtree::LoadingThreadFuncWrapper(void* arg) {
-	static_cast<StaticQuadtree*>(arg)->LoadingThreadFunc();
+void* TileManager::LoadingThreadFuncWrapper(void* arg) {
+	static_cast<TileManager*>(arg)->LoadingThreadFunc();
 	return NULL;
 }
 
@@ -184,7 +184,7 @@ void* StaticQuadtree::LoadingThreadFuncWrapper(void* arg) {
  * protected interface
  */
 
-void StaticQuadtree::Render(const Viewer& viewer) const {
+void TileManager::Render(const Viewer& viewer) const {
 	std::vector<Tile*> tiles;
 
 	/* create array of renderable tiles */
@@ -216,11 +216,11 @@ void StaticQuadtree::Render(const Viewer& viewer) const {
  * public interface
  */
 
-void StaticQuadtree::SetTargetLevel(int level) {
+void TileManager::SetTargetLevel(int level) {
 	target_level_ = level;
 }
 
-void StaticQuadtree::RequestVisible(const BBoxi& bbox, bool sync) {
+void TileManager::RequestVisible(const BBoxi& bbox, bool sync) {
 	++generation_;
 	pthread_mutex_lock(&tiles_mutex_);
 	LoadTiles(bbox, sync);
@@ -228,7 +228,7 @@ void StaticQuadtree::RequestVisible(const BBoxi& bbox, bool sync) {
 	n=0;
 }
 
-void StaticQuadtree::GarbageCollect() {
+void TileManager::GarbageCollect() {
 	pthread_mutex_lock(&tiles_mutex_);
 	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ) {
 		if (!i->second.loading && i->second.generation != generation_) {

@@ -17,8 +17,8 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATICQUADTREE_HH
-#define STATICQUADTREE_HH
+#ifndef TILEMANAGER_HH
+#define TILEMANAGER_HH
 
 #include <glosm/BBox.hh>
 #include <glosm/Projection.hh>
@@ -32,7 +32,7 @@ class GeometryDatasource;
 class Viewer;
 class Tile;
 
-class StaticQuadtree {
+class TileManager {
 protected:
 	enum TileLoadingFlags {
 	};
@@ -74,8 +74,8 @@ protected:
 	volatile bool thread_die_flag_;
 
 protected:
-	StaticQuadtree(const Projection projection, const GeometryDatasource& ds);
-	virtual ~StaticQuadtree();
+	TileManager(const Projection projection, const GeometryDatasource& ds);
+	virtual ~TileManager();
 
 	virtual Tile* SpawnTile(const Geometry& geom) const = 0;
 

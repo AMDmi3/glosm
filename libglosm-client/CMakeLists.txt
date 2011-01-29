@@ -12,7 +12,7 @@ SET(SOURCES
 	src/Projection.cc
 	src/SimpleVertexBuffer.cc
 	src/VBO.cc
-	src/StaticQuadtree.cc
+	src/TileManager.cc
 )
 
 SET(HEADERS

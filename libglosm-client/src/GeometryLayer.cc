@@ -30,7 +30,7 @@
 #include <glosm/Projection.hh>
 #include <glosm/Geometry.hh>
 
-GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): StaticQuadtree(projection, datasource), projection_(projection), datasource_(datasource) {
+GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): TileManager(projection, datasource), projection_(projection) {
 }
 
 GeometryLayer::~GeometryLayer() {
@@ -65,7 +65,7 @@ void GeometryLayer::Render(const Viewer& viewer) const {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
 
 	/* Render tile(s) */
-	StaticQuadtree::Render(viewer);
+	TileManager::Render(viewer);
 }
 
 Tile* GeometryLayer::SpawnTile(const Geometry& geom) const {
