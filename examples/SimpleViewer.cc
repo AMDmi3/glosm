@@ -34,7 +34,6 @@
 #include <glosm/FirstPersonViewer.hh>
 #include <glosm/GeometryLayer.hh>
 #include <glosm/DefaultGeometryGenerator.hh>
-#include <glosm/DefaultGeometryGenerator.hh>
 
 Viewer* g_viewer = NULL;
 GeometryLayer* g_layer = NULL;
