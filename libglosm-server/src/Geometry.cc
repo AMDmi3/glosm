@@ -22,6 +22,16 @@
 
 #include <cassert>
 
+Geometry::Geometry(): bbox_(BBoxi::Full()) {
+}
+
+Geometry::Geometry(const BBoxi& bbox): bbox_(bbox) {
+}
+
+const BBoxi& Geometry::GetBBox() const {
+	return bbox_;
+}
+
 void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
 	lines_.push_back(a);
 	lines_.push_back(b);

@@ -67,7 +67,7 @@ StaticQuadtree::StaticQuadtree(const Projection projection, const GeometryDataso
 		throw std::runtime_error("pthread_create failed");
 	}
 
-	target_level_ = 10;
+	target_level_ = 14;
 	generation_ = 0;
 	thread_die_flag_ = false;
 }
@@ -109,7 +109,7 @@ void StaticQuadtree::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, i
 			/* XXX: projection and VBO loading still
 			 * takes some time, maybe we need to limit
 			 * this per-frame */
-			thistile->second.tile = SpawnTile(*thistile->second.geometry, BBoxi::ForGeoTile(level, x, y));
+			thistile->second.tile = SpawnTile(*thistile->second.geometry);
 			delete thistile->second.geometry;
 			thistile->second.geometry = NULL;
 			return;
@@ -118,9 +118,9 @@ void StaticQuadtree::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, i
 		/* load immediately for sync case */
 		if (sync) {
 			BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
-			Geometry geom;
+			Geometry geom(bbox);
 			datasource_.GetGeometry(geom, bbox);
-			thistile->second.tile = SpawnTile(geom, bbox);
+			thistile->second.tile = SpawnTile(geom);
 			return;
 		}
 
@@ -167,7 +167,7 @@ void StaticQuadtree::LoadingThreadFunc() {
 
 		/* load tile */
 		BBoxi bbox = BBoxi::ForGeoTile(to_load->first.level, to_load->first.x, to_load->first.y);
-		to_load->second.geometry = new Geometry();
+		to_load->second.geometry = new Geometry(bbox);
 		datasource_.GetGeometry(*(to_load->second.geometry), bbox);
 
 		to_load->second.loading = false;

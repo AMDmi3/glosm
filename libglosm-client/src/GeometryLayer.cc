@@ -28,6 +28,7 @@
 #include <glosm/Viewer.hh>
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/Projection.hh>
+#include <glosm/Geometry.hh>
 
 GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): StaticQuadtree(projection, datasource), projection_(projection), datasource_(datasource) {
 }
@@ -67,6 +68,6 @@ void GeometryLayer::Render(const Viewer& viewer) const {
 	StaticQuadtree::Render(viewer);
 }
 
-Tile* GeometryLayer::SpawnTile(const Geometry& geom, const BBoxi& bbox) const {
-	return new GeometryTile(projection_, geom, bbox.GetCenter(), bbox);
+Tile* GeometryLayer::SpawnTile(const Geometry& geom) const {
+	return new GeometryTile(projection_, geom, geom.GetBBox().GetCenter(), geom.GetBBox());
 }

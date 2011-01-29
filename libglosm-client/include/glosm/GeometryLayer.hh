@@ -46,7 +46,7 @@ public:
 	virtual ~GeometryLayer();
 
 	void Render(const Viewer& viewer) const;
-	virtual Tile* SpawnTile(const Geometry& geom, const BBoxi& bbox) const;
+	virtual Tile* SpawnTile(const Geometry& geom) const;
 };
 
 #endif

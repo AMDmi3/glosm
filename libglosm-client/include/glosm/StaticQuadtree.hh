@@ -77,7 +77,7 @@ protected:
 	StaticQuadtree(const Projection projection, const GeometryDatasource& ds);
 	virtual ~StaticQuadtree();
 
-	virtual Tile* SpawnTile(const Geometry& geom, const BBoxi& bbox) const = 0;
+	virtual Tile* SpawnTile(const Geometry& geom) const = 0;
 
 	void LoadTiles(const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
 
