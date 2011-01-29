@@ -85,10 +85,7 @@ TileManager::~TileManager() {
  * recursive quadtree processing
  */
 
-int n = 0;
-
 void TileManager::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, int y) {
-	n++;
 	if (level == target_level_) {
 		TilesMap::iterator thistile = tiles_.find(TileId(level, x, y));
 		if (thistile == tiles_.end()) {
@@ -225,7 +222,6 @@ void TileManager::RequestVisible(const BBoxi& bbox, bool sync) {
 	pthread_mutex_lock(&tiles_mutex_);
 	LoadTiles(bbox, sync);
 	pthread_mutex_unlock(&tiles_mutex_);
-	n=0;
 }
 
 void TileManager::GarbageCollect() {
