@@ -67,7 +67,7 @@ TileManager::TileManager(const Projection projection, const GeometryDatasource& 
 		throw std::runtime_error("pthread_create failed");
 	}
 
-	target_level_ = 10;
+	target_level_ = 0;
 	generation_ = 0;
 	thread_die_flag_ = false;
 }
@@ -208,25 +208,33 @@ void TileManager::Render(const Viewer& viewer) const {
 		Vector3i ref = (*i)->GetReference();
 		Vector3i pos = viewer.GetPos(projection_);
 
+		/* normal at tile's reference point */
 		Vector3d refnormal = (
 				(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, std::numeric_limits<osmint_t>::max()), pos) -
 				(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, 0), pos)
 			).Normalized();
 
+		/* normal at reference point projected to equator */
 		Vector3d refeqnormal = (
 				(Vector3d)projection_.Project(Vector3i(ref.x, 0, std::numeric_limits<osmint_t>::max()), pos) -
 				(Vector3d)projection_.Project(Vector3i(ref.x, 0, 0), pos)
 			).Normalized();
 
-		if (refnormal != refeqnormal) {
-			Vector3d side = ref.y < 0 ? -refnormal.CrossProduct(refeqnormal).Normalized() : refnormal.CrossProduct(refeqnormal).Normalized();
-			double sideangle = (double)((osmlong_t)pos.y - (osmlong_t)ref.y) / 10000000.0;
+		/* normal at north pole */
+		Vector3d polenormal = (
+				(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, std::numeric_limits<osmint_t>::max()), pos) -
+				(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, 0), pos)
+			).Normalized();
 
-			Vector3d pole = side.CrossProduct(refeqnormal).Normalized();
-			double poleangle = (double)((osmlong_t)pos.x - (osmlong_t)ref.x) / 10000000.0;
+		/* XXX: IsValid() check basically detects
+		 * MercatorProjection and does no rotation for it.
+		 * While is's ok for now, this may need more generic
+		 * approach in future */
+		if (polenormal.IsValid()) {
+			Vector3d side = refnormal.CrossProduct(polenormal).Normalized();
 
-			glRotatef(sideangle, side.x, side.y, side.z);
-			glRotatef(poleangle, pole.x, pole.y, pole.z);
+			glRotatef((double)((osmlong_t)ref.y - (osmlong_t)pos.y) / 10000000.0, side.x, side.y, side.z);
+			glRotatef((double)((osmlong_t)ref.x - (osmlong_t)pos.x) / 10000000.0, polenormal.x, polenormal.y, polenormal.z);
 		}
 
 		(*i)->Render();
