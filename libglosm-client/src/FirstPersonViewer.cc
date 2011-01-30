@@ -47,7 +47,7 @@ void FirstPersonViewer::SetupViewerMatrix(const Projection& projection) const {
 	glLoadIdentity();
 
 	/* length of a meter in local units */
-	float meterlen = projection.Project(pos_ + Vector3i(0, 0, 1000), pos_).z;
+	float meterlen = projection.Project(pos_.Flattened() + Vector3i(0, 0, 1000), pos_.Flattened()).z;
 
 	/* viewer height in meters */
 	float height = pos_.z / 1000.0f;
@@ -131,6 +131,12 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 		pos_.y = 800000000;
 	if (pos_.y > 800000000)
 		pos_.y = 800000000;
+
+	/* Limit height */
+	if (pos_.z < 0.0)
+		pos_.z = 0.0;
+	if (pos_.z > std::numeric_limits<osmint_t>::max())
+		pos_.z = std::numeric_limits<osmint_t>::max();
 }
 
 void FirstPersonViewer::HardRotate(float yawdelta, float pitchdelta) {
