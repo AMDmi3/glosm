@@ -255,9 +255,21 @@ void TileManager::SetTargetLevel(int level) {
 void TileManager::RequestVisible(const BBoxi& bbox, int flags) {
 	if (!(flags & NOGENBUMP))
 		++generation_;
-	pthread_mutex_lock(&tiles_mutex_);
-	LoadTiles(bbox, flags);
-	pthread_mutex_unlock(&tiles_mutex_);
+
+	if (flags & EXPLICIT) {
+		Geometry geom(bbox);
+		datasource_.GetGeometry(geom, bbox);
+
+		std::pair<TilesMap::iterator, bool> pair = tiles_.insert(std::make_pair(TileId(0, 0, 0), TileData()));
+		assert(pair.second);
+
+		pair.first->second.tile = SpawnTile(geom);
+		pair.first->second.generation = generation_;
+	} else {
+		pthread_mutex_lock(&tiles_mutex_);
+		LoadTiles(bbox, flags);
+		pthread_mutex_unlock(&tiles_mutex_);
+	}
 }
 
 void TileManager::GarbageCollect() {

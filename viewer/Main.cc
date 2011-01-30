@@ -59,6 +59,10 @@ int lockheight = 0;
 struct timeval prevtime, curtime, fpstime;
 int nframes = 0;
 
+/* stuff that may eb changed with args */
+Projection proj = MercatorProjection();
+int tilelevel = -1;
+
 void Display(void) {
 	/* update scene */
 	gettimeofday(&curtime, NULL);
@@ -69,9 +73,11 @@ void Display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (layer_p) {
-		int radius = 5000000;
-		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
-		layer_p->GarbageCollect();
+		if (tilelevel >= 0) {
+			int radius = 5000000;
+			layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
+			layer_p->GarbageCollect();
+		}
 		layer_p->Render(viewer);
 	}
 
@@ -212,10 +218,6 @@ void usage(const char* progname) {
 int real_main(int argc, char** argv) {
 	glutInit(&argc, argv);
 
-	/* stuff that may eb changed with args */
-	Projection proj = MercatorProjection();
-	int tilelevel = 0;
-
 	/* argument parsing */
 	int c;
 	const char* progname = argv[0];
@@ -230,9 +232,6 @@ int real_main(int argc, char** argv) {
 
 	argc -= optind;
 	argv += optind;
-
-	if (tilelevel < 0)
-		usage(progname);
 
 	if (argc != 1)
 		usage(progname);
@@ -267,7 +266,10 @@ int real_main(int argc, char** argv) {
 	/* glosm init */
 	DefaultGeometryGenerator geometry_generator(osm_datasource);
 	GeometryLayer layer(proj, geometry_generator);
-	layer.SetTargetLevel(tilelevel);
+	if (tilelevel >= 0)
+		layer.SetTargetLevel(tilelevel);
+	else
+		layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);
 	layer_p = &layer;
 
 	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;

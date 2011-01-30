@@ -37,6 +37,7 @@ public:
 	enum RequestFlags {
 		SYNC = 0x01,
 		NOGENBUMP = 0x02,
+		EXPLICIT = 0x04,
 	};
 
 protected:
