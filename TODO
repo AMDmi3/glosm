@@ -11,7 +11,7 @@ Framework
       * glBegin/end/color -> glUniform
       * Fixed pipeline -> shaders
       * gl*Pointer, glClient* -> glVertexAttribPointer
-    * State changes eat some ticks, so rendering grouped by-state (e.g. all lines, then all triangles/quads). Also helps with z-order
+    * State changes eat some ticks, so rendering should be grouped by-state (e.g. all lines, then all triangles/quads). Also helps with z-order
   Geometry generation
     * Add lane divisors
     * Support landuse/natural polygons in geomgen - will need a large table for that, maybe geomgen should be split (requires materials)
@@ -37,10 +37,10 @@ Framework
     * In geometry generation optimization focus should be optimal tags processing (std::string ops take quite a lot of time) and TranslatePoints optimization
     * Add profiling support to viewer (or separate test); FindModules for google perftools
   Tiling
-    * Asynchronous tile loading
-    * Don't drop invisible tiles right away, implement queue, drop LRU
-    * Scale visible area dependent on height
-    * Implement LOD's
+    * Account tile sizes and use it to drop extra tiles
+    * When dropping tiles, use LRU
+    * Properly calculate distance to viewer
+    * Implement LOD's (need datasource and geomgen support)
 
 Applications
   Tiler
