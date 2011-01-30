@@ -44,7 +44,6 @@ protected:
 
 #ifdef TILE_DEBUG
 	Vector3f bound_[4];
-	Vector3f ref_;
 #endif
 
 public:
