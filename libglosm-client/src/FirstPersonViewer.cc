@@ -127,10 +127,10 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 		pos_.x += 3600000000U;
 
 	/* Limit poles */
-	if (pos_.y > 800000000)
-		pos_.y = 800000000;
-	if (pos_.y > 800000000)
-		pos_.y = 800000000;
+	if (pos_.y > 850000000)
+		pos_.y = 850000000;
+	if (pos_.y < -850000000)
+		pos_.y = -850000000;
 
 	/* Limit height */
 	if (pos_.z < 0.0)
