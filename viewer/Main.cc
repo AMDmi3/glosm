@@ -70,7 +70,7 @@ void Display(void) {
 
 	if (layer_p) {
 		int radius = 5000000;
-		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), false);
+		layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
 		layer_p->GarbageCollect();
 		layer_p->Render(viewer);
 	}

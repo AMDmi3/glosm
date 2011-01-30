@@ -33,8 +33,10 @@ class Viewer;
 class Tile;
 
 class TileManager {
-protected:
-	enum TileLoadingFlags {
+public:
+	enum RequestFlags {
+		SYNC = 0x01,
+		NOGENBUMP = 0x02,
 	};
 
 protected:
@@ -79,7 +81,7 @@ protected:
 
 	virtual Tile* SpawnTile(const Geometry& geom) const = 0;
 
-	void LoadTiles(const BBoxi& bbox, bool sync, int level = 0, int x = 0, int y = 0);
+	void LoadTiles(const BBoxi& bbox, int flags, int level = 0, int x = 0, int y = 0);
 
 	void LoadingThreadFunc();
 	static void* LoadingThreadFuncWrapper(void* arg);
@@ -88,7 +90,7 @@ protected:
 
 public:
 	void SetTargetLevel(int level);
-	void RequestVisible(const BBoxi& bbox, bool sync);
+	void RequestVisible(const BBoxi& bbox, int flags);
 	void GarbageCollect();
 };
 

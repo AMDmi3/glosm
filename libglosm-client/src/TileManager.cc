@@ -85,7 +85,7 @@ TileManager::~TileManager() {
  * recursive quadtree processing
  */
 
-void TileManager::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, int y) {
+void TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int y) {
 	if (level == target_level_) {
 		TilesMap::iterator thistile = tiles_.find(TileId(level, x, y));
 		if (thistile == tiles_.end()) {
@@ -113,7 +113,7 @@ void TileManager::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, int 
 		}
 
 		/* load immediately for sync case */
-		if (sync) {
+		if (flags && SYNC) {
 			BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
 			Geometry geom(bbox);
 			datasource_.GetGeometry(geom, bbox);
@@ -131,7 +131,7 @@ void TileManager::LoadTiles(const BBoxi& bbox, bool sync, int level, int x, int 
 		int xx = x * 2 + d % 2;
 		int yy = y * 2 + d / 2;
 		if (BBoxi::ForGeoTile(level + 1, xx, yy).Intersects(bbox)) {
-			LoadTiles(bbox, sync, level + 1, xx, yy);
+			LoadTiles(bbox, flags, level + 1, xx, yy);
 		}
 	}
 }
@@ -244,10 +244,11 @@ void TileManager::SetTargetLevel(int level) {
 	target_level_ = level;
 }
 
-void TileManager::RequestVisible(const BBoxi& bbox, bool sync) {
-	++generation_;
+void TileManager::RequestVisible(const BBoxi& bbox, int flags) {
+	if (!(flags & NOGENBUMP))
+		++generation_;
 	pthread_mutex_lock(&tiles_mutex_);
-	LoadTiles(bbox, sync);
+	LoadTiles(bbox, flags);
 	pthread_mutex_unlock(&tiles_mutex_);
 }
 
