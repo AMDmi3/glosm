@@ -61,7 +61,7 @@ protected:
 	};
 
 protected:
-	typedef std::map<TileId, TileData> TilesMap;
+	typedef std::multimap<TileId, TileData> TilesMap;
 
 protected:
 	const Projection projection_;

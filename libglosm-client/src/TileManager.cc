@@ -88,11 +88,8 @@ TileManager::~TileManager() {
 void TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int y) {
 	if (level == target_level_) {
 		TilesMap::iterator thistile = tiles_.find(TileId(level, x, y));
-		if (thistile == tiles_.end()) {
-			std::pair<TilesMap::iterator, bool> pair = tiles_.insert(std::make_pair(TileId(level, x, y), TileData()));
-			assert(pair.second);
-			thistile = pair.first;
-		}
+		if (thistile == tiles_.end())
+			thistile = tiles_.insert(std::make_pair(TileId(level, x, y), TileData()));
 
 		/* update generation */
 		thistile->second.generation = generation_;
@@ -260,11 +257,9 @@ void TileManager::RequestVisible(const BBoxi& bbox, int flags) {
 		Geometry geom(bbox);
 		datasource_.GetGeometry(geom, bbox);
 
-		std::pair<TilesMap::iterator, bool> pair = tiles_.insert(std::make_pair(TileId(0, 0, 0), TileData()));
-		assert(pair.second);
-
-		pair.first->second.tile = SpawnTile(geom);
-		pair.first->second.generation = generation_;
+		TilesMap::iterator thistile = tiles_.insert(std::make_pair(TileId(0, 0, 0), TileData()));
+		thistile->second.tile = SpawnTile(geom);
+		thistile->second.generation = generation_;
 	} else {
 		pthread_mutex_lock(&tiles_mutex_);
 		LoadTiles(bbox, flags);
