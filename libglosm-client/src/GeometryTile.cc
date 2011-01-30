@@ -56,6 +56,8 @@ GeometryTile::GeometryTile(const Projection& projection, const Geometry& geom, c
 	bound_[1] = projection.Project(bbox.GetTopRight(), ref);
 	bound_[2] = projection.Project(bbox.GetBottomRight(), ref);
 	bound_[3] = projection.Project(bbox.GetBottomLeft(), ref);
+
+	ref_ = projection.Project(ref, ref);
 #endif
 }
 
@@ -106,10 +108,17 @@ void GeometryTile::Render() const {
 #ifdef TILE_DEBUG
 	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINE_LOOP);
-	glVertex3f(bound_[0].x, bound_[0].y, 0.0);
-	glVertex3f(bound_[1].x, bound_[1].y, 0.0);
-	glVertex3f(bound_[2].x, bound_[2].y, 0.0);
-	glVertex3f(bound_[3].x, bound_[3].y, 0.0);
+	for (int i = 0; i < 4; i++)
+		glVertex3f(bound_[i].x, bound_[i].y, bound_[i].z);
+	glEnd();
+
+	glColor3f(0.5, 0.0, 0.0);
+	glBegin(GL_LINES);
+	for (int i = 0; i < 4; i++) {
+		Vector3f nearref = ref_ * 0.9 + bound_[i] * 0.1;
+		glVertex3f(nearref.x, nearref.y, nearref.z);
+		glVertex3f(ref_.x, ref_.y, ref_.z);
+	}
 	glEnd();
 #endif
 }
