@@ -196,10 +196,38 @@ void TileManager::Render(const Viewer& viewer) const {
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
+		/* prepare modelview matrix for the tile: position
+		 * it in the right place given that viewer is always
+		 * at (0, 0, 0) */
 		Vector3f offset = projection_.Project((*i)->GetReference(), Vector2i(viewer.GetPos(projection_))) +
 				projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
-		Vector3f voffset = projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
+
 		glTranslatef(offset.x, offset.y, offset.z);
+
+		/* same for rotation */
+		Vector3i ref = (*i)->GetReference();
+		Vector3i pos = viewer.GetPos(projection_);
+
+		Vector3d refnormal = (
+				(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, std::numeric_limits<osmint_t>::max()), pos) -
+				(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, 0), pos)
+			).Normalized();
+
+		Vector3d refeqnormal = (
+				(Vector3d)projection_.Project(Vector3i(ref.x, 0, std::numeric_limits<osmint_t>::max()), pos) -
+				(Vector3d)projection_.Project(Vector3i(ref.x, 0, 0), pos)
+			).Normalized();
+
+		if (refnormal != refeqnormal) {
+			Vector3d side = ref.y < 0 ? -refnormal.CrossProduct(refeqnormal).Normalized() : refnormal.CrossProduct(refeqnormal).Normalized();
+			double sideangle = (double)((osmlong_t)pos.y - (osmlong_t)ref.y) / 10000000.0;
+
+			Vector3d pole = side.CrossProduct(refeqnormal).Normalized();
+			double poleangle = (double)((osmlong_t)pos.x - (osmlong_t)ref.x) / 10000000.0;
+
+			glRotatef(sideangle, side.x, side.y, side.z);
+			glRotatef(poleangle, pole.x, pole.y, pole.z);
+		}
 
 		(*i)->Render();
 
