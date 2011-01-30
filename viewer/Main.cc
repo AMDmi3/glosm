@@ -83,10 +83,8 @@ void Display(void) {
 		float myspeed = speed;
 		float height = viewer.MutablePos().z / 1000.0;
 
-		if (height > 100.0 && height < 100000.0)
+		if (height > 100.0)
 			myspeed *= height / 100.0;
-		else if (height >= 100000.0)
-			myspeed *= 1000.0;
 
 		viewer.Move(movementflags, myspeed, dt);
 	}
