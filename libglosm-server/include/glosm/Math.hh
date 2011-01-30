@@ -93,6 +93,11 @@ struct Vector2 {
 	bool operator== (const Vector2<T>& other) const { return x == other.x && y == other.y; }
 	bool operator!= (const Vector2<T>& other) const { return x != other.x || y != other.y; }
 
+	/* validity check */
+	bool IsValid() const {
+		return std::isnormal(x) && std::isnormal(y);
+	}
+
 	/* functions */
 	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y); }
 	LT LengthSquare() { return (LT)x*(LT)x + (LT)y*(LT)y; }
@@ -183,6 +188,11 @@ struct Vector3 {
 	/* comparison */
 	bool operator== (const Vector3<T>& other) const { return x == other.x && y == other.y && z == other.z; }
 	bool operator!= (const Vector3<T>& other) const { return x != other.x || y != other.y || z != other.z; }
+
+	/* validity check */
+	bool IsValid() const {
+		return std::isnormal(x) && std::isnormal(y) && std::isnormal(z);
+	}
 
 	/* functions */
 	T Length() const { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z); }
