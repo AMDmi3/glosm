@@ -156,9 +156,9 @@ bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bb
 }
 
 Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
-	double lat = ref.y/1800000000.0*M_PI;
+	const double coslat = cos(ref.y/1800000000.0*M_PI);
 
-	double dx = (double)(what.x - ref.x)/3600000000.0*WGS84_EARTH_EQ_LENGTH*cos(lat);
+	double dx = (double)(what.x - ref.x)/3600000000.0*WGS84_EARTH_EQ_LENGTH*coslat;
 	double dy = (double)(what.y - ref.y)/3600000000.0*WGS84_EARTH_EQ_LENGTH;
 	double dz = (double)(what.z - ref.z)/1000.0;
 
@@ -166,9 +166,12 @@ Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
 }
 
 Vector3i FromLocalMetric(Vector3d what, Vector3i ref) {
-	double lat = ref.y/1800000000.0*M_PI;
+	const double coslat = cos(ref.y/1800000000.0*M_PI);
 
-	int x = ref.x + round(what.x*3600000000.0/WGS84_EARTH_EQ_LENGTH/cos(lat));
+	int x = ref.x;
+	if (coslat > std::numeric_limits<double>::epsilon())
+		x += round(what.x*3600000000.0/WGS84_EARTH_EQ_LENGTH/coslat);
+
 	int y = ref.y + round(what.y*3600000000.0/WGS84_EARTH_EQ_LENGTH);
 	int z = ref.z + round(what.z*1000.0);
 
