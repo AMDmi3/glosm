@@ -168,7 +168,6 @@ void TileManager::LoadingThreadFunc() {
 		datasource_.GetGeometry(*(to_load->second.geometry), bbox);
 
 		to_load->second.loading = false;
-	//	return;
 	}
 }
 
