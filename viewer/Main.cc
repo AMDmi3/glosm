@@ -212,12 +212,17 @@ void usage(const char* progname) {
 int real_main(int argc, char** argv) {
 	glutInit(&argc, argv);
 
+	/* stuff that may eb changed with args */
+	Projection proj = MercatorProjection();
+	int tilelevel = 0;
+
+	/* argument parsing */
 	int c;
 	const char* progname = argv[0];
-	Projection proj = MercatorProjection();
-	while ((c = getopt(argc, argv, "s")) != -1) {
+	while ((c = getopt(argc, argv, "st:")) != -1) {
 		switch (c) {
 		case 's': proj = SphericalProjection(); break;
+		case 't': tilelevel = strtol(optarg, NULL, 10); break;
 		default:
 			usage(progname);
 		}
@@ -225,6 +230,9 @@ int real_main(int argc, char** argv) {
 
 	argc -= optind;
 	argv += optind;
+
+	if (tilelevel < 0)
+		usage(progname);
 
 	if (argc != 1)
 		usage(progname);
@@ -259,6 +267,7 @@ int real_main(int argc, char** argv) {
 	/* glosm init */
 	DefaultGeometryGenerator geometry_generator(osm_datasource);
 	GeometryLayer layer(proj, geometry_generator);
+	layer.SetTargetLevel(tilelevel);
 	layer_p = &layer;
 
 	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;
