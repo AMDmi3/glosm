@@ -534,8 +534,8 @@ void DefaultGeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) co
 	 * all ways are included, even those which have width */
 	float extra_width = 24.0; /* still may be not sufficient, e.g. very wide roads */
 	BBoxi safe_bbox = BBoxi(
-			FromLocalMetric((Vector2d)ToLocalMetric(bbox.GetBottomLeft(), bbox.GetBottomLeft()) - extra_width, bbox.GetBottomLeft()),
-			FromLocalMetric((Vector2d)ToLocalMetric(bbox.GetTopRight(), bbox.GetTopRight()) + extra_width, bbox.GetTopRight())
+			FromLocalMetric(-Vector2d(extra_width, extra_width), bbox.GetBottomLeft()),
+			FromLocalMetric(Vector2d(extra_width, extra_width), bbox.GetTopRight())
 		);
 	datasource_.GetWays(ways, safe_bbox);
 
