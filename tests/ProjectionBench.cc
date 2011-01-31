@@ -18,9 +18,7 @@
  */
 
 /*
- * This test projects a point using Mercator projection, then
- * unprojects it. Result of project/unproject should match the
- * original point if the point is not far from origin.
+ * This is a microbenchmark for projections.
  */
 
 #include <stdio.h>
@@ -50,7 +48,7 @@ void ProjBench(Projection projection) {
 
 	float sec = (float)(end.tv_sec - start.tv_sec) + (float)(end.tv_usec - start.tv_usec)/1000000.0f;
 
-	fprintf(stderr, "  %d projections, %f seconds, %f pps\n", count, sec, (float)count/sec);
+	fprintf(stderr, "  %d points, %f seconds, %f points per second\n", count, sec, (float)count/sec);
 }
 
 int main() {
