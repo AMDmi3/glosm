@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 #include <glosm/MercatorProjection.hh>
+#include <glosm/SphericalProjection.hh>
 
 int ProjTest(Projection projection) {
 	osmint_t xref[] = { -1350000000, -450000000, 0, 450000000, 1350000000 };
@@ -92,6 +93,7 @@ int main() {
 	int result = 0;
 
 	result |= ProjTest(MercatorProjection());
+	result |= ProjTest(SphericalProjection());
 
 	return result;
 }
