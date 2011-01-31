@@ -198,18 +198,18 @@ API stability
 Tests
 =====
 
-  There are some test under tests/ subdirectory, you can run them by
+  There are some tests under tests/ subdirectory, you can run them by
   running `ctest' from your buildtree.
 
 Documentation
 =============
 
   Doxygen is supported, just run `doxygen' from this directory to
-  generate class descriptions under doc/html. There's also some more
+  generate class descriptions under doc/html/. There's also some more
   documentation under doc/.
 
-  There are also some simple examples of working with glosm under
-  examples/ subdirectory.
+  There are some simple examples of working with glosm under examples/
+  subdirectory.
 
 License
 =======
