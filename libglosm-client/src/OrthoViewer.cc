@@ -43,7 +43,7 @@ void OrthoViewer::SetupViewerMatrix(const Projection& projection) const {
 
 	/* undefined which is aspect: x/y or y/x */
 	float perspective[] = {
-		1.0f/xspan,  0.0f, 0.0f, 0.0f,
+		1.0f/xspan, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f/yspan, 0.0f, 0.0f,
 		0.0f, skew_/yspan, -1.0/zspan, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f,

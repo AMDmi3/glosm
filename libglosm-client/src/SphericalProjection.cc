@@ -32,20 +32,20 @@ Vector3f SphericalProjection::ProjectImpl(const Vector3i& point, const Vector3i&
 	double point_angle_y = (double)point.y * GEOM_DEG_TO_RAD;
 	double point_height = (double)point.z / GEOM_UNITSINMETER;
 
-    double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
-    double ref_height = (double)ref.z / GEOM_UNITSINMETER;
+	double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
+	double ref_height = (double)ref.z / GEOM_UNITSINMETER;
 
-    Vector3d point_vector(
-        (WGS84_EARTH_EQ_RADIUS + point_height) * sin(point_angle_x) * cos(point_angle_y),
-        (WGS84_EARTH_EQ_RADIUS + point_height) * sin(point_angle_y),
-        (WGS84_EARTH_EQ_RADIUS + point_height) * cos(point_angle_x) * cos(point_angle_y)
-    );
+	Vector3d point_vector(
+		(WGS84_EARTH_EQ_RADIUS + point_height) * sin(point_angle_x) * cos(point_angle_y),
+		(WGS84_EARTH_EQ_RADIUS + point_height) * sin(point_angle_y),
+		(WGS84_EARTH_EQ_RADIUS + point_height) * cos(point_angle_x) * cos(point_angle_y)
+	);
 
-    return Vector3f(
-        point_vector.x,
-        point_vector.y * cos(ref_angle_y) - point_vector.z * sin(ref_angle_y),
-        point_vector.y * sin(ref_angle_y) + point_vector.z * cos(ref_angle_y) - WGS84_EARTH_EQ_RADIUS - ref_height
-    );
+	return Vector3f(
+		point_vector.x,
+		point_vector.y * cos(ref_angle_y) - point_vector.z * sin(ref_angle_y),
+		point_vector.y * sin(ref_angle_y) + point_vector.z * cos(ref_angle_y) - WGS84_EARTH_EQ_RADIUS - ref_height
+	);
 }
 
 Vector3i SphericalProjection::UnProjectImpl(const Vector3f& point, const Vector3i& ref) {

@@ -106,7 +106,7 @@ BBoxi::Side IntersectSegmentWithBBox(const Vector3i& one, const Vector3i& two, c
 	if (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out))
 		return BBoxi::LEFT;
 
-	if (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out)  && bbox.Contains(out))
+	if (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) && bbox.Contains(out))
 		return BBoxi::BOTTOM;
 
 	if (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out))
@@ -125,7 +125,7 @@ BBoxi::Side IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, 
 	if (IntersectSegmentWithVertical(one, two, bbox.right, out) && bbox.Contains(out))
 		return BBoxi::RIGHT;
 
-	if (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out)  && bbox.Contains(out))
+	if (IntersectSegmentWithHorizontal(one, two, bbox.bottom, out) && bbox.Contains(out))
 		return BBoxi::BOTTOM;
 
 	if (IntersectSegmentWithVertical(one, two, bbox.left, out) && bbox.Contains(out))

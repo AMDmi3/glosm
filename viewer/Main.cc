@@ -167,7 +167,7 @@ void SpecialDown(int key, int, int) {
 	case GLUT_KEY_LEFT: movementflags |= FirstPersonViewer::LEFT; break;
 	case GLUT_KEY_RIGHT: movementflags |= FirstPersonViewer::RIGHT; break;
 	default:
-		  break;
+		break;
 	}
 }
 
@@ -178,7 +178,7 @@ void SpecialUp(int key, int, int) {
 	case GLUT_KEY_LEFT: movementflags &= ~FirstPersonViewer::LEFT; break;
 	case GLUT_KEY_RIGHT: movementflags &= ~FirstPersonViewer::RIGHT; break;
 	default:
-		  break;
+		break;
 	}
 }
 
@@ -196,7 +196,7 @@ void KeyDown(unsigned char key, int, int) {
 	case '+': speed *= 5.0f; break;
 	case '-': speed /= 5.0f; break;
 	default:
-		  break;
+		break;
 	}
 }
 
@@ -209,7 +209,7 @@ void KeyUp(unsigned char key, int, int) {
 	case 'c': movementflags &= ~FirstPersonViewer::LOWER; break;
 	case ' ': movementflags &= ~FirstPersonViewer::HIGHER; break;
 	default:
-		  break;
+		break;
 	}
 }
 
