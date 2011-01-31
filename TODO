@@ -41,6 +41,8 @@ Framework
     * When dropping tiles, use LRU
     * Properly calculate distance to viewer
     * Implement LOD's (need datasource and geomgen support)
+    * PreloadedXmlDatasource needs feature index by bbox
+    * Frustum culling (at render phase)
 
 Applications
   Tiler
