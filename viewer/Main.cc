@@ -35,6 +35,8 @@
 #include <vector>
 #include <map>
 
+#include <glosm/geomath.h>
+
 #include <glosm/Math.hh>
 
 #include <glosm/SphericalProjection.hh>
@@ -87,8 +89,9 @@ void Display(void) {
 	/* movement */
 	if (movementflags) {
 		float myspeed = speed;
-		float height = viewer.MutablePos().z / 1000.0;
+		float height = viewer.MutablePos().z / GEOM_UNITSINMETER;
 
+		/* don't scale down under 100 meters */
 		if (height > 100.0)
 			myspeed *= height / 100.0;
 
@@ -272,7 +275,7 @@ int real_main(int argc, char** argv) {
 		layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);
 	layer_p = &layer;
 
-	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;
+	int height = fabs((float)geometry_generator.GetBBox().top - (float)geometry_generator.GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
 
 	/* main loop */

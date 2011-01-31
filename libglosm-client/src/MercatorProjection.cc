@@ -28,17 +28,17 @@ MercatorProjection::MercatorProjection() : Projection(&ProjectImpl, &UnProjectIm
 
 Vector3f MercatorProjection::ProjectImpl(const Vector3i& point, const Vector3i& ref) {
 	return Vector3f(
-			(double)((osmlong_t)point.x - ref.x) / 1800000000.0 * M_PI,
-			mercator((double)point.y / 1800000000.0 * M_PI) - mercator((double)ref.y / 1800000000.0 * M_PI),
-			(double)(point.z - ref.z) / 1000.0 / (WGS84_EARTH_EQ_RADIUS * cos((double)(point.y / 1800000000.0 * M_PI)))
+			(double)((osmlong_t)point.x - ref.x) * GEOM_DEG_TO_RAD,
+			mercator((double)point.y * GEOM_DEG_TO_RAD) - mercator((double)ref.y * GEOM_DEG_TO_RAD),
+			(double)(point.z - ref.z) / GEOM_UNITSINMETER / (WGS84_EARTH_EQ_RADIUS * cos((double)(point.y * GEOM_DEG_TO_RAD)))
 		);
 }
 
 Vector3i MercatorProjection::UnProjectImpl(const Vector3f& point, const Vector3i& ref) {
-	double y = unmercator((double)point.y + mercator((double)ref.y / 1800000000.0 * M_PI));
+	double y = unmercator((double)point.y + mercator((double)ref.y * GEOM_DEG_TO_RAD));
 	return Vector3i(
-			ref.x + (osmint_t)round(point.x / M_PI * 1800000000.0),
-			(osmint_t)round(y / M_PI * 1800000000.0),
-			ref.z + (osmint_t)round((double)point.z * 1000.0 * WGS84_EARTH_EQ_RADIUS * cos(y))
+			ref.x + (osmint_t)round(point.x * GEOM_RAD_TO_DEG),
+			(osmint_t)round(y * GEOM_RAD_TO_DEG),
+			ref.z + (osmint_t)round((double)point.z * GEOM_UNITSINMETER * WGS84_EARTH_EQ_RADIUS * cos(y))
 		);
 }

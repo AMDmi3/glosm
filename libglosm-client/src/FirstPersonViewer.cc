@@ -47,19 +47,19 @@ void FirstPersonViewer::SetupViewerMatrix(const Projection& projection) const {
 	glLoadIdentity();
 
 	/* length of a meter in local units */
-	float meterlen = projection.Project(pos_.Flattened() + Vector3i(0, 0, 1000), pos_.Flattened()).z;
+	float meterlen = projection.Project(pos_.Flattened() + Vector3i(0, 0, GEOM_UNITSINMETER), pos_.Flattened()).z;
 
 	/* viewer height in meters */
-	float height = pos_.z / 1000.0f;
+	float height = pos_.z / (float)GEOM_UNITSINMETER;
 	if (height < 100.0f)
 		height = 100.0f;
 
 	/* viewing distances is [1meter..100km] at under 100m height
 	 * and increases linearly with going higher */
-	float near = 0.01f*height*meterlen;
-	float far = 1000.0f*height*meterlen;
+	float near = 0.01f * height * meterlen;
+	float far = 1000.0f * height * meterlen;
 
-	gluPerspective(fov_/M_PI*180.0f, aspect_, near, far);
+	gluPerspective(fov_ / M_PI * 180.0f, aspect_, near, far);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -93,9 +93,9 @@ void FirstPersonViewer::SetPos(Vector3i pos) {
 void FirstPersonViewer::Move(int flags, float speed, float time) {
 	/* 1 meter direction-collinear vector in OSM coordinate space */
 	Vector3f dirbasis = Vector3f(
-			1.0/WGS84_EARTH_EQ_LENGTH/cos(pos_.y / 1800000000.0 * M_PI)*3600000000.0,
-			1.0/WGS84_EARTH_EQ_LENGTH*3600000000.0,
-			1000.0
+			GEOM_LONSPAN / WGS84_EARTH_EQ_LENGTH / cos(pos_.y * GEOM_DEG_TO_RAD),
+			GEOM_LONSPAN / WGS84_EARTH_EQ_LENGTH,
+			GEOM_UNITSINMETER
 		);
 
 	Vector3f dir = GetDirection();
@@ -121,16 +121,16 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 		pos_ -= dirbasis * worldup * speed * time;
 
 	/* Wrap around */
-	if (pos_.x > 1800000000)
-		pos_.x -= 3600000000U;
-	if (pos_.x < -1800000000)
-		pos_.x += 3600000000U;
+	if (pos_.x > GEOM_MAXLON)
+		pos_.x -= GEOM_LONSPAN;
+	if (pos_.x < GEOM_MINLON)
+		pos_.x += GEOM_LONSPAN;
 
 	/* Limit poles */
-	if (pos_.y > 850000000)
-		pos_.y = 850000000;
-	if (pos_.y < -850000000)
-		pos_.y = -850000000;
+	if (pos_.y > GEOM_MERCATOR_MAXLAT)
+		pos_.y = GEOM_MERCATOR_MAXLAT;
+	if (pos_.y < GEOM_MERCATOR_MINLAT)
+		pos_.y = GEOM_MERCATOR_MINLAT;
 
 	/* Limit height */
 	if (pos_.z < 0.0)

@@ -28,12 +28,12 @@ SphericalProjection::SphericalProjection() : Projection(&ProjectImpl, &UnProject
 }
 
 Vector3f SphericalProjection::ProjectImpl(const Vector3i& point, const Vector3i& ref) {
-	double point_angle_x = ((double)point.x - (double)ref.x) / 1800000000.0 * M_PI;
-	double point_angle_y = (double)point.y / 1800000000.0 * M_PI;
-	double point_height = (double)point.z / 1000.0;
+	double point_angle_x = ((double)point.x - (double)ref.x) * GEOM_DEG_TO_RAD;
+	double point_angle_y = (double)point.y * GEOM_DEG_TO_RAD;
+	double point_height = (double)point.z / GEOM_UNITSINMETER;
 
-    double ref_angle_y = (double)ref.y / 1800000000.0 * M_PI;
-    double ref_height = (double)ref.z / 1000.0;
+    double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
+    double ref_height = (double)ref.z / GEOM_UNITSINMETER;
 
     Vector3d point_vector(
         (WGS84_EARTH_EQ_RADIUS + point_height) * sin(point_angle_x) * cos(point_angle_y),

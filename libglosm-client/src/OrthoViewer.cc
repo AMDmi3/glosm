@@ -39,7 +39,7 @@ void OrthoViewer::SetupViewerMatrix(const Projection& projection) const {
 	float yspan = fabs(projection.Project(Vector2i(0, bbox_.top), center).y);
 
 	/* Take +/- 1km as Z range */
-	float zspan = fabs(projection.Project(Vector3i(center.x, center.y, 1000000), Vector3i(center.x, center.y, 0)).z);
+	float zspan = fabs(projection.Project(Vector3i(center.x, center.y, 1000 * GEOM_UNITSINMETER), Vector3i(center.x, center.y, 0)).z);
 
 	/* undefined which is aspect: x/y or y/x */
 	float perspective[] = {
@@ -66,10 +66,10 @@ void OrthoViewer::SetBBox(const BBoxi& bbox) {
 }
 
 void OrthoViewer::SetBBoxForTile(int nx, int ny, int zoom) {
-	bbox_.left = round(((double)nx) / pow(2.0, zoom) * 3600000000.0 - 1800000000.0);
-	bbox_.right = round(((double)nx + 1.0) / pow(2.0, zoom) * 3600000000.0 - 1800000000.0);
-	bbox_.bottom = round(-unmercator(((float)ny) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0);
-	bbox_.top = round(-unmercator(((float)ny + 1.0) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0);
+	bbox_.left = round(((double)nx) / pow(2.0, zoom) * GEOM_LONSPAN - GEOM_MAXLON);
+	bbox_.right = round(((double)nx + 1.0) / pow(2.0, zoom) * GEOM_LONSPAN - GEOM_MAXLON);
+	bbox_.bottom = round(-unmercator(((float)ny) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) * GEOM_RAD_TO_DEG);
+	bbox_.top = round(-unmercator(((float)ny + 1.0) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) * GEOM_RAD_TO_DEG);
 }
 
 void OrthoViewer::SetSkew(float skew) {

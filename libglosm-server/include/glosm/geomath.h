@@ -34,6 +34,24 @@
 /* Zero meridian offset (rel to Greenwich) in WGS84 */
 #define WGS84_LONGITUDE_OFFSET 5.31/3600.0
 
+/* Portable geometry constants */
+#define GEOM_UNITSINDEGREE 10000000
+#define GEOM_UNITSINMETER 1000
+
+#define GEOM_MINLON (-180 * GEOM_UNITSINDEGREE)
+#define GEOM_MAXLON ( 180 * GEOM_UNITSINDEGREE)
+#define GEOM_MINLAT (-90 * GEOM_UNITSINDEGREE)
+#define GEOM_MAXLAT ( 90 * GEOM_UNITSINDEGREE)
+
+#define GEOM_LONSPAN (360U * GEOM_UNITSINDEGREE)
+#define GEOM_LATSPAN (180 * GEOM_UNITSINDEGREE)
+
+#define GEOM_MERCATOR_MINLAT (-85 * GEOM_UNITSINDEGREE)
+#define GEOM_MERCATOR_MAXLAT ( 85 * GEOM_UNITSINDEGREE)
+
+#define GEOM_DEG_TO_RAD (M_PI / (double)(180 * GEOM_UNITSINDEGREE))
+#define GEOM_RAD_TO_DEG ((double)(180 * GEOM_UNITSINDEGREE) / M_PI)
+
 /*
  * These were chosen out of 7 mercator and 4 unmercator
  * functions as fastest on common i386/amd64 hardware; these also

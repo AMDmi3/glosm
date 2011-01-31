@@ -156,24 +156,24 @@ bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bb
 }
 
 Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
-	const double coslat = cos(ref.y/1800000000.0*M_PI);
+	const double coslat = cos(ref.y * GEOM_DEG_TO_RAD);
 
-	double dx = (double)(what.x - ref.x)/3600000000.0*WGS84_EARTH_EQ_LENGTH*coslat;
-	double dy = (double)(what.y - ref.y)/3600000000.0*WGS84_EARTH_EQ_LENGTH;
-	double dz = (double)(what.z - ref.z)/1000.0;
+	double dx = (double)(what.x - ref.x) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * coslat;
+	double dy = (double)(what.y - ref.y) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH;
+	double dz = (double)(what.z - ref.z) / GEOM_UNITSINMETER;
 
 	return Vector3f(dx, dy, dz);
 }
 
 Vector3i FromLocalMetric(Vector3d what, Vector3i ref) {
-	const double coslat = cos(ref.y/1800000000.0*M_PI);
+	const double coslat = cos(ref.y * GEOM_DEG_TO_RAD);
 
 	int x = ref.x;
 	if (coslat > std::numeric_limits<double>::epsilon())
-		x += round(what.x*3600000000.0/WGS84_EARTH_EQ_LENGTH/coslat);
+		x += round(what.x * GEOM_LONSPAN / WGS84_EARTH_EQ_LENGTH / coslat);
 
-	int y = ref.y + round(what.y*3600000000.0/WGS84_EARTH_EQ_LENGTH);
-	int z = ref.z + round(what.z*1000.0);
+	int y = ref.y + round(what.y * GEOM_LONSPAN / WGS84_EARTH_EQ_LENGTH);
+	int z = ref.z + round(what.z * GEOM_UNITSINMETER);
 
 	return Vector3i(x, y, z);
 }
