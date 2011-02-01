@@ -69,11 +69,10 @@ Vector3i SphericalProjection::UnProjectImpl(const Vector3f& point, const Vector3
 			cosay * (WGS84_EARTH_EQ_RADIUS + ref_height + point.z) - sinay * point.y
 		);
 
-	double full_len = point_vector.Length();
 	Vector3d spherical(
 		atan2(point_vector.x, point_vector.z),
 		atan2(point_vector.y, sqrt(point_vector.x * point_vector.x + point_vector.z * point_vector.z)),
-		full_len - WGS84_EARTH_EQ_RADIUS
+		point_vector.Length() - WGS84_EARTH_EQ_RADIUS
 	);
 
 	return Vector3i(
