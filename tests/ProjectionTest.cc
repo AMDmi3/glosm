@@ -72,7 +72,7 @@ int ProjTest(Projection projection) {
 
 				int maxerror = std::max(error.x, std::max(error.y, error.z));
 
-				printf("[%d,%d,%d] by [%d,%d,%d] -> [%.10f,%.10f,%.10f] -> [%d,%d,%d] error=%d\n",
+				printf("[%d, %d, %d]\n  by [%d, %d, %d]\n    -> [%.10f, %.10f, %.10f]\n      -> [%d, %d, %d]\n  error=%d\n",
 						orig.x, orig.y, orig.z,
 						ref.x, ref.y, ref.z,
 						projected.x, projected.y, projected.z,
