@@ -57,6 +57,28 @@ Vector3f SphericalProjection::ProjectImpl(const Vector3i& point, const Vector3i&
 }
 
 Vector3i SphericalProjection::UnProjectImpl(const Vector3f& point, const Vector3i& ref) {
-	throw std::runtime_error("SphericalProjection::UnProjectImpl not implemented");
-	return Vector3i();
+	double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
+	double ref_height = (double)ref.z / GEOM_UNITSINMETER;
+
+	/* XXX: this can benefit from sincos() on Linux */
+	double cosay = cos(ref_angle_y);
+	double sinay = sin(ref_angle_y);
+	Vector3d point_vector(
+			point.x,
+			sinay * (WGS84_EARTH_EQ_RADIUS + ref_height + point.z) + cosay * point.y,
+			cosay * (WGS84_EARTH_EQ_RADIUS + ref_height + point.z) - sinay * point.y
+		);
+
+	double full_len = point_vector.Length();
+	Vector3d spherical(
+		atan2(point_vector.x, point_vector.z),
+		atan2(point_vector.y, sqrt(point_vector.x * point_vector.x + point_vector.z * point_vector.z)),
+		full_len - WGS84_EARTH_EQ_RADIUS
+	);
+
+	return Vector3i(
+			ref.x + (osmint_t)round(spherical.x * GEOM_RAD_TO_DEG),
+			(osmint_t)round(spherical.y * GEOM_RAD_TO_DEG),
+			(osmint_t)round(spherical.z * GEOM_UNITSINMETER)
+		);
 }
