@@ -35,20 +35,20 @@ Vector3f SphericalProjection::ProjectImpl(const Vector3i& point, const Vector3i&
 	double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
 	double ref_height = (double)ref.z / GEOM_UNITSINMETER;
 
-	/* using sqrt(1-sin^2) instead of cos and vice versa gives
-	 * ~30% performance gain (thx Komzpa). Precision loss this
-	 * brings should be insignificant */
+	/* XXX: this can benefit from sincos() on Linux */
+	double cosx = cos(point_angle_x);
 	double cosy = cos(point_angle_y);
 	double sinx = sin(point_angle_x);
+	double siny = sin(point_angle_y);
 	Vector3d point_vector(
 		(WGS84_EARTH_EQ_RADIUS + point_height) * sinx * cosy,
-		(WGS84_EARTH_EQ_RADIUS + point_height) * sqrt(1.0 - cosy * cosy),
-		(WGS84_EARTH_EQ_RADIUS + point_height) * sqrt(1.0 - sinx * sinx) * cosy
+		(WGS84_EARTH_EQ_RADIUS + point_height) * siny,
+		(WGS84_EARTH_EQ_RADIUS + point_height) * cosx * cosy
 	);
 
-	/* additional ~20% performance gain */
+	/* XXX: this can benefit from sincos() on Linux */
 	double cosay = cos(ref_angle_y);
-	double sinay = sqrt(1.0 - cosay * cosay);
+	double sinay = sin(ref_angle_y);
 	return Vector3f(
 		point_vector.x,
 		point_vector.y * cosay - point_vector.z * sinay,
