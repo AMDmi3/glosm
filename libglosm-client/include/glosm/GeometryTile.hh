@@ -43,7 +43,8 @@ protected:
 	std::auto_ptr<SimpleVertexBuffer> quads_;
 
 #ifdef TILE_DEBUG
-	Vector3f bound_[4];
+	Vector3f bound_1[4];
+	Vector3f bound_2[40];
 #endif
 
 public:
