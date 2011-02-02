@@ -22,7 +22,6 @@
 #include <glosm/geomath.h>
 
 #include <cmath>
-#include <stdexcept>
 
 SphericalProjection::SphericalProjection() : Projection(&ProjectImpl, &UnProjectImpl) {
 }
@@ -35,20 +34,29 @@ Vector3f SphericalProjection::ProjectImpl(const Vector3i& point, const Vector3i&
 	double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
 	double ref_height = (double)ref.z / GEOM_UNITSINMETER;
 
-	/* XXX: this can benefit from sincos() on Linux */
+#ifdef HAVE_SINCOS
+	double sinx, cosx, siny, cosy;
+	sincos(point_angle_x, &sinx, &cosx);
+	sincos(point_angle_y, &siny, &cosy);
+#else
 	double cosx = cos(point_angle_x);
 	double cosy = cos(point_angle_y);
 	double sinx = sin(point_angle_x);
 	double siny = sin(point_angle_y);
+#endif
 	Vector3d point_vector(
 		(WGS84_EARTH_EQ_RADIUS + point_height) * sinx * cosy,
 		(WGS84_EARTH_EQ_RADIUS + point_height) * siny,
 		(WGS84_EARTH_EQ_RADIUS + point_height) * cosx * cosy
 	);
 
-	/* XXX: this can benefit from sincos() on Linux */
-	double cosay = cos(ref_angle_y);
+#ifdef HAVE_SINCOS
+	double sinay, cosay;
+	sincos(ref_angle_y, &sinay, &cosay);
+#else
 	double sinay = sin(ref_angle_y);
+	double cosay = cos(ref_angle_y);
+#endif
 	return Vector3f(
 		point_vector.x,
 		point_vector.y * cosay - point_vector.z * sinay,
@@ -60,9 +68,13 @@ Vector3i SphericalProjection::UnProjectImpl(const Vector3f& point, const Vector3
 	double ref_angle_y = (double)ref.y * GEOM_DEG_TO_RAD;
 	double ref_height = (double)ref.z / GEOM_UNITSINMETER;
 
-	/* XXX: this can benefit from sincos() on Linux */
-	double cosay = cos(ref_angle_y);
+#ifdef HAVE_SINCOS
+	double sinay, cosay;
+	sincos(ref_angle_y, &sinay, &cosay);
+#else
 	double sinay = sin(ref_angle_y);
+	double cosay = cos(ref_angle_y);
+#endif
 	Vector3d point_vector(
 			point.x,
 			sinay * (WGS84_EARTH_EQ_RADIUS + ref_height + point.z) + cosay * point.y,
