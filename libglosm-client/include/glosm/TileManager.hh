@@ -51,7 +51,7 @@ protected:
 	};
 
 	struct TileData {
-		Tile* volatile tile;
+		Tile* tile;
 		Geometry* volatile geometry;
 		int generation;
 		volatile bool loading;
