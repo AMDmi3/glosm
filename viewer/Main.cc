@@ -277,6 +277,7 @@ int real_main(int argc, char** argv) {
 
 	int height = fabs((float)geometry_generator.GetBBox().top - (float)geometry_generator.GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
+	viewer.HardRotate(0, -M_PI_4);
 
 	/* main loop */
 	/* note that this never returns and objects created above
