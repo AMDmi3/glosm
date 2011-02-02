@@ -17,8 +17,8 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DEFAULTGEOMETRYGENERATOR_HH
-#define DEFAULTGEOMETRYGENERATOR_HH
+#ifndef GEOMETRYGENERATOR_HH
+#define GEOMETRYGENERATOR_HH
 
 #include <glosm/Math.hh>
 #include <glosm/GeometryDatasource.hh>
@@ -26,12 +26,12 @@
 class OsmDatasource;
 class Geometry;
 
-class DefaultGeometryGenerator : public GeometryDatasource {
+class GeometryGenerator : public GeometryDatasource {
 protected:
 	const OsmDatasource& datasource_;
 
 public:
-	DefaultGeometryGenerator(const OsmDatasource& datasource);
+	GeometryGenerator(const OsmDatasource& datasource);
 	void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::ForEarth()) const;
 
 	virtual Vector2i GetCenter() const;

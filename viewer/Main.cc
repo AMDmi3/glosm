@@ -42,7 +42,7 @@
 #include <glosm/SphericalProjection.hh>
 #include <glosm/MercatorProjection.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
-#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/GeometryGenerator.hh>
 #include <glosm/FirstPersonViewer.hh>
 #include <glosm/GeometryLayer.hh>
 
@@ -267,7 +267,7 @@ int real_main(int argc, char** argv) {
 	glutSpecialUpFunc(SpecialUp);
 
 	/* glosm init */
-	DefaultGeometryGenerator geometry_generator(osm_datasource);
+	GeometryGenerator geometry_generator(osm_datasource);
 	GeometryLayer layer(proj, geometry_generator);
 	if (tilelevel >= 0)
 		layer.SetTargetLevel(tilelevel);

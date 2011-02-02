@@ -33,7 +33,7 @@
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/FirstPersonViewer.hh>
 #include <glosm/GeometryLayer.hh>
-#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/GeometryGenerator.hh>
 
 Viewer* g_viewer = NULL;
 GeometryLayer* g_layer = NULL;
@@ -72,16 +72,19 @@ int main(int argc, char** argv) {
 	osm_datasource.Load(TESTDATA);
 
 	/* 2) Create facility to translate OSM data to geometry */
-	DefaultGeometryGenerator geometry_generator(osm_datasource);
+	GeometryGenerator geometry_generator(osm_datasource);
 
 	/* 3) Create layer which will render that geometry */
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
 
-	/* 4) Create viewer to control eye position and direction */
+	/* 4) Request all data to be loaded synchronously */
+	layer.RequestVisible(BBoxi::Full(), TileManager::SYNC);
+
+	/* 5) Create viewer to control eye position and direction */
 	FirstPersonViewer viewer;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), 100000 /* 100 meters */));
 	viewer.SetAspect(800.0/600.0);
-	viewer.HardRotate(-135.0 / 180.0 * M_PI, -30.0 / 180.0 * M_PI);
+	viewer.HardRotate(-135.0 / 180.0 * M_PI, -60.0 / 180.0 * M_PI);
 
 	/*** glosm stuff ends ***/
 

@@ -33,7 +33,7 @@
 
 #include <glosm/MercatorProjection.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
-#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/GeometryGenerator.hh>
 #include <glosm/GeometryLayer.hh>
 #include <glosm/OrthoViewer.hh>
 #include <glosm/geomath.h>
@@ -141,7 +141,7 @@ int real_main(int argc, char** argv) {
 	osm_datasource.Load(argv[0]);
 
 	fprintf(stderr, "Creating geometry...\n");
-	DefaultGeometryGenerator geometry_generator(osm_datasource);
+	GeometryGenerator geometry_generator(osm_datasource);
 
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
 	layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);

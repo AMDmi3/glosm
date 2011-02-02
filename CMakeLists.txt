@@ -24,7 +24,7 @@ ADD_DEFINITIONS(-Wall -Wextra -DTILE_DEBUG)
 # Framework subdirs
 ADD_SUBDIRECTORY(libglosm-server)
 ADD_SUBDIRECTORY(libglosm-client)
-ADD_SUBDIRECTORY(libgeomgen-default)
+ADD_SUBDIRECTORY(libglosm-geomgen)
 
 # Application subdirs
 IF(BUILD_VIEWER)

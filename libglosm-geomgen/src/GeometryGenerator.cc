@@ -17,7 +17,7 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glosm/DefaultGeometryGenerator.hh>
+#include <glosm/GeometryGenerator.hh>
 
 #include <glosm/OsmDatasource.hh>
 #include <glosm/Geometry.hh>
@@ -524,10 +524,10 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const
 	}
 }
 
-DefaultGeometryGenerator::DefaultGeometryGenerator(const OsmDatasource& datasource) : datasource_(datasource) {
+GeometryGenerator::GeometryGenerator(const OsmDatasource& datasource) : datasource_(datasource) {
 }
 
-void DefaultGeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) const {
+void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) const {
 	std::vector<OsmDatasource::Way> ways;
 
 	/* safe bbox is a bit wider than requested one to be sure
@@ -547,10 +547,10 @@ void DefaultGeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) co
 	geom.AppendCropped(temp, bbox);
 }
 
-Vector2i DefaultGeometryGenerator::GetCenter() const {
+Vector2i GeometryGenerator::GetCenter() const {
 	return datasource_.GetCenter();
 }
 
-BBoxi DefaultGeometryGenerator::GetBBox() const {
+BBoxi GeometryGenerator::GetBBox() const {
 	return datasource_.GetBBox();
 }
