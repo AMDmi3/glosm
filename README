@@ -11,7 +11,7 @@ Features
    * Basic OSM XML loader
    * Basic geometry generator (renders buildings, barriers and roads
      in 3D, other polygons as lines at ground level)
-   * Spherical mercator projection
+   * Mercator and spherical projections
    * First-person OSM viewer
    * Command-line ortho tile renderer
    * Extensible framework for building (other) 3D geodata
@@ -65,7 +65,7 @@ Usage
   glosm-viewer
   ------------
 
-    glosm-viewer <file.osm|->
+    glosm-viewer [-s] [-t N] <file.osm|->
 
   runs interactive 3D map viewer for a specified map dump. Dumps can
   be obtained from OpenStreetMap editing applications (jOSM,
@@ -78,6 +78,11 @@ Usage
   Please be careful with large dumps, as the application requires
   amount of RAM comparable to the .osm file size. It also takes some
   time (under a minute, however) to load a large dump.
+
+  Options:
+
+    -s      - enable spherical Earth view (instead of mercator)
+    -t N    - enable tiling of level N (experimental)
 
   Controls:
 
@@ -104,6 +109,7 @@ Usage
   If `-' is provided as filename, osm data is read from stdin.
 
   Options:
+
     -0..-9     - set png compression level (default 6)
 
     -x minlon
