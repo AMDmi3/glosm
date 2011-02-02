@@ -41,6 +41,7 @@ protected:
 	std::auto_ptr<VBO> vertices_;
 	std::auto_ptr<VBO> normals_;
 	GLenum mode_;
+	int size_;
 
 public:
 	enum Type {
@@ -52,6 +53,8 @@ public:
 public:
 	SimpleVertexBuffer(Type type, Vector3f* vertices, int count);
 	virtual ~SimpleVertexBuffer();
+
+	int GetSize() const;
 
 	virtual void Render();
 };

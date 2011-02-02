@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 #include <glosm/MercatorProjection.hh>
+#include <glosm/SphericalProjection.hh>
 
 int ProjTest(Projection projection) {
 	osmint_t xref[] = { -1350000000, -450000000, 0, 450000000, 1350000000 };
@@ -71,7 +72,7 @@ int ProjTest(Projection projection) {
 
 				int maxerror = std::max(error.x, std::max(error.y, error.z));
 
-				printf("[%d,%d,%d] by [%d,%d,%d] -> [%.10f,%.10f,%.10f] -> [%d,%d,%d] error=%d\n",
+				printf("[%d, %d, %d]\n  by [%d, %d, %d]\n    -> [%.10f, %.10f, %.10f]\n      -> [%d, %d, %d]\n  error=%d\n",
 						orig.x, orig.y, orig.z,
 						ref.x, ref.y, ref.z,
 						projected.x, projected.y, projected.z,
@@ -92,6 +93,7 @@ int main() {
 	int result = 0;
 
 	result |= ProjTest(MercatorProjection());
+	result |= ProjTest(SphericalProjection());
 
 	return result;
 }

@@ -320,9 +320,20 @@ void PreloadedXmlDatasource::EndElement(void* userData, const char* /*name*/) {
 					if (i != loader->last_way_->second.Nodes.begin())
 						area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
 					prev = cur;
+					loader->last_way_->second.BBox.Include(cur->second.Pos);
 				}
 
 				loader->last_way_->second.Clockwise = area < 0;
+			} else {
+				for (Way::NodesList::const_iterator i = loader->last_way_->second.Nodes.begin(); i != loader->last_way_->second.Nodes.end(); ++i) {
+					NodesMap::const_iterator cur = loader->nodes_.find(*i);
+					if (cur == loader->nodes_.end()) {
+						std::stringstream e;
+						e << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
+						throw std::runtime_error(e.str());
+					}
+					loader->last_way_->second.BBox.Include(cur->second.Pos);
+				}
 			}
 			break;
 		default:
@@ -418,7 +429,8 @@ const OsmDatasource::Relation& PreloadedXmlDatasource::GetRelation(osmid_t id) c
 	return i->second;
 }
 
-void PreloadedXmlDatasource::GetAllWays(std::vector<OsmDatasource::Way>& out) const {
+void PreloadedXmlDatasource::GetWays(std::vector<OsmDatasource::Way>& out, const BBoxi& bbox) const {
 	for (WaysMap::const_iterator i = ways_.begin(); i != ways_.end(); ++i)
-		out.push_back(i->second);
+		if (i->second.BBox.Intersects(bbox))
+			out.push_back(i->second);
 }

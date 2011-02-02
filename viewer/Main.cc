@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
@@ -34,8 +35,11 @@
 #include <vector>
 #include <map>
 
+#include <glosm/geomath.h>
+
 #include <glosm/Math.hh>
 
+#include <glosm/SphericalProjection.hh>
 #include <glosm/MercatorProjection.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/DefaultGeometryGenerator.hh>
@@ -57,6 +61,10 @@ int lockheight = 0;
 struct timeval prevtime, curtime, fpstime;
 int nframes = 0;
 
+/* stuff that may eb changed with args */
+Projection proj = MercatorProjection();
+int tilelevel = -1;
+
 void Display(void) {
 	/* update scene */
 	gettimeofday(&curtime, NULL);
@@ -66,20 +74,26 @@ void Display(void) {
 	glClearColor(0.5, 0.5, 0.5, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (layer_p)
+	if (layer_p) {
+		if (tilelevel >= 0) {
+			int radius = 5000000;
+			layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
+			layer_p->GarbageCollect();
+		}
 		layer_p->Render(viewer);
+	}
 
 	glFlush();
 	glutSwapBuffers();
 
+	/* movement */
 	if (movementflags) {
 		float myspeed = speed;
-		float height = viewer.MutablePos().z / 1000.0;
+		float height = viewer.MutablePos().z / GEOM_UNITSINMETER;
 
-		if (height > 100.0 && height < 100000.0)
+		/* don't scale down under 100 meters */
+		if (height > 100.0)
 			myspeed *= height / 100.0;
-		else if (height >= 100000.0)
-			myspeed *= 1000.0;
 
 		viewer.Move(movementflags, myspeed, dt);
 	}
@@ -153,7 +167,7 @@ void SpecialDown(int key, int, int) {
 	case GLUT_KEY_LEFT: movementflags |= FirstPersonViewer::LEFT; break;
 	case GLUT_KEY_RIGHT: movementflags |= FirstPersonViewer::RIGHT; break;
 	default:
-		  break;
+		break;
 	}
 }
 
@@ -164,7 +178,7 @@ void SpecialUp(int key, int, int) {
 	case GLUT_KEY_LEFT: movementflags &= ~FirstPersonViewer::LEFT; break;
 	case GLUT_KEY_RIGHT: movementflags &= ~FirstPersonViewer::RIGHT; break;
 	default:
-		  break;
+		break;
 	}
 }
 
@@ -182,7 +196,7 @@ void KeyDown(unsigned char key, int, int) {
 	case '+': speed *= 5.0f; break;
 	case '-': speed /= 5.0f; break;
 	default:
-		  break;
+		break;
 	}
 }
 
@@ -195,24 +209,45 @@ void KeyUp(unsigned char key, int, int) {
 	case 'c': movementflags &= ~FirstPersonViewer::LOWER; break;
 	case ' ': movementflags &= ~FirstPersonViewer::HIGHER; break;
 	default:
-		  break;
+		break;
 	}
+}
+
+void usage(const char* progname) {
+	fprintf(stderr, "Usage: %s [-s] file.osm\n", progname);
+	exit(1);
 }
 
 int real_main(int argc, char** argv) {
 	glutInit(&argc, argv);
 
-	if (argc != 2)
-		errx(1, "Usage: %s file.osm", argv[0]);
+	/* argument parsing */
+	int c;
+	const char* progname = argv[0];
+	while ((c = getopt(argc, argv, "st:")) != -1) {
+		switch (c) {
+		case 's': proj = SphericalProjection(); break;
+		case 't': tilelevel = strtol(optarg, NULL, 10); break;
+		default:
+			usage(progname);
+		}
+	}
+
+	argc -= optind;
+	argv += optind;
+
+	if (argc != 1)
+		usage(progname);
 
 	/* load data */
 	fprintf(stderr, "Loading...\n");
 	PreloadedXmlDatasource osm_datasource;
 	gettimeofday(&prevtime, NULL);
-	osm_datasource.Load(argv[1]);
+	osm_datasource.Load(argv[0]);
 	gettimeofday(&curtime, NULL);
 	fprintf(stderr, "Loaded XML in %.3f seconds\n", (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f);
 	prevtime = curtime;
+	fpstime = curtime;
 
 	/* glut init */
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
@@ -232,22 +267,16 @@ int real_main(int argc, char** argv) {
 	glutSpecialUpFunc(SpecialUp);
 
 	/* glosm init */
-	gettimeofday(&prevtime, NULL);
-
 	DefaultGeometryGenerator geometry_generator(osm_datasource);
-	GeometryLayer layer(MercatorProjection(), geometry_generator);
+	GeometryLayer layer(proj, geometry_generator);
+	if (tilelevel >= 0)
+		layer.SetTargetLevel(tilelevel);
+	else
+		layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);
 	layer_p = &layer;
 
-	gettimeofday(&curtime, NULL);
-	fprintf(stderr, "Prepared geometry in %.3f seconds\n", (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f);
-	prevtime = curtime;
-	fpstime = curtime;
-
-	int height = fabs((float)geometry_generator.GetBBox().top -  (float)geometry_generator.GetBBox().bottom)/3600000000.0*40000000.0/10.0*1000.0;
+	int height = fabs((float)geometry_generator.GetBBox().top - (float)geometry_generator.GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
-
-	/* with current GeometryLayer implementation, datasources are no longer needed */
-	osm_datasource.Clear();
 
 	/* main loop */
 	/* note that this never returns and objects created above

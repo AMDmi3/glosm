@@ -19,7 +19,7 @@ SET(BINDIR "bin" CACHE STRING "Install subdirectory for binaries")
 SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
 
 # Global definitions
-ADD_DEFINITIONS(-Wall -Wextra)
+ADD_DEFINITIONS(-Wall -Wextra -DTILE_DEBUG)
 
 # Framework subdirs
 ADD_SUBDIRECTORY(libglosm-server)

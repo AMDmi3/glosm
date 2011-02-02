@@ -33,6 +33,7 @@ SET(SOURCES
 	src/Geometry.cc
 	src/BBox.cc
 	src/PreloadedXmlDatasource.cc
+	src/GeometryOperations.cc
 )
 
 SET(HEADERS

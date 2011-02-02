@@ -21,6 +21,7 @@
 
 #include <glosm/OsmDatasource.hh>
 #include <glosm/Geometry.hh>
+#include <glosm/GeometryOperations.hh>
 
 #include <glosm/geomath.h>
 
@@ -32,26 +33,6 @@
 
 typedef std::list<Vector2i> VertexList;
 typedef std::vector<Vector2i> VertexVector;
-
-Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
-	double lat = ref.y/1800000000.0*M_PI;
-
-	double dx = (double)(what.x - ref.x)/3600000000.0*WGS84_EARTH_EQ_LENGTH*cos(lat);
-	double dy = (double)(what.y - ref.y)/3600000000.0*WGS84_EARTH_EQ_LENGTH;
-	double dz = (double)(what.z - ref.z)/1000.0;
-
-	return Vector3f(dx, dy, dz);
-}
-
-Vector3i FromLocalMetric(Vector3d what, Vector3i ref) {
-	double lat = ref.y/1800000000.0*M_PI;
-
-	int x = ref.x + what.x*3600000000.0/WGS84_EARTH_EQ_LENGTH/cos(lat);
-	int y = ref.y + what.y*3600000000.0/WGS84_EARTH_EQ_LENGTH;
-	int z = ref.z + what.z*1000.0;
-
-	return Vector3i(x, y, z);
-}
 
 static void CreateLines(Geometry& geom, const VertexList& vertices, int z, const OsmDatasource::Way& way) {
 	if (vertices.size() < 2)
@@ -220,7 +201,7 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 
 		if (shape->second == "pyramidal") {
 			Vector3i center = ((Vector3l)vert[0] + (Vector3l)vert[1] + (Vector3l)vert[2] + (Vector3l)vert[3]) / 4;
-			center.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * 1000.0;
+			center.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
 
 			for (int i = 0; i < 4; i++) {
 				geom.AddTriangle(vert[i], center, vert[i+1]);
@@ -229,7 +210,7 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 			return;
 		} else if (shape->second == "pitched") {
 			if (!!(length1 < length2) ^ !along) {
-				osmint_t height = (tan(slope/180.0*M_PI) * length1 * 0.5) * 1000.0;
+				osmint_t height = (tan(slope/180.0*M_PI) * length1 * 0.5) * GEOM_UNITSINMETER;
 
 				Vector3i center1 = ((Vector3l)vert[0] + (Vector3l)vert[1])/2;
 				Vector3i center2 = ((Vector3l)vert[2] + (Vector3l)vert[3])/2;
@@ -246,7 +227,7 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 				geom.AddLine(vert[2], center2); geom.AddLine(center2, vert[3]);
 				geom.AddLine(center1, center2);
 			} else {
-				osmint_t height = (tan(slope/180.0*M_PI) * length2 * 0.5) * 1000.0;
+				osmint_t height = (tan(slope/180.0*M_PI) * length2 * 0.5) * GEOM_UNITSINMETER;
 
 				Vector3i center1 = ((Vector3l)vert[1] + (Vector3l)vert[2])/2;
 				Vector3i center2 = ((Vector3l)vert[0] + (Vector3l)vert[3])/2;
@@ -266,7 +247,7 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 			return;
 		} else if (shape->second == "hipped") {
 			if (length1 < length2) {
-				osmint_t height = (tan(slope/180.0*M_PI) * length1 * 0.5) * 1000.0;
+				osmint_t height = (tan(slope/180.0*M_PI) * length1 * 0.5) * GEOM_UNITSINMETER;
 
 				Vector3i center1 = ((Vector3l)vert[0] + (Vector3l)vert[1])/2;
 				Vector3i center2 = ((Vector3l)vert[2] + (Vector3l)vert[3])/2;
@@ -288,7 +269,7 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 				geom.AddLine(vert[2], center2); geom.AddLine(center2, vert[3]);
 				geom.AddLine(center1, center2);
 			} else {
-				osmint_t height = (tan(slope/180.0*M_PI) * length2 * 0.5) * 1000.0;
+				osmint_t height = (tan(slope/180.0*M_PI) * length2 * 0.5) * GEOM_UNITSINMETER;
 
 				Vector3i center1 = ((Vector3l)vert[1] + (Vector3l)vert[2])/2;
 				Vector3i center2 = ((Vector3l)vert[0] + (Vector3l)vert[3])/2;
@@ -312,7 +293,7 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 			}
 			return;
 		} else if (shape->second == "crosspitched") {
-			int height = (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * 1000.0;
+			int height = (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
 
 			Vector3i center = ((Vector3l)vert[0] + (Vector3l)vert[1] + (Vector3l)vert[2] + (Vector3l)vert[3]) / 4;
 			center.z += height;
@@ -493,8 +474,8 @@ static float GetHighwayWidth(const std::string& highway, const OsmDatasource::Wa
 }
 
 static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
-	osmint_t minz = GetMinHeight(way)*1000.0;
-	osmint_t maxz = GetMaxHeight(way)*1000.0;
+	osmint_t minz = GetMinHeight(way) * GEOM_UNITSINMETER;
+	osmint_t maxz = GetMaxHeight(way) * GEOM_UNITSINMETER;
 
 	if (minz < 0)
 		minz = 0;
@@ -523,7 +504,7 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const
 		}
 	} else if (way.Tags.find("barrier") != way.Tags.end()) {
 		if (maxz == minz)
-			maxz += 2000;
+			maxz += 2 * GEOM_UNITSINMETER;
 		CreateWall(geom, vertices, minz, maxz, way);
 
 		CreateLines(geom, vertices, minz, way);
@@ -548,14 +529,22 @@ DefaultGeometryGenerator::DefaultGeometryGenerator(const OsmDatasource& datasour
 
 void DefaultGeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) const {
 	std::vector<OsmDatasource::Way> ways;
-	datasource_.GetAllWays(ways);
+
+	/* safe bbox is a bit wider than requested one to be sure
+	 * all ways are included, even those which have width */
+	float extra_width = 24.0; /* still may be not sufficient, e.g. very wide roads */
+	BBoxi safe_bbox = BBoxi(
+			FromLocalMetric(-Vector2d(extra_width, extra_width), bbox.GetBottomLeft()),
+			FromLocalMetric(Vector2d(extra_width, extra_width), bbox.GetTopRight())
+		);
+	datasource_.GetWays(ways, safe_bbox);
 
 	Geometry temp;
 	for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w) {
 		WayDispatcher(temp, datasource_, *w);
 	}
 
-	geom.Append(temp);
+	geom.AppendCropped(temp, bbox);
 }
 
 Vector2i DefaultGeometryGenerator::GetCenter() const {

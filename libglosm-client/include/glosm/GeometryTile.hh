@@ -29,7 +29,7 @@
 class SimpleVertexBuffer;
 
 class Projection;
-class GeometryDatasource;
+class Geometry;
 
 /**
  * A tile of renderable geometry
@@ -42,8 +42,12 @@ protected:
 	std::auto_ptr<SimpleVertexBuffer> triangles_;
 	std::auto_ptr<SimpleVertexBuffer> quads_;
 
+#ifdef TILE_DEBUG
+	Vector3f bound_[4];
+#endif
+
 public:
-	GeometryTile(const Projection& p, const GeometryDatasource& ds, const Vector2i& ref, const BBoxi& bbox);
+	GeometryTile(const Projection& p, const Geometry& geom, const Vector2i& ref, const BBoxi& bbox);
 	virtual ~GeometryTile();
 
 	virtual void Render() const;

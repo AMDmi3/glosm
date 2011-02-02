@@ -27,10 +27,18 @@
  */
 template <typename T>
 struct BBox {
+	enum Side {
+		NONE = 0,
+		LEFT = 1,
+		BOTTOM = 2,
+		RIGHT = 3,
+		TOP = 4
+	};
+
 	typedef typename LongType<T>::type LT;
 
 	/* ctors */
-	BBox(Vector2<T> one, Vector2<T> two) {
+	BBox(const Vector2<T>& one, const Vector2<T>& two) {
 		if (one.x < two.x) {
 			left = one.x;
 			right = two.x;
@@ -63,9 +71,14 @@ struct BBox {
 		return BBox<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::max(), std::numeric_limits<T>::min(), std::numeric_limits<T>::min());
 	}
 
+	/* specialized only for <osmint_t>, see BBox.cc */
+	static BBox<T> ForEarth();
+	static BBox<T> ForMercatorTile(int zoom, int x, int y);
+	static BBox<T> ForGeoTile(int zoom, int x, int y);
+
 	/* operators - may be added later if needed: addition/substraction/intersection */
 
-	/* misc */
+	/* modifiers */
 	void Include(const Vector2<T>& point) {
 		if (point.x < left)
 			left = point.x;
@@ -77,10 +90,18 @@ struct BBox {
 			top = point.y;
 	}
 
-	bool IsEmpty() const {
-		return left > right || bottom > top;
+	void Include(const BBox<T>& bbox) {
+		if (bbox.left < left)
+			left = bbox.left;
+		if (bbox.right > right)
+			right = bbox.right;
+		if (bbox.bottom < bottom)
+			bottom = bbox.bottom;
+		if (bbox.top > top)
+			top = bbox.top;
 	}
 
+	/* derivs */
 	Vector2<T> GetCenter() const {
 		return Vector2<T>(((LT)left + (LT)right)/2, ((LT)top + (LT)bottom)/2);
 	}
@@ -89,12 +110,39 @@ struct BBox {
 		return Vector2<T>(left, bottom);
 	}
 
+	Vector2<T> GetBottomRight() const {
+		return Vector2<T>(right, bottom);
+	}
+
+	Vector2<T> GetTopLeft() const {
+		return Vector2<T>(left, top);
+	}
+
 	Vector2<T> GetTopRight() const {
 		return Vector2<T>(right, top);
 	}
 
+	/* tests */
+	bool IsEmpty() const {
+		return left > right || bottom > top;
+	}
+
 	bool Contains(const Vector2<T>& v) const {
 		return v.x >= left && v.x <= right && v.y >= bottom && v.y <= top;
+	}
+
+	bool Intersects(const BBox<T>& bbox) const {
+		return !(bbox.right < left || bbox.left > right || bbox.top < bottom || bbox.bottom > top);
+	}
+
+	bool IsPointOutAtSide(const Vector2i& p, Side s) const {
+		switch (s) {
+		case LEFT: return p.x < left;
+		case RIGHT: return p.x > right;
+		case TOP: return p.y > top;
+		case BOTTOM: return p.y < bottom;
+		default: return false;
+		}
 	}
 
 	/* data */

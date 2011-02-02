@@ -17,32 +17,23 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TESTTILE_HH
-#define TESTTILE_HH
+#ifndef SPHERICALPROJECTION_HH
+#define SPHERICALPROJECTION_HH
 
-#include <glosm/Tile.hh>
-#include <glosm/Math.hh>
-
-class Projection;
+#include <glosm/Projection.hh>
 
 /**
- * A tile for testing
+ * Spherical projection
  *
- * This kind of tile is planned to be used for testing while
- * real tiling is implemented in GeometryLayer. It just shows
- * tile boundaries.
+ * This represents Spherical projection.
  */
-class TestTile : public Tile {
+class SphericalProjection : public Projection {
 protected:
-	Vector3f data_[4];
+	static Vector3f ProjectImpl(const Vector3i& point, const Vector3i& ref);
+	static Vector3i UnProjectImpl(const Vector3f& point, const Vector3i& ref);
 
 public:
-	TestTile(const Projection& projection, const Vector2i& ref, const BBoxi& bbox);
-
-	virtual void Render();
-
-protected:
-	void InterpolatedVertex(float x, float y);
+	SphericalProjection();
 };
 
 #endif

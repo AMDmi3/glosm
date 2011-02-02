@@ -26,6 +26,7 @@
 #include <glosm/Projection.hh>
 #include <glosm/GeometryTile.hh>
 #include <glosm/NonCopyable.hh>
+#include <glosm/TileManager.hh>
 
 #include <memory.h>
 
@@ -35,17 +36,16 @@ class GeometryDatasource;
 /**
  * Layer with 3D OpenStreetMap data.
  */
-class GeometryLayer : public Layer, NonCopyable {
+class GeometryLayer : public Layer, public TileManager, NonCopyable {
 protected:
-	const GeometryTile tile_;
 	const Projection projection_;
 
 public:
 	GeometryLayer(const Projection projection, const GeometryDatasource& datasource);
 	virtual ~GeometryLayer();
-	virtual void RequestVisible(const BBoxi& bbox);
 
 	void Render(const Viewer& viewer) const;
+	virtual Tile* SpawnTile(const Geometry& geom) const;
 };
 
 #endif

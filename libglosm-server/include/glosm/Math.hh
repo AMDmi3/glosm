@@ -71,6 +71,8 @@ struct Vector2 {
 	Vector2<T> operator* (const Vector2<T>& other) const { return Vector2<T>(x * other.x, y * other.y); }
 	Vector2<T> operator/ (const Vector2<T>& other) const { return Vector2<T>(x / other.x, y / other.y); }
 
+	Vector2<T> operator+ (const T v) const { return Vector2<T>(x + v, y + v); }
+	Vector2<T> operator- (const T v) const { return Vector2<T>(x - v, y - v); }
 	Vector2<T> operator* (const T v) const { return Vector2<T>(x * v, y * v); }
 	Vector2<T> operator/ (const T v) const { return Vector2<T>(x / v, y / v); }
 
@@ -82,11 +84,19 @@ struct Vector2 {
 	Vector2<T>& operator*= (const Vector2<T>& other) { x *= other.x; y *= other.y; return *this; }
 	Vector2<T>& operator/= (const Vector2<T>& other) { x /= other.x; y /= other.y; return *this; }
 
+	Vector2<T>& operator+= (const T& v) { x += v; y += v; return *this; }
+	Vector2<T>& operator-= (const T& v) { x -= v; y -= v; return *this; }
 	Vector2<T>& operator*= (const T& v) { x *= v; y *= v; return *this; }
 	Vector2<T>& operator/= (const T& v) { x /= v; y /= v; return *this; }
 
 	/* comparison */
 	bool operator== (const Vector2<T>& other) const { return x == other.x && y == other.y; }
+	bool operator!= (const Vector2<T>& other) const { return x != other.x || y != other.y; }
+
+	/* validity check */
+	bool IsValid() const {
+		return std::isnormal(x) && std::isnormal(y);
+	}
 
 	/* functions */
 	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y); }
@@ -177,10 +187,16 @@ struct Vector3 {
 
 	/* comparison */
 	bool operator== (const Vector3<T>& other) const { return x == other.x && y == other.y && z == other.z; }
+	bool operator!= (const Vector3<T>& other) const { return x != other.x || y != other.y || z != other.z; }
+
+	/* validity check */
+	bool IsValid() const {
+		return std::isnormal(x) && std::isnormal(y) && std::isnormal(z);
+	}
 
 	/* functions */
-	T Length() { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z); }
-	LT LengthSquare() { return (LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z; }
+	T Length() const { return std::sqrt((LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z); }
+	LT LengthSquare() const { return (LT)x*(LT)x + (LT)y*(LT)y + (LT)z*(LT)z; }
 
 	LT DotProduct(const Vector3<T>& other) const { return (LT)x*(LT)other.x + (LT)y*(LT)other.y + (LT)z*(LT)other.z; }
 	Vector3<LT> CrossProduct(const Vector3<T>& other) const { return Vector3<LT>((LT)y*(LT)other.z - (LT)z*(LT)other.y, (LT)z*(LT)other.x - (LT)x*(LT)other.z, (LT)x*(LT)other.y - (LT)y*(LT)other.x); }
@@ -195,12 +211,16 @@ struct Vector3 {
 		z /= len;
 	}
 
-	Vector3<T> Normalized() {
+	Vector3<T> Normalized() const {
 		T len = Length();
 		if (len == 0)
 			return Vector3<T>(); /* Zero vector */
 
 		return Vector3<T>(x / len, y / len, z / len);
+	}
+
+	Vector3<T> Flattened() const {
+		return Vector3<T>(x, y, 0);
 	}
 
 	/* data */

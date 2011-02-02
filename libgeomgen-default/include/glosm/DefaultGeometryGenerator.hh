@@ -32,7 +32,7 @@ protected:
 
 public:
 	DefaultGeometryGenerator(const OsmDatasource& datasource);
-	void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::Full()) const;
+	void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::ForEarth()) const;
 
 	virtual Vector2i GetCenter() const;
 	virtual BBoxi GetBBox() const;

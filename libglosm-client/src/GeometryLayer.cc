@@ -28,15 +28,12 @@
 #include <glosm/Viewer.hh>
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/Projection.hh>
+#include <glosm/Geometry.hh>
 
-GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): tile_(projection, datasource, datasource.GetCenter(), datasource.GetBBox()), projection_(projection) {
+GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): TileManager(projection, datasource), projection_(projection) {
 }
 
 GeometryLayer::~GeometryLayer() {
-}
-
-void GeometryLayer::RequestVisible(const BBoxi& bbox) {
-	/* noop, tile with all data is already constructed */
 }
 
 void GeometryLayer::Render(const Viewer& viewer) const {
@@ -68,14 +65,9 @@ void GeometryLayer::Render(const Viewer& viewer) const {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
 
 	/* Render tile(s) */
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	TileManager::Render(viewer);
+}
 
-	Vector3f offset = projection_.Project(tile_.GetReference(), viewer.GetPos(projection_));
-	glTranslatef(offset.x, offset.y, offset.z);
-
-	tile_.Render();
-
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+Tile* GeometryLayer::SpawnTile(const Geometry& geom) const {
+	return new GeometryTile(projection_, geom, geom.GetBBox().GetCenter(), geom.GetBBox());
 }

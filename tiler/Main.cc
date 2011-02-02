@@ -144,6 +144,7 @@ int real_main(int argc, char** argv) {
 	DefaultGeometryGenerator geometry_generator(osm_datasource);
 
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
+	layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);
 
 	/* Rendering */
 	fprintf(stderr, "Rendering...\n");

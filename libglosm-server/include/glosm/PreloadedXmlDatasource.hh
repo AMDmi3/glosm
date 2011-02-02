@@ -95,7 +95,7 @@ public:
 	virtual const Way& GetWay(osmid_t id) const;
 	virtual const Relation& GetRelation(osmid_t id) const;
 
-	virtual void GetAllWays(std::vector<Way>& out) const;
+	virtual void GetWays(std::vector<Way>& out, const BBoxi& bbox) const;
 };
 
 #endif
