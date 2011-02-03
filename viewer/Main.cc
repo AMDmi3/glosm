@@ -17,7 +17,6 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <err.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
