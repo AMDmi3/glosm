@@ -29,6 +29,8 @@
 #include <glosm/NonCopyable.hh>
 #include <glosm/Math.hh>
 
+#include <sys/types.h>
+
 /**
  * Wrapper around OpenGL vertex buffer object
  */
