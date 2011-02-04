@@ -2,6 +2,8 @@ PROJECT(glosm)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
+SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 # Global options
 IF(UNIX)
 	SET(BUILD_TILER_DEFAULT ON)
@@ -9,10 +11,17 @@ ELSE(UNIX)
 	SET(BUILD_TILER_DEFAULT OFF)
 ENDIF(UNIX)
 
+IF(WIN32)
+	SET(USE_GLEW_DEFAULT ON)
+ELSE(WIN32)
+	SET(USE_GLEW_DEFAULT OFF)
+ENDIF(WIN32)
+
 OPTION(BUILD_VIEWER "Build first-person osm viewer" ON)
 OPTION(BUILD_TILER "Build tile generator" ${BUILD_TILER_DEFAULT})
 OPTION(BUILD_EXAMPLES "Build examples" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
+OPTION(USE_GLEW "Use GLEW (needed when you system uses archaic OpenGL)" ${USE_GLEW_DEFAULT})
 
 # Global variables (still overridable via cmake -D ..)
 SET(BINDIR "bin" CACHE STRING "Install subdirectory for binaries")

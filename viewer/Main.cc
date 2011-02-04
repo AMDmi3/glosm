@@ -23,6 +23,10 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#if defined(USE_GLEW)
+#	include <GL/glew.h>
+#endif
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #	include <GLUT/glut.h>
@@ -252,6 +256,10 @@ int real_main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
 	glutInitWindowSize(800, 600);
 	glutCreateWindow("glosm viewer");
+
+#if defined(USE_GLEW)
+	glewInit();
+#endif
 
 	glutIgnoreKeyRepeat(1);
 	glutSetCursor(GLUT_CURSOR_NONE);
