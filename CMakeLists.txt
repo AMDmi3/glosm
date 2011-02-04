@@ -30,9 +30,9 @@ SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra -DTILE_DEBUG)
 
-IF(MINGW)
-	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
-ENDIF(MINGW)
+#IF(MINGW)
+#	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
+#ENDIF(MINGW)
 
 # Framework subdirs
 ADD_SUBDIRECTORY(libglosm-server)
