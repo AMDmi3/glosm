@@ -24,9 +24,9 @@
 #include <glosm/GeometryOperations.hh>
 #include <glosm/geomath.h>
 
-#include <stdio.h>
-
 #include <list>
+#include <cstdlib>
+#include <cstdio>
 
 typedef std::list<Vector2i> VertexList;
 typedef std::vector<Vector2i> VertexVector;

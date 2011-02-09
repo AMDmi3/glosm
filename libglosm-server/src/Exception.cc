@@ -20,6 +20,7 @@
 #include <glosm/Exception.hh>
 
 #include <cerrno>
+#include <cstring>
 
 namespace Private {
 	void SafeStringBuffer::EnsureSize(unsigned int size) {
@@ -77,7 +78,7 @@ namespace Private {
 	}
 
 	std::streamsize SafeStringBuffer::AppendReserve(const char* s, std::streamsize n) throw() {
-		if (n > reserve_)
+		if ((unsigned int)n > reserve_)
 			n = reserve_;
 
 		memcpy(buffer_ + used_, s, n);

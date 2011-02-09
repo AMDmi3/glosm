@@ -28,6 +28,7 @@
 
 #include <getopt.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #if defined(USE_GLEW)
 #	include <GL/glew.h>
