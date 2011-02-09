@@ -92,16 +92,16 @@ namespace Private {
 		return buffer_;
 	}
 
-	Exception::Exception() {
+	ExceptionBase::ExceptionBase() {
 	}
 
-	Exception::Exception(const Exception& e): std::exception(), message_(e.what()/*message_*/) {
+	ExceptionBase::ExceptionBase(const ExceptionBase& e): std::exception(), message_(e.what()/*message_*/) {
 	}
 
-	Exception::~Exception() throw() {
+	ExceptionBase::~ExceptionBase() throw() {
 	}
 
-	const char* Exception::what() const throw() {
+	const char* ExceptionBase::what() const throw() {
 		return message_.c_str();
 	}
 };

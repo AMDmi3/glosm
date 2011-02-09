@@ -110,14 +110,17 @@ namespace Private {
 	 * Example:
 	 * @code throw Exception("foo") << ", also baz and " << 1 << 2 << 3; @endcode
 	 */
-	class Exception: public std::exception {
+	class ExceptionBase: public std::exception {
 	protected:
+		/* being mutable allows appending data to const
+		 * ExceptionBase. See operator<< below for the
+		 * explanation of why const is needed */
 		mutable SafeStringBuffer message_;
 
 	public:
-		Exception();
-		Exception(const Exception& e);
-		virtual ~Exception() throw();
+		ExceptionBase();
+		ExceptionBase(const ExceptionBase& e);
+		virtual ~ExceptionBase() throw();
 
 		template <class T>
 		void Append(const T& t) const {
@@ -128,10 +131,24 @@ namespace Private {
 		virtual const char* what() const throw();
 	};
 
+	/**
+	 * Append operator for exception
+	 *
+	 * This just forwards all << calls to Exception which in
+	 * turn forwards them to std::ostream build around
+	 * SafeStringBuffer.
+	 *
+	 * @note This is put under the namespace to not be visible
+	 * from other parts of the program.
+	 *
+	 * @node This is intended to be used on const Exception
+	 * classes because C++ doesn't allow references to non-const
+	 * temporary objects. Pity. However, C++0x brings r-value
+	 * references which can make this look a bit better.
+	 */
 	template <class E, class T>
 	static const E& operator<<(const E& e, const T& t) {
 		e.Append(t);
-
 		return e;
 	}
 };
@@ -139,11 +156,11 @@ namespace Private {
 /**
  * Generic exception
  */
-class Exception: public Private::Exception {
+class Exception: public Private::ExceptionBase {
 };
 
 /**
- * System error that automatically appends strerror
+ * System error that automatically appends strerror to the message
  */
 class SystemError: public Exception {
 protected:
