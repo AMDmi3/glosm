@@ -23,12 +23,12 @@
 #include <glosm/Projection.hh>
 #include <glosm/geomath.h>
 
+#include "mglu.h"
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
-#	include <OpenGL/glu.h>
 #else
 #	include <GL/gl.h>
-#	include <GL/glu.h>
 #endif
 
 #include <stdio.h>
@@ -59,7 +59,7 @@ void FirstPersonViewer::SetupViewerMatrix(const Projection& projection) const {
 	float znear = 0.01f * height * meterlen;
 	float zfar = 1000.0f * height * meterlen;
 
-	gluPerspective(fov_ / M_PI * 180.0f, aspect_, znear, zfar);
+	mgluPerspective(fov_ / M_PI * 180.0f, aspect_, znear, zfar);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -67,7 +67,7 @@ void FirstPersonViewer::SetupViewerMatrix(const Projection& projection) const {
 	Vector3f dir = GetDirection();
 	Vector3f up = Vector3f(0.0f, 0.0f, 1.0f);
 
-	gluLookAt(0.0f, 0.0f, 0.0f, dir.x, dir.y, dir.z, up.x, up.y, up.z);
+	mgluLookAt(0.0f, 0.0f, 0.0f, dir.x, dir.y, dir.z, up.x, up.y, up.z);
 }
 
 Vector3i FirstPersonViewer::GetPos(const Projection& /* unused*/) const {

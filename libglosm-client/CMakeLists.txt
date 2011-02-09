@@ -32,6 +32,7 @@ SET(SOURCES
 	src/SimpleVertexBuffer.cc
 	src/VBO.cc
 	src/TileManager.cc
+	src/mglu.cc
 )
 
 SET(HEADERS
@@ -40,7 +41,7 @@ SET(HEADERS
 INCLUDE_DIRECTORIES(include ../libglosm-server/include ${EXPAT_INCLUDE_DIR} ${GLEW_INCLUDE_DIR})
 
 ADD_LIBRARY(glosm-client SHARED ${SOURCES})
-TARGET_LINK_LIBRARIES(glosm-client glosm-server ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GLEW_LIBRARY})
+TARGET_LINK_LIBRARIES(glosm-client glosm-server ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${GLEW_LIBRARY})
 
 # Installation
 # We don't have even a sight of stable API, so don't use soversion
