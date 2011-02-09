@@ -32,6 +32,7 @@ ENDIF(TRUSTED_XML)
 SET(SOURCES
 	src/Geometry.cc
 	src/BBox.cc
+	src/Exception.cc
 	src/PreloadedXmlDatasource.cc
 	src/GeometryOperations.cc
 )
