@@ -29,6 +29,9 @@
 class ParsingException : public Exception {
 };
 
+class DataException : public Exception {
+};
+
 /**
  * Source of OpenStreetMap data which preloads .osm dump into memory.
  *

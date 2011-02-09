@@ -326,11 +326,8 @@ void PreloadedXmlDatasource::EndElement(void* userData, const char* /*name*/) {
 			} else {
 				for (Way::NodesList::const_iterator i = loader->last_way_->second.Nodes.begin(); i != loader->last_way_->second.Nodes.end(); ++i) {
 					NodesMap::const_iterator cur = loader->nodes_.find(*i);
-					if (cur == loader->nodes_.end()) {
-						std::stringstream e;
-						e << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
-						throw std::runtime_error(e.str());
-					}
+					if (cur == loader->nodes_.end())
+						throw ParsingException() << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
 					loader->last_way_->second.BBox.Include(cur->second.Pos);
 				}
 			}
@@ -416,21 +413,21 @@ void PreloadedXmlDatasource::Clear() {
 const OsmDatasource::Node& PreloadedXmlDatasource::GetNode(osmid_t id) const {
 	NodesMap::const_iterator i = nodes_.find(id);
 	if (i == nodes_.end())
-		throw std::runtime_error("node not found");
+		throw DataException() << "node not found";
 	return i->second;
 }
 
 const OsmDatasource::Way& PreloadedXmlDatasource::GetWay(osmid_t id) const {
 	WaysMap::const_iterator i = ways_.find(id);
 	if (i == ways_.end())
-		throw std::runtime_error("way not found");
+		throw DataException() << "way not found";
 	return i->second;
 }
 
 const OsmDatasource::Relation& PreloadedXmlDatasource::GetRelation(osmid_t id) const {
 	RelationsMap::const_iterator i = relations_.find(id);
 	if (i == relations_.end())
-		throw std::runtime_error("relation not found");
+		throw DataException() << "relation not found";
 	return i->second;
 }
 

@@ -29,9 +29,7 @@
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/Tile.hh>
-
-#include <stdexcept>
-#include <cassert>
+#include <glosm/Exception.hh>
 
 TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
 }
@@ -53,18 +51,20 @@ TileManager::TileData::~TileData() {
 }
 
 TileManager::TileManager(const Projection projection, const GeometryDatasource& ds): projection_(projection), datasource_(ds) {
-	if (pthread_mutex_init(&tiles_mutex_, 0) != 0)
-		throw std::runtime_error("pthread_mutex_init failed");
+	int errn;
 
-	if (pthread_cond_init(&tiles_cond_, 0) != 0) {
+	if ((errn = pthread_mutex_init(&tiles_mutex_, 0)) != 0)
+		throw SystemError(errn) << "pthread_mutex_init failed";
+
+	if ((errn = pthread_cond_init(&tiles_cond_, 0)) != 0) {
 		pthread_mutex_destroy(&tiles_mutex_);
-		throw std::runtime_error("pthread_cond_init failed");
+		throw SystemError(errn) << "pthread_cond_init failed";
 	}
 
-	if (pthread_create(&loading_thread_, NULL, LoadingThreadFuncWrapper, (void*)this) != 0) {
+	if ((errn = pthread_create(&loading_thread_, NULL, LoadingThreadFuncWrapper, (void*)this)) != 0) {
 		pthread_cond_destroy(&tiles_cond_);
 		pthread_mutex_destroy(&tiles_mutex_);
-		throw std::runtime_error("pthread_create failed");
+		throw SystemError(errn) << "pthread_create failed";
 	}
 
 	target_level_ = 0;
