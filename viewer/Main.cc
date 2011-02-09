@@ -253,7 +253,16 @@ int real_main(int argc, char** argv) {
 	glutCreateWindow("glosm viewer");
 
 #if defined(USE_GLEW)
-	glewInit();
+	GLenum err = glewInit(); 
+	if (err != GLEW_OK) {
+		fprintf(stderr, "Cannot init glew: %s\n", glewGetErrorString(err));
+		return 1;
+	}
+	const char *gl_requirements = "GL_VERSION_1_5";
+	if (!glewIsSupported(gl_requirements)) {
+		fprintf(stderr, "Minimal OpenGL requirements (%s) not met, unable to continue\n", gl_requirements);
+		return 1;
+	}
 #endif
 
 	glutIgnoreKeyRepeat(1);
