@@ -253,7 +253,7 @@ int real_main(int argc, char** argv) {
 	glutCreateWindow("glosm viewer");
 
 #if defined(USE_GLEW)
-	GLenum err = glewInit(); 
+	GLenum err = glewInit();
 	if (err != GLEW_OK) {
 		fprintf(stderr, "Cannot init glew: %s\n", glewGetErrorString(err));
 		return 1;
