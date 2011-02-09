@@ -20,10 +20,10 @@
 #ifndef MATH_HH
 #define MATH_HH
 
+#include <glosm/osmtypes.h>
+
 #include <cmath>
 #include <limits>
-
-#include <glosm/osmtypes.h>
 
 template <typename T>
 struct LongType {

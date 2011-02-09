@@ -18,8 +18,10 @@
  */
 
 #include <glosm/BBox.hh>
+
 #include <glosm/geomath.h>
-#include <math.h>
+
+#include <cmath>
 
 template<>
 BBox<osmint_t> BBox<osmint_t>::ForEarth() {

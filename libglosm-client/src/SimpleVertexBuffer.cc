@@ -18,7 +18,6 @@
  */
 
 #define GL_GLEXT_PROTOTYPES
-
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #	include <OpenGL/glext.h>
@@ -27,9 +26,9 @@
 #	include <GL/glext.h>
 #endif
 
-#include <glosm/VBO.hh>
-
 #include <glosm/SimpleVertexBuffer.hh>
+
+#include <glosm/VBO.hh>
 
 #include <stdexcept>
 #include <cassert>

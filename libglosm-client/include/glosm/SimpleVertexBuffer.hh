@@ -20,16 +20,16 @@
 #ifndef SIMPLEVERTEXBUFFER_HH
 #define SIMPLEVERTEXBUFFER_HH
 
+#include <glosm/Math.hh>
+#include <glosm/NonCopyable.hh>
+#include <glosm/VBO.hh>
+#include <glosm/Renderable.hh>
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #else
 #	include <GL/gl.h>
 #endif
-
-#include <glosm/Math.hh>
-#include <glosm/NonCopyable.hh>
-#include <glosm/VBO.hh>
-#include <glosm/Renderable.hh>
 
 #include <memory>
 

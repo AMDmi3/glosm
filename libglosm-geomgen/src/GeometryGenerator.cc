@@ -22,14 +22,11 @@
 #include <glosm/OsmDatasource.hh>
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryOperations.hh>
-
 #include <glosm/geomath.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <list>
-#include <cassert>
 
 typedef std::list<Vector2i> VertexList;
 typedef std::vector<Vector2i> VertexVector;

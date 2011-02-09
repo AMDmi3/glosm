@@ -20,8 +20,9 @@
 #ifndef GEOMETRYGENERATOR_HH
 #define GEOMETRYGENERATOR_HH
 
-#include <glosm/Math.hh>
 #include <glosm/GeometryDatasource.hh>
+#include <glosm/Math.hh>
+#include <glosm/BBox.hh>
 
 class OsmDatasource;
 class Geometry;

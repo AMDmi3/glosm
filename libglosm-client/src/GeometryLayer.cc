@@ -17,18 +17,19 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glosm/GeometryLayer.hh>
+
+#include <glosm/Geometry.hh>
+#include <glosm/GeometryDatasource.hh>
+#include <glosm/GeometryTile.hh>
+#include <glosm/Projection.hh>
+#include <glosm/Viewer.hh>
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #else
 #	include <GL/gl.h>
 #endif
-
-#include <glosm/GeometryLayer.hh>
-
-#include <glosm/Viewer.hh>
-#include <glosm/GeometryDatasource.hh>
-#include <glosm/Projection.hh>
-#include <glosm/Geometry.hh>
 
 GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): TileManager(projection, datasource), projection_(projection) {
 }

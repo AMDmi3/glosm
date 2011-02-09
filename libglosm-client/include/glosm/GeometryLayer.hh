@@ -20,15 +20,10 @@
 #ifndef GEOMETRYLAYER_HH
 #define GEOMETRYLAYER_HH
 
-#include <glosm/Math.hh>
-#include <glosm/Misc.hh>
 #include <glosm/Layer.hh>
 #include <glosm/Projection.hh>
-#include <glosm/GeometryTile.hh>
 #include <glosm/NonCopyable.hh>
 #include <glosm/TileManager.hh>
-
-#include <memory.h>
 
 class Viewer;
 class GeometryDatasource;

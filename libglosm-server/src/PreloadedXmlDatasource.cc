@@ -44,14 +44,13 @@
 
 #include <glosm/PreloadedXmlDatasource.hh>
 
+#include <fcntl.h>
+#include <expat.h>
+
+#include <cstring>
 #include <stdexcept>
 #include <limits>
 #include <sstream>
-
-#include <fcntl.h>
-
-#include <expat.h>
-#include <string.h>
 
 /* when we know that a string may be only one of e.g. "node", "way",
  * "relation", we can only check first letter which will give us

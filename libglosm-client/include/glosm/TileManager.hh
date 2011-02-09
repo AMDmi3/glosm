@@ -24,6 +24,7 @@
 #include <glosm/Projection.hh>
 
 #include <pthread.h>
+
 #include <list>
 #include <map>
 

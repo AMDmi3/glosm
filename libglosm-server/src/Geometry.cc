@@ -18,6 +18,7 @@
  */
 
 #include <glosm/Geometry.hh>
+
 #include <glosm/GeometryOperations.hh>
 
 #include <cassert>

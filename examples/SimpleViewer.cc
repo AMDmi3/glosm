@@ -24,16 +24,16 @@
  * functionality to show you how glosm works.
  */
 
-#include <stdlib.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
-
 #include <glosm/Math.hh>
 #include <glosm/MercatorProjection.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/FirstPersonViewer.hh>
 #include <glosm/GeometryLayer.hh>
 #include <glosm/GeometryGenerator.hh>
+
+#include <GL/gl.h>
+#include <GL/glut.h>
+#include <stdlib.h>
 
 Viewer* g_viewer = NULL;
 GeometryLayer* g_layer = NULL;

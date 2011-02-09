@@ -18,7 +18,9 @@
  */
 
 #include <glosm/GeometryOperations.hh>
+
 #include <glosm/geomath.h>
+
 #include <math.h>
 
 bool IntersectSegmentWithHorizontal(const Vector3i& one, const Vector3i& two, osmint_t y, Vector3i& out) {

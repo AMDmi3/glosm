@@ -17,20 +17,6 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <X11/Xlib.h>
-#include <GL/glx.h>
-
-#include <err.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-
-#include "PBuffer.hh"
-#include "PixelBuffer.hh"
-#include "PngWriter.hh"
-
 #include <glosm/MercatorProjection.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/GeometryGenerator.hh>
@@ -38,7 +24,19 @@
 #include <glosm/OrthoViewer.hh>
 #include <glosm/geomath.h>
 
+#include "PBuffer.hh"
+#include "PixelBuffer.hh"
+#include "PngWriter.hh"
+
+#include <GL/glx.h>
+#include <X11/Xlib.h>
+#include <err.h>
 #include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
 
 void usage(const char* progname) {
 	fprintf(stderr, "Usage: %s [-0123456789] [-s skew] [-z minzoom] [-Z maxzoom] -x minlon -X maxlon -y minlat -Y maxlat infile.osm outdir\n", progname);

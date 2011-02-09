@@ -17,13 +17,21 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glosm/FirstPersonViewer.hh>
+#include <glosm/GeometryGenerator.hh>
+#include <glosm/GeometryLayer.hh>
+#include <glosm/Math.hh>
+#include <glosm/MercatorProjection.hh>
+#include <glosm/PreloadedXmlDatasource.hh>
+#include <glosm/SphericalProjection.hh>
+#include <glosm/geomath.h>
+
 #include <err.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
-
+#include <sys/time.h>
+#include <unistd.h>
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #	include <GLUT/glut.h>
@@ -31,20 +39,6 @@
 #	include <GL/gl.h>
 #	include <GL/glut.h>
 #endif
-
-#include <vector>
-#include <map>
-
-#include <glosm/geomath.h>
-
-#include <glosm/Math.hh>
-
-#include <glosm/SphericalProjection.hh>
-#include <glosm/MercatorProjection.hh>
-#include <glosm/PreloadedXmlDatasource.hh>
-#include <glosm/GeometryGenerator.hh>
-#include <glosm/FirstPersonViewer.hh>
-#include <glosm/GeometryLayer.hh>
 
 /* as glut has no OO concept and no feature like setUserData,
  * please forgive me using global variables pointing to

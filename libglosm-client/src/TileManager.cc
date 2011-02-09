@@ -19,17 +19,17 @@
 
 #include <glosm/TileManager.hh>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
-
 #include <glosm/Viewer.hh>
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/Tile.hh>
 #include <glosm/Exception.hh>
+
+#if defined(__APPLE__)
+#	include <OpenGL/gl.h>
+#else
+#	include <GL/gl.h>
+#endif
 
 TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
 }

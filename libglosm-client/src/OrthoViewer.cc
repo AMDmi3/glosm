@@ -17,17 +17,16 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glosm/OrthoViewer.hh>
+
+#include <glosm/Projection.hh>
+#include <glosm/geomath.h>
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #else
 #	include <GL/gl.h>
 #endif
-
-#include <glosm/Projection.hh>
-
-#include <glosm/OrthoViewer.hh>
-
-#include <glosm/geomath.h>
 
 OrthoViewer::OrthoViewer() : bbox_(BBoxi::ForEarth()), skew_(0.0f) {
 }

@@ -17,6 +17,12 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glosm/FirstPersonViewer.hh>
+
+#include <glosm/Math.hh>
+#include <glosm/Projection.hh>
+#include <glosm/geomath.h>
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #	include <OpenGL/glu.h>
@@ -26,12 +32,6 @@
 #endif
 
 #include <stdio.h>
-
-#include <glosm/Math.hh>
-#include <glosm/Projection.hh>
-#include <glosm/geomath.h>
-
-#include <glosm/FirstPersonViewer.hh>
 
 FirstPersonViewer::FirstPersonViewer(): pos_(), yaw_(0), pitch_(0), fov_(90.0), aspect_(1.0) {
 }
