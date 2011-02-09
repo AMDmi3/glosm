@@ -26,12 +26,8 @@
 #include <glosm/SphericalProjection.hh>
 #include <glosm/geomath.h>
 
-#include <err.h>
 #include <getopt.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/time.h>
-#include <unistd.h>
 
 #if defined(USE_GLEW)
 #	include <GL/glew.h>
@@ -43,6 +39,8 @@
 #	include <GL/gl.h>
 #	include <GL/glut.h>
 #endif
+
+#include <cstdio>
 
 /* as glut has no OO concept and no feature like setUserData,
  * please forgive me using global variables pointing to
@@ -254,15 +252,11 @@ int real_main(int argc, char** argv) {
 
 #if defined(USE_GLEW)
 	GLenum err = glewInit();
-	if (err != GLEW_OK) {
-		fprintf(stderr, "Cannot init glew: %s\n", glewGetErrorString(err));
-		return 1;
-	}
+	if (err != GLEW_OK)
+		throw Exception() << "Cannot init glew: " << glewGetErrorString(err);
 	const char *gl_requirements = "GL_VERSION_1_5";
-	if (!glewIsSupported(gl_requirements)) {
-		fprintf(stderr, "Minimal OpenGL requirements (%s) not met, unable to continue\n", gl_requirements);
-		return 1;
-	}
+	if (!glewIsSupported(gl_requirements))
+		throw Exception() << "Minimal OpenGL requirements (" << gl_requirements << ") not met, unable to continue";
 #endif
 
 	glutIgnoreKeyRepeat(1);

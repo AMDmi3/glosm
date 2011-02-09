@@ -30,13 +30,13 @@
 
 #include <GL/glx.h>
 #include <X11/Xlib.h>
-#include <err.h>
 #include <getopt.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+
+#include <cstdio>
 
 void usage(const char* progname) {
 	fprintf(stderr, "Usage: %s [-0123456789] [-s skew] [-z minzoom] [-Z maxzoom] -x minlon -X maxlon -y minlat -Y maxlat infile.osm outdir\n", progname);

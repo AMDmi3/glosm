@@ -23,24 +23,26 @@
 
 #include <png.h>
 
+#include <stdexcept>
+
 static void png_error_fn(png_struct*, const char* e) {
-	throw PngWriterException(std::string("png write error: ") + std::string(e));
+	throw PngWriterException() << "png write error: " << e;
 }
 
 PngWriter::PngWriter(const char* filename, int width, int height, int compression): width_(width), height_(height) {
 	if ((png_ptr_ = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, png_error_fn, NULL)) == NULL)
-		throw PngWriterException("png_create_write_struct failed");
+		throw PngWriterException() << "png_create_write_struct failed";
 
 	png_set_compression_level(png_ptr_, compression);
 
 	if ((info_ptr_ = png_create_info_struct(png_ptr_)) == NULL) {
 		png_destroy_write_struct(&png_ptr_, NULL);
-		throw PngWriterException("png_create_info_struct failed");
+		throw PngWriterException() << "png_create_info_struct failed";
 	}
 
 	if ((file_ = fopen(filename, "wb")) == NULL) {
 		png_destroy_write_struct(&png_ptr_, &info_ptr_);
-		throw PngWriterException(std::string("cannot open output png file: ") + filename);
+		throw PngWriterException() << "cannot open output png file: " << filename;
 	}
 
 	png_init_io(png_ptr_, file_);

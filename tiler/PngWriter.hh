@@ -20,15 +20,13 @@
 #ifndef PNGWRITER_HH
 #define PNGWRITER_HH
 
-#include <stdexcept>
+#include <glosm/Exception.hh>
+
 #include <png.h>
 
 class PixelBuffer;
 
-class PngWriterException : public std::runtime_error {
-public:
-	PngWriterException(const std::string& msg): std::runtime_error(msg) {
-	}
+class PngWriterException : public Exception {
 };
 
 class PngWriter {

@@ -20,19 +20,17 @@
 #ifndef PBUFFER_HH
 #define PBUFFER_HH
 
+#include <glosm/Exception.hh>
+
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
-#include <stdexcept>
 #include <vector>
 
-class PixelBuffer;
-
-class PBufferException: public std::runtime_error {
-public:
-	PBufferException(const std::string& msg): std::runtime_error(msg) {
-	}
+class PBufferException: public Exception {
 };
+
+class PixelBuffer;
 
 class PBuffer {
 protected:

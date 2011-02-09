@@ -40,13 +40,13 @@ static bool CheckGLXVersion(Display* display, int screen) {
 
 PBuffer::PBuffer(int width, int height, int samples) : width_(width), height_(height), display_(NULL), context_(NULL), pbuffer_(NULL) {
 	if ((display_ = XOpenDisplay(NULL)) == NULL)
-		throw PBufferException("cannot open default X display");
+		throw PBufferException() << "cannot open default X display";
 
 	int screen = DefaultScreen(display_);
 
 	if (!CheckGLXVersion(display_, screen)) {
 		XCloseDisplay(display_);
-		throw PBufferException("GLX 1.3 or 1.4 required, but not available");
+		throw PBufferException() << "GLX 1.3 or 1.4 required, but not available";
 	}
 
 	int fbattribs[] = {
@@ -80,13 +80,13 @@ PBuffer::PBuffer(int width, int height, int samples) : width_(width), height_(he
 	GLXFBConfig *fbconfigs;
 	if ((fbconfigs = glXChooseFBConfig(display_, screen, fbattribs, &nconfigs)) == NULL) {
 		XCloseDisplay(display_);
-		throw PBufferException("glxChooseFBConfig failed");
+		throw PBufferException() << "glxChooseFBConfig failed";
 	}
 
 	if (nconfigs == 0) {
 		XFree(fbconfigs);
 		XCloseDisplay(display_);
-		throw PBufferException("no suitable configs returned by glxChooseFBConfig");
+		throw PBufferException() << "no suitable configs returned by glxChooseFBConfig";
 	}
 
 	/* Just use first config */
@@ -95,20 +95,20 @@ PBuffer::PBuffer(int width, int height, int samples) : width_(width), height_(he
 
 	if ((pbuffer_ = glXCreatePbuffer(display_, fbconfig, pbattribs)) == None) {
 		XCloseDisplay(display_);
-		throw PBufferException("glXCreatePbuffer failed");
+		throw PBufferException() << "glXCreatePbuffer failed";
 	}
 
 	if ((context_ = glXCreateNewContext(display_, fbconfig, GLX_RGBA_TYPE, NULL, True)) == NULL) {
 		glXDestroyPbuffer(display_, pbuffer_);
 		XCloseDisplay(display_);
-		throw PBufferException("glXCreateNewContext failed");
+		throw PBufferException() << "glXCreateNewContext failed";
 	}
 
 	if (!glXMakeCurrent(display_, pbuffer_, context_)) {
 		glXDestroyContext(display_, context_);
 		glXDestroyPbuffer(display_, pbuffer_);
 		XCloseDisplay(display_);
-		throw PBufferException("glXMakeCurrent failed");
+		throw PBufferException() << "glXMakeCurrent failed";
 	}
 }
 
