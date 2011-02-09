@@ -168,6 +168,7 @@ protected:
 
 public:
 	SystemError();
+	SystemError(int errn);
 	SystemError(const SystemError& e);
 	virtual ~SystemError() throw();
 	virtual const char* what() const throw();

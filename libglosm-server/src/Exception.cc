@@ -107,7 +107,11 @@ namespace Private {
 };
 
 SystemError::SystemError() : errno_(errno) {
-	message_.SetReserve(strlen(strerror(errno)) + 3);
+	message_.SetReserve(strlen(strerror(errno_)) + 3);
+}
+
+SystemError::SystemError(int errn) : errno_(errn) {
+	message_.SetReserve(strlen(strerror(errno_)) + 3);
 }
 
 SystemError::SystemError(const SystemError& e): Exception(e), errno_(e.errno_) {
