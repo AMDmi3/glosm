@@ -56,10 +56,10 @@ void FirstPersonViewer::SetupViewerMatrix(const Projection& projection) const {
 
 	/* viewing distances is [1meter..100km] at under 100m height
 	 * and increases linearly with going higher */
-	float near = 0.01f * height * meterlen;
-	float far = 1000.0f * height * meterlen;
+	float znear = 0.01f * height * meterlen;
+	float zfar = 1000.0f * height * meterlen;
 
-	gluPerspective(fov_ / M_PI * 180.0f, aspect_, near, far);
+	gluPerspective(fov_ / M_PI * 180.0f, aspect_, znear, zfar);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();

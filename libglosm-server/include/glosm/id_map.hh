@@ -276,7 +276,7 @@ protected:
 		int newnbuckets = nbuckets * (1 << k);
 
 		hash_node** newbuckets = new hash_node*[newnbuckets];
-		bzero(newbuckets, newnbuckets * sizeof(hash_node*));
+		memset(newbuckets, 0, newnbuckets * sizeof(hash_node*));
 
 		for (hash_node** b = buckets; b < buckets + nbuckets; ++b) {
 			for (hash_node* n = *b; n != NULL; ) {
@@ -311,7 +311,7 @@ protected:
 		last_chunk_free = 0;
 		nbuckets = 1 << BUCKET_COUNT_ORDER;
 		buckets = new hash_node*[nbuckets];
-		bzero(buckets, nbuckets * sizeof(hash_node*));
+		memset(buckets, 0, nbuckets * sizeof(hash_node*));
 	}
 
 protected:

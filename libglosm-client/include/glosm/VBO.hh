@@ -29,6 +29,8 @@
 #	include <GL/gl.h>
 #endif
 
+#include <sys/types.h>
+
 /**
  * Wrapper around OpenGL vertex buffer object
  */
