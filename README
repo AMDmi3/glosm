@@ -12,7 +12,7 @@ Features
    * Basic geometry generator (renders buildings, barriers and roads
      in 3D, other polygons as lines at ground level)
    * Mercator and spherical projections
-   * First-person OSM viewer
+   * First-person real-time 3D map viewer
    * Command-line ortho tile renderer
    * Extensible framework for building (other) 3D geodata
      visualization applications
@@ -21,6 +21,7 @@ Requirements
 ============
 
   Required libraries: expat2, OpenGL
+                      GLEW (only on windows)
   Optional libraries: GLUT (required for viewer)
                       libpng, X11 (required for tiler)
   Required applications: CMake >= 2.6
@@ -28,15 +29,16 @@ Requirements
   since CMake builtin GLUT detection routine requires it for some
   reason, you will also need libXmu and libXi installed.
 
-  Summarizing, for debian-based systems, you'll need to run:
+  Summarizing, for Debian-based systems, you'll need to run:
 
-    apt-get install cmake libexpat1-dev libglut3-dev libpng12-dev libxmu-dev libxi-dev
+    apt-get install cmake libexpat1-dev libglut3-dev libpng12-dev \
+                    libxmu-dev libxi-dev
 
 Installation
 ============
 
-  Compilation: cmake . && make
-  Installation: make install
+    Compilation: cmake . && make
+    Installation: make install
 
   Note that you don't need to install it to run programs, and in case
   you really want to install it, you may need to tweak installation
@@ -55,6 +57,15 @@ Installation
   files. Here's how it's done:
 
     mkdir build && cd build && cmake .. && make
+
+  On FreeBSD, glosm is also available from ports collection
+  (graphics/glosm).
+
+  Native build on Windows has not been tested yet, but
+  cross-compilation works (see [1]) and native compilation should work
+  similarily.
+
+  [1] https://github.com/AMDmi3/glosm/wiki/CrossCompilation
 
 Usage
 =====
@@ -159,24 +170,23 @@ OpenStreetMap tag support
     * building:levels
     * building:min_level
     * building:ground_level
-    * building:skipped_levels (see [2])
+    * building:skipped_levels (see [3])
 
-  to determine height of 3D objects (buildings, barriers). See [1].
+  to determine height of 3D objects (buildings, barriers). See [2].
   Height of one level is taken as 3 meters, for some 1-level buildings
   1 meter is added for basement.
 
-  [1] http://wiki.openstreetmap.org/wiki/User%3AJongleur/MultiLevel_Building_Shapes
-  [2] http://wiki.openstreetmap.org/wiki/User_talk:Jongleur/MultiLevel_Building_Shapes
+  [2] http://wiki.openstreetmap.org/wiki/User%3AJongleur/MultiLevel_Building_Shapes
+  [3] http://wiki.openstreetmap.org/wiki/User_talk:Jongleur/MultiLevel_Building_Shapes
 
     * building:roof:shape
     * building:roof:orientation
     * building:roof:angle
 
-  for specific roof shapes support. See [3], [4]. Supported roof
-  shapes are: flat, pitched, hipped, pyramidal, crosspitched.
+  for specific roof shapes support. See [4]. Supported roof shapes
+  are: flat, pitched, hipped, pyramidal, crosspitched.
 
-  [3] http://wiki.openstreetmap.org/wiki/Proposed_features/Building_attributes
-  [4] http://wiki.openstreetmap.org/wiki/Talk:Proposed_features/Building_attributes#Needs_illustrations_for_roof_types
+  [4] http://wiki.openstreetmap.org/wiki/Proposed_features/Building_attributes
 
     * width
     * lanes
@@ -197,9 +207,6 @@ API stability
     * GeometryGenerator (due to above)
     * Geometry (material support, optimizations like triangle
       strip/fan support, serialization)
-    * Whole library will be split into at least two parts:
-      libglosm-server (OsmDatasource and Geometry generation bits) and
-      libglosm-client (OpenGL and related stuff)
 
 Tests
 =====
