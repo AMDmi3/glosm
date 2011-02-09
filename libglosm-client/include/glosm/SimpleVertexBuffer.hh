@@ -36,7 +36,7 @@
 /**
  * Static renderable geometry stored in VBOs
  */
-class SimpleVertexBuffer : public Renderable, NonCopyable {
+class SimpleVertexBuffer : public Renderable, private NonCopyable {
 protected:
 	std::auto_ptr<VBO> vertices_;
 	std::auto_ptr<VBO> normals_;

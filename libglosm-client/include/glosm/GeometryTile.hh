@@ -36,7 +36,7 @@ class Geometry;
  *
  * This tile type is used in GeometryLayer
  */
-class GeometryTile : public Tile, NonCopyable {
+class GeometryTile : public Tile, private NonCopyable {
 protected:
 	std::auto_ptr<SimpleVertexBuffer> lines_;
 	std::auto_ptr<SimpleVertexBuffer> triangles_;

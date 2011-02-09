@@ -34,7 +34,7 @@
 /**
  * Wrapper around OpenGL vertex buffer object
  */
-class VBO : public NonCopyable {
+class VBO : private NonCopyable {
 protected:
 	GLuint buffer_;
 	size_t size_;

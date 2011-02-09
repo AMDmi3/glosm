@@ -20,8 +20,6 @@
 #ifndef LAYER_HH
 #define LAYER_HH
 
-class Viewer;
-
 /**
  * Abstact base class for all layers.
  *

@@ -31,7 +31,7 @@ class GeometryDatasource;
 /**
  * Layer with 3D OpenStreetMap data.
  */
-class GeometryLayer : public Layer, public TileManager, NonCopyable {
+class GeometryLayer : public Layer, public TileManager, private NonCopyable {
 protected:
 	const Projection projection_;
 

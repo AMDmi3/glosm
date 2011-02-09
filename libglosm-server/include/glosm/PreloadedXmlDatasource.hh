@@ -38,7 +38,7 @@ class DataException : public Exception {
  * with XML parser and stores node/way/relation information in
  * memory.
  */
-class PreloadedXmlDatasource : public OsmDatasource, NonCopyable {
+class PreloadedXmlDatasource : public OsmDatasource, private NonCopyable {
 protected:
 	typedef id_map<osmid_t, Node> NodesMap;
 	//typedef id_map<osmid_t, TagsMap> NodeTagsMap;
