@@ -37,13 +37,13 @@ int main() {
 	try {
 		throw Exception() << "foo " << 123 << " bar";
 	} catch (Exception& e) {
-		std::cerr << "Cought right exception: " << e.what() << std::endl;
+		std::cerr << "Caught right exception: " << e.what() << std::endl;
 		if (strcmp(e.what(), "foo 123 bar") != 0) {
 			std::cerr << "But the message is wrong" << std::endl;
 			ret = 1;
 		}
 	} catch (...) {
-		std::cerr << "Cought wrong exception" << std::endl;
+		std::cerr << "Caught wrong exception" << std::endl;
 		ret = 1;
 	}
 
@@ -52,9 +52,9 @@ int main() {
 	try {
 		throw MyException();
 	} catch (MyException& e) {
-		std::cerr << "Cought right exception: " << std::endl;
+		std::cerr << "Caught right exception: " << std::endl;
 	} catch (...) {
-		std::cerr << "Cought wrong exception" << std::endl;
+		std::cerr << "Caught wrong exception" << std::endl;
 		ret = 1;
 	}
 
@@ -63,7 +63,7 @@ int main() {
 		errno = EINVAL;
 		throw SystemError() << "TEST" << 123;
 	} catch (std::exception& e) {
-		std::cerr << "Cought right exception: " << e.what() << std::endl;
+		std::cerr << "Caught right exception: " << e.what() << std::endl;
 		if (strstr(e.what(), "TEST123") == NULL) {
 			std::cerr << "But user message was lost" << std::endl;
 			ret = 1;
@@ -73,7 +73,7 @@ int main() {
 			ret = 1;
 		}
 	} catch (...) {
-		std::cerr << "Cought wrong exception" << std::endl;
+		std::cerr << "Caught wrong exception" << std::endl;
 		ret = 1;
 	}
 
@@ -83,7 +83,7 @@ int main() {
 		errno = EINVAL;
 		throw Exception(SystemError() << "TEST" << 123);
 	} catch (std::exception& e) {
-		std::cerr << "Cought right exception: " << e.what() << std::endl;
+		std::cerr << "Caught right exception: " << e.what() << std::endl;
 		if (strstr(e.what(), "TEST123") == NULL) {
 			std::cerr << "But user message was lost" << std::endl;
 			ret = 1;
@@ -93,7 +93,7 @@ int main() {
 			ret = 1;
 		}
 	} catch (...) {
-		std::cerr << "Cought wrong exception" << std::endl;
+		std::cerr << "Caught wrong exception" << std::endl;
 		ret = 1;
 	}
 
