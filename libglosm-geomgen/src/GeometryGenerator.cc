@@ -499,6 +499,13 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const
 			CreateArea(geom, vertices, true, minz, way);
 			CreateLines(geom, vertices, minz, way);
 		}
+	} else if ((t = way.Tags.find("man_made")) != way.Tags.end() && (t->second == "tower" || t->second == "chimney") && minz != maxz) {
+		CreateWalls(geom, vertices, minz, maxz, way);
+		CreateArea(geom, vertices, false, maxz, way);
+
+		CreateLines(geom, vertices, minz, way);
+		CreateLines(geom, vertices, maxz, way);
+		CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
 	} else if (way.Tags.find("barrier") != way.Tags.end()) {
 		if (maxz == minz)
 			maxz += 2 * GEOM_UNITSINMETER;
