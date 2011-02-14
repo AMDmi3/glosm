@@ -31,7 +31,12 @@ class Geometry;
  */
 class GeometryDatasource {
 public:
-	virtual void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::ForEarth()) const = 0;
+	enum Flags {
+		LOWRES = 0x01,
+	};
+
+public:
+	virtual void GetGeometry(Geometry& geometry, const BBoxi& bbox, int flags = 0) const = 0;
 
 	/** Returns the center of available area */
 	virtual Vector2i GetCenter() const {
