@@ -539,6 +539,10 @@ static void LowresWayDispatcher(Geometry& geom, const OsmDatasource& datasource,
 				t->second == "tertiary")
 			) {
 		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("railway")) != way.Tags.end() && (t->second == "rail")) {
+		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("boundary")) != way.Tags.end() && (t->second == "administrative")) {
+		/* TODO: add real processing here */
 	} else if ((t = way.Tags.find("waterway")) != way.Tags.end()) {
 		/* TODO: add real processing here */
 	} else if ((t = way.Tags.find("natural")) != way.Tags.end()) {
