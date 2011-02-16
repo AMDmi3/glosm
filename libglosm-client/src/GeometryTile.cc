@@ -31,23 +31,23 @@
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/SimpleVertexBuffer.hh>
 
-GeometryTile::GeometryTile(const Projection& projection, const Geometry& geom, const Vector2i& ref, const BBoxi& bbox = BBoxi::ForEarth()) : Tile(ref) {
+GeometryTile::GeometryTile(const Projection& projection, const GeometryDatasource& datasource, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
+	Geometry geom;
+	datasource.GetGeometry(geom, bbox);
+
 	if (geom.GetLines().size() != 0) {
-		std::vector<Vector3f> translated;
-		projection.ProjectPoints(geom.GetLines(), ref, translated);
-		lines_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::LINES, translated.data(), translated.size()));
+		projected_lines_.reset(new ProjectedVertices);
+		projection.ProjectPoints(geom.GetLines(), ref, *projected_lines_);
 	}
 
 	if (geom.GetTriangles().size() != 0) {
-		std::vector<Vector3f> translated;
-		projection.ProjectPoints(geom.GetTriangles(), ref, translated);
-		triangles_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::TRIANGLES, translated.data(), translated.size()));
+		projected_triangles_.reset(new ProjectedVertices);
+		projection.ProjectPoints(geom.GetTriangles(), ref, *projected_triangles_);
 	}
 
 	if (geom.GetQuads().size() != 0) {
-		std::vector<Vector3f> translated;
-		projection.ProjectPoints(geom.GetQuads(), ref, translated);
-		quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, translated.data(), translated.size()));
+		projected_quads_.reset(new ProjectedVertices);
+		projection.ProjectPoints(geom.GetQuads(), ref, *projected_quads_);
 	}
 
 #ifdef TILE_DEBUG
@@ -77,7 +77,26 @@ GeometryTile::GeometryTile(const Projection& projection, const Geometry& geom, c
 GeometryTile::~GeometryTile() {
 }
 
-void GeometryTile::Render() const {
+void GeometryTile::BindBuffers() {
+	if (projected_lines_.get()) {
+		lines_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::LINES, projected_lines_->data(), projected_lines_->size()));
+		projected_lines_.reset(NULL);
+	}
+
+	if (projected_triangles_.get()) {
+		triangles_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::TRIANGLES, projected_triangles_->data(), projected_triangles_->size()));
+		projected_triangles_.reset(NULL);
+	}
+
+	if (projected_quads_.get()) {
+		quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, projected_quads_->data(), projected_quads_->size()));
+		projected_quads_.reset(NULL);
+	}
+}
+
+void GeometryTile::Render() {
+	BindBuffers();
+
 	if (lines_.get()) {
 		glDepthFunc(GL_LESS);
 

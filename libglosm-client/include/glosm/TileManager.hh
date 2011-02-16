@@ -37,8 +37,7 @@ class TileManager {
 public:
 	enum RequestFlags {
 		SYNC = 0x01,
-		NOGENBUMP = 0x02,
-		EXPLICIT = 0x04,
+		BLOB = 0x02,
 	};
 
 protected:
@@ -53,42 +52,57 @@ protected:
 
 	struct TileData {
 		Tile* tile;
-		Geometry* volatile geometry;
 		int generation;
-		volatile bool loading;
 
-		TileData();
-		~TileData();
+		TileData(Tile* t, int g): tile(t), generation(g) {
+		}
+	};
+
+	struct TileTask {
+		TileId id;
+		BBoxi bbox;
+
+		TileTask(const TileId& i, const BBoxi& b) : id(i), bbox(b) {
+		}
 	};
 
 protected:
+	/* TODO: use more clever bbox-based container */
 	typedef std::multimap<TileId, TileData> TilesMap;
+	typedef std::list<TileTask> TilesQueue;
 
 protected:
 	const Projection projection_;
-	const GeometryDatasource& datasource_;
 	int target_level_;
-	int generation_;
 
-	TilesMap tiles_;
 	mutable pthread_mutex_t tiles_mutex_;
-	pthread_cond_t tiles_cond_;
+	/* protected by tiles_mutex_ */
+	TilesMap tiles_;
+	int generation_;
+	/* /protected by tiles_mutex_ */
+
+	mutable pthread_mutex_t queue_mutex_;
+	pthread_cond_t queue_cond_;
+	/* protected by queue_mutex_ */
+	TilesQueue queue_;
+	/* /protected by queue_mutex_ */
 
 	pthread_t loading_thread_;
 	volatile bool thread_die_flag_;
 
 protected:
-	TileManager(const Projection projection, const GeometryDatasource& ds);
+	TileManager(const Projection projection);
 	virtual ~TileManager();
 
-	virtual Tile* SpawnTile(const Geometry& geom) const = 0;
+	virtual Tile* SpawnTile(const BBoxi& bbox) const = 0;
 
-	void LoadTiles(const BBoxi& bbox, int flags, int level = 0, int x = 0, int y = 0);
+	int LoadTile(const TileId& id, const BBoxi& bbox, int flags);
+	bool LoadTiles(const BBoxi& bbox, int flags, int level = 0, int x = 0, int y = 0);
 
 	void LoadingThreadFunc();
 	static void* LoadingThreadFuncWrapper(void* arg);
 
-	void Render(const Viewer& viewer) const;
+	void Render(const Viewer& viewer);
 
 public:
 	void SetTargetLevel(int level);

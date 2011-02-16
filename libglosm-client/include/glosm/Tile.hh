@@ -42,7 +42,7 @@ public:
 	Tile(const Vector2i& ref) : reference_(ref) {}
 	virtual ~Tile() {}
 
-	virtual void Render() const = 0;
+	virtual void Render() = 0;
 
 	const Vector2i& GetReference() const {
 		return reference_;

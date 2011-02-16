@@ -54,13 +54,8 @@ protected:
 	VertexVector triangles_;
 	VertexVector quads_;
 
-	BBoxi bbox_;
-
 public:
 	Geometry();
-	Geometry(const BBoxi& bbox);
-
-	const BBoxi& GetBBox() const;
 
 	void AddLine(const Vector3i& a, const Vector3i& b);
 	void AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c);

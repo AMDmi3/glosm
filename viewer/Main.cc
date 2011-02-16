@@ -74,8 +74,8 @@ void Display(void) {
 	if (layer_p) {
 		if (tilelevel >= 0) {
 			int radius = 5000000;
-			layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
 			layer_p->GarbageCollect();
+			layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
 		}
 		layer_p->Render(viewer);
 	}
@@ -278,7 +278,7 @@ int real_main(int argc, char** argv) {
 	if (tilelevel >= 0)
 		layer.SetTargetLevel(tilelevel);
 	else
-		layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);
+		layer.RequestVisible(geometry_generator.GetBBox(), TileManager::BLOB);
 	layer_p = &layer;
 
 	int height = fabs((float)geometry_generator.GetBBox().top - (float)geometry_generator.GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
