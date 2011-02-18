@@ -17,19 +17,7 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glosm/FirstPersonViewer.hh>
-#include <glosm/GeometryGenerator.hh>
-#include <glosm/GeometryLayer.hh>
-#include <glosm/Math.hh>
-#include <glosm/MercatorProjection.hh>
-#include <glosm/PreloadedXmlDatasource.hh>
-#include <glosm/SphericalProjection.hh>
-#include <glosm/geomath.h>
-
-#include <getopt.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include "GlosmViewer.hh"
 
 #if defined(USE_GLEW)
 #	include <GL/glew.h>
@@ -42,210 +30,63 @@
 #	include <GL/glut.h>
 #endif
 
-#include <cstdio>
+class GlosmViewerImpl : public GlosmViewer {
+protected:
+	virtual void WarpCursor(int x, int y) {
+		glutWarpPointer(x, y);
+	}
 
-/* as glut has no OO concept and no feature like setUserData,
- * please forgive me using global variables pointing to
- * stack data for now */
-FirstPersonViewer viewer;
-GeometryLayer* layer_p = NULL;
+	virtual void Flip() {
+		glutSwapBuffers();
+	}
+};
 
-int screenw = 1;
-int screenh = 1;
-int movementflags = 0;
-float speed = 200.0f;
-int lockheight = 0;
-
-struct timeval prevtime, curtime, fpstime;
-int nframes = 0;
-
-/* stuff that may eb changed with args */
-Projection proj = MercatorProjection();
-int tilelevel = -1;
+GlosmViewerImpl app;
 
 void Display(void) {
-	/* update scene */
-	gettimeofday(&curtime, NULL);
-	float dt = (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f;
-
-	/* render frame */
-	glClearColor(0.5, 0.5, 0.5, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	if (layer_p) {
-		if (tilelevel >= 0) {
-			int radius = 5000000;
-			layer_p->RequestVisible(BBoxi(viewer.GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer.GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
-			layer_p->GarbageCollect();
-		}
-		layer_p->Render(viewer);
-	}
-
-	glFlush();
-	glutSwapBuffers();
-
-	/* movement */
-	if (movementflags) {
-		float myspeed = speed;
-		float height = viewer.MutablePos().z / GEOM_UNITSINMETER;
-
-		/* don't scale down under 100 meters */
-		if (height > 100.0)
-			myspeed *= height / 100.0;
-
-		viewer.Move(movementflags, myspeed, dt);
-	}
-	if (lockheight != 0)
-		viewer.MutablePos().z = lockheight;
-
-	/* update FPS */
-	float fpst = (float)(curtime.tv_sec - fpstime.tv_sec) + (float)(curtime.tv_usec - fpstime.tv_usec)/1000000.0f;
-
-	if (fpst > 10.0) {
-		fprintf(stderr, "FPS: %.3f\n", (float)nframes/fpst);
-		fpstime = curtime;
-		nframes = 0;
-	}
-
-	prevtime = curtime;
-	nframes++;
-
-	/* frame limiter */
-	usleep(10000);
+	app.Render();
 }
 
 void Reshape(int w, int h) {
-	if (w <= 0)
-		w = 1;
-	if (h <= 0)
-		h = 1;
-
-	screenw = w;
-	screenh = h;
-
-	float wanted_fov = 70.0f/180.0f*M_PI;
-	float wanted_aspect = 4.0f/3.0f;
-
-	float fov, aspect;
-
-	if ((float)w/(float)h > wanted_aspect) { // wider than wanted
-		fov = wanted_fov;
-	} else { // narrower than wanted
-		float wanted_h = (float)w/wanted_aspect;
-		fov = 2.0f*atanf((float)h / wanted_h * tanf(wanted_fov/2.0f));
-	}
-	fov = wanted_fov;
-	aspect = (float)w/(float)h;
-
-	glViewport(0, 0, w, h);
-
-	viewer.SetFov(fov);
-	viewer.SetAspect(aspect);
-
-	glutWarpPointer(screenw/2, screenh/2);
+	app.Resize(w, h);
 }
 
 void Mouse(int x, int y) {
-	int dx = x - screenw/2;
-	int dy = y - screenh/2;
-
-	float YawDelta = (float)dx / 500.0;
-	float PitchDelta = -(float)dy / 500.0;
-
-	viewer.HardRotate(YawDelta, PitchDelta);
-
-	if (dx != 0 || dy != 0)
-		glutWarpPointer(screenw/2, screenh/2);
+	app.MouseMove(x, y);
 }
 
 void SpecialDown(int key, int, int) {
 	switch (key) {
-	case GLUT_KEY_UP: movementflags |= FirstPersonViewer::FORWARD; break;
-	case GLUT_KEY_DOWN: movementflags |= FirstPersonViewer::BACKWARD; break;
-	case GLUT_KEY_LEFT: movementflags |= FirstPersonViewer::LEFT; break;
-	case GLUT_KEY_RIGHT: movementflags |= FirstPersonViewer::RIGHT; break;
-	default:
-		break;
+	case GLUT_KEY_UP: app.KeyDown(GlosmViewer::UP); break;
+	case GLUT_KEY_DOWN: app.KeyDown(GlosmViewer::DOWN); break;
+	case GLUT_KEY_LEFT: app.KeyDown(GlosmViewer::LEFT); break;
+	case GLUT_KEY_RIGHT: app.KeyDown(GlosmViewer::RIGHT); break;
+	default: break;
 	}
 }
 
 void SpecialUp(int key, int, int) {
 	switch (key) {
-	case GLUT_KEY_UP: movementflags &= ~FirstPersonViewer::FORWARD; break;
-	case GLUT_KEY_DOWN: movementflags &= ~FirstPersonViewer::BACKWARD; break;
-	case GLUT_KEY_LEFT: movementflags &= ~FirstPersonViewer::LEFT; break;
-	case GLUT_KEY_RIGHT: movementflags &= ~FirstPersonViewer::RIGHT; break;
-	default:
-		break;
+	case GLUT_KEY_UP: app.KeyUp(GlosmViewer::UP); break;
+	case GLUT_KEY_DOWN: app.KeyUp(GlosmViewer::DOWN); break;
+	case GLUT_KEY_LEFT: app.KeyUp(GlosmViewer::LEFT); break;
+	case GLUT_KEY_RIGHT: app.KeyUp(GlosmViewer::RIGHT); break;
+	default: break;
 	}
 }
 
 void KeyDown(unsigned char key, int, int) {
-	switch (key) {
-	case 27: case 'q': exit(0); break;
-	case 'w': movementflags |= FirstPersonViewer::FORWARD; break;
-	case 's': movementflags |= FirstPersonViewer::BACKWARD; break;
-	case 'a': movementflags |= FirstPersonViewer::LEFT; break;
-	case 'd': movementflags |= FirstPersonViewer::RIGHT; break;
-	case 'c': movementflags |= FirstPersonViewer::LOWER; break;
-	case ' ': movementflags |= FirstPersonViewer::HIGHER; break;
-	case 'l': lockheight = (lockheight == 0 ? viewer.MutablePos().z : 0); break;
-	case 'h': lockheight = (lockheight == 0 ? 1750 : 0); break;
-	case '+': speed *= 5.0f; break;
-	case '-': speed /= 5.0f; break;
-	default:
-		break;
-	}
+	app.KeyDown(key);
 }
 
 void KeyUp(unsigned char key, int, int) {
-	switch (key) {
-	case 'w': movementflags &= ~FirstPersonViewer::FORWARD; break;
-	case 's': movementflags &= ~FirstPersonViewer::BACKWARD; break;
-	case 'a': movementflags &= ~FirstPersonViewer::LEFT; break;
-	case 'd': movementflags &= ~FirstPersonViewer::RIGHT; break;
-	case 'c': movementflags &= ~FirstPersonViewer::LOWER; break;
-	case ' ': movementflags &= ~FirstPersonViewer::HIGHER; break;
-	default:
-		break;
-	}
-}
-
-void usage(const char* progname) {
-	fprintf(stderr, "Usage: %s [-s] file.osm\n", progname);
-	exit(1);
+	app.KeyUp(key);
 }
 
 int real_main(int argc, char** argv) {
 	glutInit(&argc, argv);
 
-	/* argument parsing */
-	int c;
-	const char* progname = argv[0];
-	while ((c = getopt(argc, argv, "st:")) != -1) {
-		switch (c) {
-		case 's': proj = SphericalProjection(); break;
-		case 't': tilelevel = strtol(optarg, NULL, 10); break;
-		default:
-			usage(progname);
-		}
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if (argc != 1)
-		usage(progname);
-
-	/* load data */
-	fprintf(stderr, "Loading...\n");
-	PreloadedXmlDatasource osm_datasource;
-	gettimeofday(&prevtime, NULL);
-	osm_datasource.Load(argv[0]);
-	gettimeofday(&curtime, NULL);
-	fprintf(stderr, "Loaded XML in %.3f seconds\n", (float)(curtime.tv_sec - prevtime.tv_sec) + (float)(curtime.tv_usec - prevtime.tv_usec)/1000000.0f);
-	prevtime = curtime;
-	fpstime = curtime;
+	app.Init(argc, argv);
 
 	/* glut init */
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
@@ -273,18 +114,7 @@ int real_main(int argc, char** argv) {
 	glutSpecialFunc(SpecialDown);
 	glutSpecialUpFunc(SpecialUp);
 
-	/* glosm init */
-	GeometryGenerator geometry_generator(osm_datasource);
-	GeometryLayer layer(proj, geometry_generator);
-	if (tilelevel >= 0)
-		layer.SetTargetLevel(tilelevel);
-	else
-		layer.RequestVisible(geometry_generator.GetBBox(), TileManager::EXPLICIT);
-	layer_p = &layer;
-
-	int height = fabs((float)geometry_generator.GetBBox().top - (float)geometry_generator.GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
-	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), height));
-	viewer.HardRotate(0, -M_PI_4);
+	app.InitGL();
 
 	/* main loop */
 	/* note that this never returns and objects created above

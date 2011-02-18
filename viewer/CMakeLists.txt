@@ -9,6 +9,7 @@ ENDIF(USE_GLEW)
 # Targets
 SET(SOURCES
 	Main.cc
+	GlosmViewer.cc
 )
 
 INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ../libglosm-client/include ../libglosm-server/include ../libglosm-geomgen/include)
