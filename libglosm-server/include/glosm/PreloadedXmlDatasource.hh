@@ -70,8 +70,13 @@ protected:
 	BBoxi bbox_;
 
 protected:
-	static void StartElement(void* userData, const char* name, const char** atts);
-	static void EndElement(void* userData, const char* name);
+
+protected:
+	static void StartElementWrapper(void* userData, const char* name, const char** atts);
+	static void EndElementWrapper(void* userData, const char* name);
+
+	void StartElement(const char* name, const char** atts);
+	void EndElement(const char* name);
 
 public:
 	PreloadedXmlDatasource();

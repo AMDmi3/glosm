@@ -198,10 +198,16 @@ PreloadedXmlDatasource::PreloadedXmlDatasource() : bbox_(BBoxi::Empty()) {
 PreloadedXmlDatasource::~PreloadedXmlDatasource() {
 }
 
-void PreloadedXmlDatasource::StartElement(void* userData, const char* name, const char** atts) {
-	PreloadedXmlDatasource* loader = static_cast<PreloadedXmlDatasource*>(userData);
+void PreloadedXmlDatasource::StartElementWrapper(void* userData, const char* name, const char** atts) {
+	static_cast<PreloadedXmlDatasource*>(userData)->StartElement(name, atts);
+}
 
-	if (loader->tag_level_ == 1 && loader->InsideWhich == NONE) {
+void PreloadedXmlDatasource::EndElementWrapper(void* userData, const char* name) {
+	static_cast<PreloadedXmlDatasource*>(userData)->EndElement(name);
+}
+
+void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
+	if (tag_level_ == 1 && InsideWhich == NONE) {
 		int id = 0;
 		int lat = 0;
 		int lon = 0;
@@ -217,36 +223,36 @@ void PreloadedXmlDatasource::StartElement(void* userData, const char* name, cons
 		}
 
 		if (StrEq<1>(name, "node")) {
-			loader->InsideWhich = NODE;
-			std::pair<NodesMap::iterator, bool> p = loader->nodes_.insert(std::make_pair(id, Node(lon, lat)));
-			loader->last_node_ = p.first;
-			//loader->last_node_tags_ = loader->node_tags_.end();
+			InsideWhich = NODE;
+			std::pair<NodesMap::iterator, bool> p = nodes_.insert(std::make_pair(id, Node(lon, lat)));
+			last_node_ = p.first;
+			//last_node_tags_ = node_tags_.end();
 		} else if (StrEq<1>(name, "way")) {
-			loader->InsideWhich = WAY;
-			std::pair<WaysMap::iterator, bool> p = loader->ways_.insert(std::make_pair(id, Way()));
-			loader->last_way_ = p.first;
+			InsideWhich = WAY;
+			std::pair<WaysMap::iterator, bool> p = ways_.insert(std::make_pair(id, Way()));
+			last_way_ = p.first;
 		} else if (StrEq<1>(name, "relation")) {
-			loader->InsideWhich = RELATION;
-			std::pair<RelationsMap::iterator, bool> p = loader->relations_.insert(std::make_pair(id, Relation()));
-			loader->last_relation_ = p.first;
+			InsideWhich = RELATION;
+			std::pair<RelationsMap::iterator, bool> p = relations_.insert(std::make_pair(id, Relation()));
+			last_relation_ = p.first;
 		} else if (StrEq<-1>(name, "bounds")) {
-			loader->bbox_ = ParseBounds(atts);
+			bbox_ = ParseBounds(atts);
 		} else if (StrEq<-1>(name, "bound")) {
-			loader->bbox_ = ParseBound(atts);
+			bbox_ = ParseBound(atts);
 		}
-	} else if (loader->tag_level_ == 2 && loader->InsideWhich == NODE) {
+	} else if (tag_level_ == 2 && InsideWhich == NODE) {
 		if (StrEq<0>(name, "tag")) {
-//			if (loader->last_node_tags_ == loader->node_tags_.end()) {
-//				std::pair<NodeTagsMap::iterator, bool> p = loader->node_tags_.insert(std::make_pair(loader->last_node_->first, TagsMap()));
-//				loader->last_node_tags_ = p.first;
+//			if (last_node_tags_ == node_tags_.end()) {
+//				std::pair<NodeTagsMap::iterator, bool> p = node_tags_.insert(std::make_pair(last_node_->first, TagsMap()));
+//				last_node_tags_ = p.first;
 //			}
-//			ParseTag(loader->last_node_tags_->second, atts);
+//			ParseTag(last_node_tags_->second, atts);
 		} else {
 			throw ParsingException() << "unexpected tag in node";
 		}
-	} else if (loader->tag_level_ == 2 && loader->InsideWhich == WAY) {
+	} else if (tag_level_ == 2 && InsideWhich == WAY) {
 		if (StrEq<1>(name, "tag")) {
-			ParseTag(loader->last_way_->second.Tags, atts);
+			ParseTag(last_way_->second.Tags, atts);
 		} else if (StrEq<1>(name, "nd")) {
 			int id;
 
@@ -255,13 +261,13 @@ void PreloadedXmlDatasource::StartElement(void* userData, const char* name, cons
 			else
 				throw ParsingException() << "no ref attribute for nd tag";
 
-			loader->last_way_->second.Nodes.push_back(id);
+			last_way_->second.Nodes.push_back(id);
 		} else {
 			throw ParsingException() << "unexpected tag in way";
 		}
-	} else if (loader->tag_level_ == 2 && loader->InsideWhich == RELATION) {
+	} else if (tag_level_ == 2 && InsideWhich == RELATION) {
 		if (StrEq<1>(name, "tag")) {
-//			ParseTag(loader->last_relation_->second.Tags, atts);
+//			ParseTag(last_relation_->second.Tags, atts);
 		} else if (StrEq<1>(name, "member")) {
 			int ref;
 			const char* role;
@@ -287,57 +293,55 @@ void PreloadedXmlDatasource::StartElement(void* userData, const char* name, cons
 				}
 			}
 
-			loader->last_relation_->second.Members.push_back(Relation::Member(type, ref, role));
+			last_relation_->second.Members.push_back(Relation::Member(type, ref, role));
 		} else {
 			throw ParsingException() << "unexpected tag in relation";
 		}
-	} else if (loader->tag_level_ >= 2) {
+	} else if (tag_level_ >= 2) {
 		throw ParsingException() << "unexpected tag";
 	}
 
-	++loader->tag_level_;
+	++tag_level_;
 }
 
-void PreloadedXmlDatasource::EndElement(void* userData, const char* /*name*/) {
-	PreloadedXmlDatasource* loader = static_cast<PreloadedXmlDatasource*>(userData);
-
-	if (loader->tag_level_ == 2) {
-		switch (loader->InsideWhich) {
+void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
+	if (tag_level_ == 2) {
+		switch (InsideWhich) {
 		case WAY:
 			/* check if a way is closed */
-			if (loader->last_way_->second.Nodes.front() == loader->last_way_->second.Nodes.back()) {
-				loader->last_way_->second.Closed = true;
+			if (last_way_->second.Nodes.front() == last_way_->second.Nodes.back()) {
+				last_way_->second.Closed = true;
 
 				/* check if a way is clockwise */
 				NodesMap::const_iterator prev, cur;
 				osmlong_t area = 0;
-				for (Way::NodesList::const_iterator i = loader->last_way_->second.Nodes.begin(); i != loader->last_way_->second.Nodes.end(); ++i) {
-					cur = loader->nodes_.find(*i);
-					if (cur == loader->nodes_.end())
-						throw ParsingException() << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
-					if (i != loader->last_way_->second.Nodes.begin())
+				for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
+					cur = nodes_.find(*i);
+					if (cur == nodes_.end())
+						throw ParsingException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
+					if (i != last_way_->second.Nodes.begin())
 						area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
 					prev = cur;
-					loader->last_way_->second.BBox.Include(cur->second.Pos);
+					last_way_->second.BBox.Include(cur->second.Pos);
 				}
 
-				loader->last_way_->second.Clockwise = area < 0;
+				last_way_->second.Clockwise = area < 0;
 			} else {
-				for (Way::NodesList::const_iterator i = loader->last_way_->second.Nodes.begin(); i != loader->last_way_->second.Nodes.end(); ++i) {
-					NodesMap::const_iterator cur = loader->nodes_.find(*i);
-					if (cur == loader->nodes_.end())
-						throw ParsingException() << "node " << *i << " referenced by way " << loader->last_way_->first << " was not found in this dump";
-					loader->last_way_->second.BBox.Include(cur->second.Pos);
+				for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
+					NodesMap::const_iterator cur = nodes_.find(*i);
+					if (cur == nodes_.end())
+						throw ParsingException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
+					last_way_->second.BBox.Include(cur->second.Pos);
 				}
 			}
 			break;
 		default:
 			break;
 		}
-		loader->InsideWhich = NONE;
+		InsideWhich = NONE;
 	}
 
-	--loader->tag_level_;
+	--tag_level_;
 }
 
 Vector2i PreloadedXmlDatasource::GetCenter() const {
@@ -364,7 +368,7 @@ void PreloadedXmlDatasource::Load(const char* filename) {
 		throw Exception() << "cannot create XML parser";
 	}
 
-	XML_SetElementHandler(parser, StartElement, EndElement);
+	XML_SetElementHandler(parser, StartElementWrapper, EndElementWrapper);
 	XML_SetUserData(parser, this);
 
 	InsideWhich = NONE;
