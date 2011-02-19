@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#if defined(USE_GLEW)
+#if defined(WITH_GLEW)
 #   include <GL/glew.h>
 #endif
 
@@ -92,7 +92,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 }
 
 void GlosmViewer::InitGL() {
-#if defined(USE_GLEW)
+#if defined(WITH_GLEW)
 	GLenum err = glewInit();
 	if (err != GLEW_OK)
 		throw Exception() << "Cannot init glew: " << glewGetErrorString(err);

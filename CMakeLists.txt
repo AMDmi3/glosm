@@ -12,9 +12,9 @@ ELSE(UNIX)
 ENDIF(UNIX)
 
 IF(WIN32)
-	SET(USE_GLEW_DEFAULT ON)
+	SET(WITH_GLEW_DEFAULT ON)
 ELSE(WIN32)
-	SET(USE_GLEW_DEFAULT OFF)
+	SET(WITH_GLEW_DEFAULT OFF)
 ENDIF(WIN32)
 
 OPTION(BUILD_VIEWER_SDL "Build first-person osm viewer (SDL version)" ON)
@@ -22,11 +22,22 @@ OPTION(BUILD_VIEWER_GLUT "Build first-person osm viewer (GLUT version)" OFF)
 OPTION(BUILD_TILER "Build tile generator" ${BUILD_TILER_DEFAULT})
 OPTION(BUILD_EXAMPLES "Build examples" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
-OPTION(USE_GLEW "Use GLEW (needed when you system uses archaic OpenGL)" ${USE_GLEW_DEFAULT})
+OPTION(WITH_GLEW "Use GLEW (needed when you system uses archaic OpenGL)" ${WITH_GLEW_DEFAULT})
+OPTION(WITH_GLES "Use OpenGL ES for mobile devices" OFF)
+OPTION(WITH_TOUCHPAD "Tweak control for touchpad" OFF)
 
 # Global variables (still overridable via cmake -D ..)
 SET(BINDIR "bin" CACHE STRING "Install subdirectory for binaries")
 SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
+
+# Conditionals
+#IF(MINGW)
+#	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
+#ENDIF(MINGW)
+
+IF(WITH_GLES AND BUILD_VIEWER_GLUT)
+	MESSAGE(FATAL_ERROR "OpenGL ES is not supported with GLUT")
+ENDIF(WITH_GLES AND BUILD_VIEWER_GLUT)
 
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra -DTILE_DEBUG)
@@ -37,10 +48,10 @@ MESSAGE("Building GLUT viewer: ${BUILD_VIEWER_GLUT}")
 MESSAGE("      Building tiler: ${BUILD_TILER}")
 MESSAGE("   Building examples: ${BUILD_EXAMPLES}")
 MESSAGE("      Building tests: ${BUILD_TESTS}")
-
-#IF(MINGW)
-#	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
-#ENDIF(MINGW)
+MESSAGE("")
+MESSAGE("        GLEW support: ${WITH_GLEW}")
+MESSAGE("   OpenGL ES support: ${WITH_GLES}")
+MESSAGE("    Touchpad support: ${WITH_TOUCHPAD}")
 
 # Framework subdirs
 ADD_SUBDIRECTORY(libglosm-server)

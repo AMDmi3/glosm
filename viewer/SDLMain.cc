@@ -19,15 +19,20 @@
 
 #include "GlosmViewer.hh"
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
-
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <SDL/SDL_keysym.h>
+
+#if defined(WITH_GLES)
+#	include <GLES/gl.h>
+#	include <SDL_gles.h>
+#else
+#	if defined(__APPLE__)
+#		include <OpenGL/gl.h>
+#	else
+#		include <GL/gl.h>
+#	endif
+#	include <SDL/SDL_opengl.h>
+#endif
 
 #include <cstdio>
 
@@ -52,14 +57,24 @@ protected:
 	}
 
 	virtual void Flip() {
+#if defined(WITH_GLES)
+		SDL_GLES_SwapBuffers();
+#else
 		SDL_GL_SwapBuffers();
+#endif
 	}
 };
+
+#if defined(WITH_GLES)
+SDL_GLES_Context* gles_context = 0;
+#endif
 
 GlosmViewerImpl app;
 
 void Reshape(int w, int h) {
+#if !defined(WITH_GLES)
 	SDL_SetVideoMode(w, h, 0, SDL_OPENGL | SDL_RESIZABLE | SDL_HWSURFACE);
+#endif
 
 	app.Resize(w, h);
 }
@@ -96,6 +111,14 @@ void KeyUp(SDLKey key) {
 		case SDLK_LCTRL: case SDLK_RCTRL: app.KeyUp(GlosmViewer::CTRL); break;
 		default: break;
 		}
+}
+
+void Cleanup() {
+#if defined(WITH_GLES)
+	if (gles_context)
+		SDL_GLES_DeleteContext(gles_context);
+#endif
+	SDL_Quit();
 }
 
 int GetEvents() {
@@ -136,13 +159,27 @@ int real_main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		throw Exception() << "Couldn't initialize SDL: " << (const char*)SDL_GetError();
 
-	atexit(SDL_Quit);
+	atexit(Cleanup);
 
+#if !defined(WITH_GLES)
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	Reshape(800, 600);
+#else
+	/* Using fixed resolution for N900
+	 * it should be detected on the fly instead */
+	SDL_SetVideoMode(800, 480, 0, SDL_SWSURFACE | SDL_FULLSCREEN);
+
+	SDL_GLES_Init(SDL_GLES_VERSION_1_1);
+
+	gles_context = SDL_GLES_CreateContext();
+
+	SDL_GLES_MakeCurrent(gles_context);
+
+	Reshape(800, 480);
+#endif
 
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EnableKeyRepeat(0, 0);

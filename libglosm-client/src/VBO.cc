@@ -17,7 +17,7 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if defined(USE_GLEW)
+#if defined(WITH_GLEW)
 #	include <GL/glew.h>
 #endif
 
