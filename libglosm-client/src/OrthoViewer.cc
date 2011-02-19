@@ -22,11 +22,7 @@
 #include <glosm/Projection.hh>
 #include <glosm/geomath.h>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 OrthoViewer::OrthoViewer() : bbox_(BBoxi::ForEarth()), skew_(0.0f) {
 }

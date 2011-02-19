@@ -25,11 +25,7 @@
 #include <glosm/Tile.hh>
 #include <glosm/Exception.hh>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
 }

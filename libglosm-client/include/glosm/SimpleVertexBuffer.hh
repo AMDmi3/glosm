@@ -25,11 +25,7 @@
 #include <glosm/VBO.hh>
 #include <glosm/Renderable.hh>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 #include <memory>
 

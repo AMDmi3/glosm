@@ -25,11 +25,7 @@
 #include <glosm/Projection.hh>
 #include <glosm/Viewer.hh>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): TileManager(projection, datasource), projection_(projection) {
 }

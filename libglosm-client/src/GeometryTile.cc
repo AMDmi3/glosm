@@ -17,12 +17,7 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define GL_GLEXT_PROTOTYPES
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 #include <glosm/GeometryTile.hh>
 

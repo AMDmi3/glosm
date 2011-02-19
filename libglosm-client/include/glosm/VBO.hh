@@ -23,11 +23,7 @@
 #include <glosm/NonCopyable.hh>
 #include <glosm/Math.hh>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 #include <sys/types.h>
 

@@ -31,14 +31,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#if defined(USE_GLEW)
-#	include <GL/glew.h>
-#endif
+#include <glosm/util/gl.h>
+
 #if defined(__APPLE__)
-#	include <OpenGL/gl.h>
 #	include <GLUT/glut.h>
 #else
-#	include <GL/gl.h>
 #	include <GL/glut.h>
 #endif
 

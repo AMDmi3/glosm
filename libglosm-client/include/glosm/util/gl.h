@@ -20,14 +20,24 @@
 #ifndef UTIL_GL_HH
 #define UTIL_GL_HH
 
+#if defined(WITH_GLEW)
+#	include <GL/glew.h>
+#else
+#	define GL_GLEXT_PROTOTYPES
+#endif
+
 #if defined(WITH_GLES)
 #	include <GLES/gl.h>
+#	include <GLES/glext.h>
 #elif defined(WITH_GLES2)
 #	include <GLES2/gl2.h>
+#	include <GLES2/gl2ext.h>
 #elif defined(__APPLE__)
 #	include <OpenGL/gl.h>
+#	include <OpenGL/glext.h>
 #else
 #	include <GL/gl.h>
+#	include <GL/glext.h>
 #endif
 
 #endif

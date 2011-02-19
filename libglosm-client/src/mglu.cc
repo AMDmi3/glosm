@@ -24,11 +24,7 @@
 
 #include <glosm/Math.hh>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
+#include <glosm/util/gl.h>
 
 void mglFrustum(float left, float right, float bottom, float top, float znear, float zfar) {
 	float matrix[16] = {
