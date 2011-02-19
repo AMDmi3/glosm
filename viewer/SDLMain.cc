@@ -173,6 +173,8 @@ int real_main(int argc, char** argv) {
 	SDL_SetVideoMode(800, 480, 0, SDL_SWSURFACE | SDL_FULLSCREEN);
 
 	SDL_GLES_Init(SDL_GLES_VERSION_1_1);
+	
+	SDL_GLES_SetAttribute(SDL_GLES_DEPTH_SIZE, 24);
 
 	gles_context = SDL_GLES_CreateContext();
 
