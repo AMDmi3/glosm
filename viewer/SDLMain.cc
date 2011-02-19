@@ -32,6 +32,8 @@
 #include <SDL/SDL_opengl.h>
 #include <SDL/SDL_keysym.h>
 
+#include <cstdio>
+
 class GlosmViewerImpl : public GlosmViewer {
 protected:
 	bool ignoremouse_;
@@ -137,6 +139,8 @@ int real_main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		throw Exception() << "Couldn't initialize SDL: " << (const char*)SDL_GetError();
 
+	atexit(SDL_Quit);
+
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -160,8 +164,6 @@ int real_main(int argc, char** argv) {
 	/* main loop */
 	while (GetEvents())
 		app.Render();
-
-	SDL_Quit();
 
 	return 0;
 }

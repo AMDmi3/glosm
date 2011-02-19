@@ -31,6 +31,13 @@ SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra -DTILE_DEBUG)
 
+# Info
+MESSAGE(" Building SDL viewer: ${BUILD_VIEWER_SDL}")
+MESSAGE("Building GLUT viewer: ${BUILD_VIEWER_GLUT}")
+MESSAGE("      Building tiler: ${BUILD_TILER}")
+MESSAGE("   Building examples: ${BUILD_EXAMPLES}")
+MESSAGE("      Building tests: ${BUILD_TESTS}")
+
 #IF(MINGW)
 #	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
 #ENDIF(MINGW)

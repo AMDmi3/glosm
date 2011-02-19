@@ -30,6 +30,8 @@
 #	include <GL/glut.h>
 #endif
 
+#include <cstdio>
+
 class GlosmViewerImpl : public GlosmViewer {
 protected:
 	virtual void WarpCursor(int x, int y) {
