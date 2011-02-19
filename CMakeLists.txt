@@ -17,7 +17,8 @@ ELSE(WIN32)
 	SET(USE_GLEW_DEFAULT OFF)
 ENDIF(WIN32)
 
-OPTION(BUILD_VIEWER "Build first-person osm viewer" ON)
+OPTION(BUILD_VIEWER_SDL "Build first-person osm viewer (SDL version)" ON)
+OPTION(BUILD_VIEWER_GLUT "Build first-person osm viewer (GLUT version)" OFF)
 OPTION(BUILD_TILER "Build tile generator" ${BUILD_TILER_DEFAULT})
 OPTION(BUILD_EXAMPLES "Build examples" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
@@ -30,6 +31,13 @@ SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra -DTILE_DEBUG)
 
+# Info
+MESSAGE(" Building SDL viewer: ${BUILD_VIEWER_SDL}")
+MESSAGE("Building GLUT viewer: ${BUILD_VIEWER_GLUT}")
+MESSAGE("      Building tiler: ${BUILD_TILER}")
+MESSAGE("   Building examples: ${BUILD_EXAMPLES}")
+MESSAGE("      Building tests: ${BUILD_TESTS}")
+
 #IF(MINGW)
 #	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
 #ENDIF(MINGW)
@@ -40,9 +48,9 @@ ADD_SUBDIRECTORY(libglosm-client)
 ADD_SUBDIRECTORY(libglosm-geomgen)
 
 # Application subdirs
-IF(BUILD_VIEWER)
+IF(BUILD_VIEWER_SDL OR BUILD_VIEWER_GLUT)
 	ADD_SUBDIRECTORY(viewer)
-ENDIF(BUILD_VIEWER)
+ENDIF(BUILD_VIEWER_SDL OR BUILD_VIEWER_GLUT)
 IF(BUILD_TILER)
 	ADD_SUBDIRECTORY(tiler)
 ENDIF(BUILD_TILER)
