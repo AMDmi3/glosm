@@ -19,9 +19,6 @@
 
 #include "GlosmViewer.hh"
 
-#if defined(USE_GLEW)
-#	include <GL/glew.h>
-#endif
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #else
@@ -149,15 +146,6 @@ int real_main(int argc, char** argv) {
 
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EnableKeyRepeat(0, 0);
-
-#if defined(USE_GLEW)
-	GLenum err = glewInit();
-	if (err != GLEW_OK)
-		throw Exception() << "Cannot init glew: " << glewGetErrorString(err);
-	const char *gl_requirements = "GL_VERSION_1_5";
-	if (!glewIsSupported(gl_requirements))
-		throw Exception() << "Minimal OpenGL requirements (" << gl_requirements << ") not met, unable to continue";
-#endif
 
 	app.InitGL();
 

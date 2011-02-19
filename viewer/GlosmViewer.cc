@@ -29,6 +29,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#if defined(USE_GLEW)
+#   include <GL/glew.h>
+#endif
+
 #if defined(__APPLE__)
 #	include <OpenGL/gl.h>
 #else
@@ -88,6 +92,15 @@ void GlosmViewer::Init(int argc, char** argv) {
 }
 
 void GlosmViewer::InitGL() {
+#if defined(USE_GLEW)
+	GLenum err = glewInit();
+	if (err != GLEW_OK)
+		throw Exception() << "Cannot init glew: " << glewGetErrorString(err);
+	const char *gl_requirements = "GL_VERSION_1_5";
+	if (!glewIsSupported(gl_requirements))
+		throw Exception() << "Minimal OpenGL requirements (" << gl_requirements << ") not met, unable to continue";
+#endif
+
 	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_));
 	geometry_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
 
