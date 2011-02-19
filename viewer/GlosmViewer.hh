@@ -30,12 +30,6 @@
 
 #include <sys/time.h>
 
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
-
 class GlosmViewer {
 public:
 	enum Keys {
