@@ -17,9 +17,9 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glosm/util/gl.h>
-
 #include <glosm/VBO.hh>
+
+#include <glosm/util/gl.h>
 
 VBO::VBO(const Vector3f* data, int count) : size_(count) {
 	glGenBuffers(1, &buffer_);

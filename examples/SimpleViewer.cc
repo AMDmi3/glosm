@@ -32,7 +32,7 @@
 #include <glosm/GeometryGenerator.hh>
 #include <glosm/geomath.h>
 
-#if defined(USE_GLEW)
+#if defined(WITH_GLEW)
 #	include <GL/glew.h>
 #endif
 #include <GL/gl.h>
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(Display);
 	glutKeyboardFunc(KeyDown);
 
-#if defined USE_GLEW
+#if defined WITH_GLEW
 	glewInit();
 #endif
 

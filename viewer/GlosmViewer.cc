@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#if defined(USE_GLEW)
+#if defined(WITH_GLEW)
 #   include <GL/glew.h>
 #endif
 
@@ -92,7 +92,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 }
 
 void GlosmViewer::InitGL() {
-#if defined(USE_GLEW)
+#if defined(WITH_GLEW)
 	GLenum err = glewInit();
 	if (err != GLEW_OK)
 		throw Exception() << "Cannot init glew: " << glewGetErrorString(err);
@@ -281,8 +281,13 @@ void GlosmViewer::MouseMove(int x, int y) {
 	int dx = x - screenw_/2;
 	int dy = y - screenh_/2;
 
+#if defined(WITH_TOUCHPAD)
+	float YawDelta = (float)dx / 5000.0;
+	float PitchDelta = -(float)dy / 5000.0;
+#else
 	float YawDelta = (float)dx / 500.0;
 	float PitchDelta = -(float)dy / 500.0;
+#endif
 
 	viewer_->HardRotate(YawDelta, PitchDelta);
 
