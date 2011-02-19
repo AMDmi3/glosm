@@ -45,10 +45,26 @@ void Geometry::AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i&
 }
 
 void Geometry::AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, const Vector3i& d) {
+#if !defined(WITH_GLES)
 	quads_.push_back(a);
 	quads_.push_back(b);
 	quads_.push_back(c);
 	quads_.push_back(d);
+#else
+	/* GL ES doesn't seem to support VBOs with more than 64k
+	 * vertices, so just drop extra instead of producing artifacts */
+	if (triangles_.size() > 65536-6)
+		return;
+
+	/* GL ES doesn't support quads */
+	triangles_.push_back(a);
+	triangles_.push_back(b);
+	triangles_.push_back(c);
+
+	triangles_.push_back(c);
+	triangles_.push_back(d);
+	triangles_.push_back(a);
+#endif
 }
 
 const std::vector<Vector3i>& Geometry::GetLines() const {
