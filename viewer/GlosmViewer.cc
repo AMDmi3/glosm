@@ -45,6 +45,8 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	movementflags_ = 0;
 	speed_ = 200.0f;
 	lockheight_ = 0;
+
+	slow_ = fast_ = false;
 }
 
 void GlosmViewer::Usage(const char* progname) {
@@ -127,6 +129,11 @@ void GlosmViewer::Render() {
 		/* don't scale down under 100 meters */
 		if (height > 100.0)
 			myspeed *= height / 100.0;
+
+		if (fast_)
+			myspeed *= 5.0;
+		if (slow_)
+			myspeed /= 5.0;
 
 		viewer_->Move(movementflags_, myspeed, dt);
 	}
@@ -215,6 +222,12 @@ void GlosmViewer::KeyDown(int key) {
 	case '-':
 		speed_ /= 5.0f;
 		break;
+	case SHIFT:
+		fast_ = true;
+		break;
+	case CTRL:
+		slow_ = true;
+		break;
 	default:
 		break;
 	}
@@ -239,6 +252,12 @@ void GlosmViewer::KeyUp(int key) {
 		break;
 	case ' ':
 		movementflags_ &= ~FirstPersonViewer::HIGHER;
+		break;
+	case SHIFT:
+		fast_ = false;
+		break;
+	case CTRL:
+		slow_ = false;
 		break;
 	default:
 		break;

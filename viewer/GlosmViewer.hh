@@ -42,7 +42,9 @@ public:
 		UP = 0x100,
 		DOWN,
 		LEFT,
-		RIGHT
+		RIGHT,
+		SHIFT,
+		CTRL
 	};
 
 protected:
@@ -61,6 +63,8 @@ protected:
 
 	int movementflags_;
 	float speed_;
+	bool slow_;
+	bool fast_;
 	int lockheight_;
 
 protected:
@@ -70,14 +74,14 @@ protected:
 public:
 	GlosmViewer();
 
-	void Usage(const char* progname);
-	void Init(int argc, char** argv);
-	void InitGL();
-	void Render();
-	void Resize(int w, int h);
-	void KeyDown(int key);
-	void KeyUp(int key);
-	void MouseMove(int x, int y);
+	virtual void Usage(const char* progname);
+	virtual void Init(int argc, char** argv);
+	virtual void InitGL();
+	virtual void Render();
+	virtual void Resize(int w, int h);
+	virtual void KeyDown(int key);
+	virtual void KeyUp(int key);
+	virtual void MouseMove(int x, int y);
 };
 
 #endif
