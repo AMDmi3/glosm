@@ -281,8 +281,13 @@ void GlosmViewer::MouseMove(int x, int y) {
 	int dx = x - screenw_/2;
 	int dy = y - screenh_/2;
 
+#if defined(WITH_TOUCHPAD)
+	float YawDelta = (float)dx / 5000.0;
+	float PitchDelta = -(float)dy / 5000.0;
+#else
 	float YawDelta = (float)dx / 500.0;
 	float PitchDelta = -(float)dy / 500.0;
+#endif
 
 	viewer_->HardRotate(YawDelta, PitchDelta);
 
