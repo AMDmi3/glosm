@@ -1,26 +1,37 @@
-# Depends
 IF(BUILD_VIEWER_SDL)
+	# Depends
 	FIND_PACKAGE(SDL REQUIRED)
-	SET(FRONTEND_SOURCES SDLMain.cc)
-	SET(FRONTEND_LIBRARIES ${SDL_LIBRARY})
-	SET(FRONTEND_INCLUDE_DIR ${SDL_INCLUDE_DIR})
-ELSEIF(BUILD_VIEWER_GLUT)
-	FIND_PACKAGE(GLUT REQUIRED)
-	SET(FRONTEND_SOURCES GLUTMain.cc)
-	SET(FRONTEND_LIBRARIES ${GLUT_LIBRARY})
-	SET(FRONTEND_INCLUDE_DIR ${GLUT_INCLUDE_DIR})
+
+	# Targets
+	SET(SOURCES
+		SDLMain.cc
+		GlosmViewer.cc
+	)
+
+	INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ../libglosm-client/include ../libglosm-server/include ../libglosm-geomgen/include)
+
+	ADD_EXECUTABLE(glosm-viewer-sdl ${SOURCES})
+	TARGET_LINK_LIBRARIES(glosm-viewer-sdl glosm-client glosm-server glosm-geomgen ${SDL_LIBRARY} ${GLEW_LIBRARY})
+
+	# Installation
+	INSTALL(TARGETS glosm-viewer-sdl RUNTIME DESTINATION ${BINDIR})
 ENDIF(BUILD_VIEWER_SDL)
 
-# Targets
-SET(SOURCES
-	${FRONTEND_SOURCES}
-	GlosmViewer.cc
-)
+IF(BUILD_VIEWER_GLUT)
+	# Depends
+	FIND_PACKAGE(GLUT REQUIRED)
 
-INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${FRONTEND_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ../libglosm-client/include ../libglosm-server/include ../libglosm-geomgen/include)
+	# Targets
+	SET(SOURCES
+		GLUTMain.cc
+		GlosmViewer.cc
+	)
 
-ADD_EXECUTABLE(glosm-viewer ${SOURCES})
-TARGET_LINK_LIBRARIES(glosm-viewer glosm-client glosm-server glosm-geomgen ${FRONTEND_LIBRARIES} ${GLEW_LIBRARY})
+	INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ../libglosm-client/include ../libglosm-server/include ../libglosm-geomgen/include)
 
-# Installation
-INSTALL(TARGETS glosm-viewer RUNTIME DESTINATION ${BINDIR})
+	ADD_EXECUTABLE(glosm-viewer-glut ${SOURCES})
+	TARGET_LINK_LIBRARIES(glosm-viewer-glut glosm-client glosm-server glosm-geomgen ${GLUT_LIBRARIES} ${GLEW_LIBRARY})
+
+	# Installation
+	INSTALL(TARGETS glosm-viewer-glut RUNTIME DESTINATION ${BINDIR})
+ENDIF(BUILD_VIEWER_GLUT)
