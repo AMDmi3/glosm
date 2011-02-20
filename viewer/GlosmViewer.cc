@@ -50,9 +50,11 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	speed_ = 200.0f;
 	lockheight_ = 0;
 
-	mouse_capture_ = drag_ = slow_ = fast_ = false;
+	drag_ = slow_ = fast_ = false;
 
 #if defined(WITH_TOUCHPAD)
+	mouse_capture_ = false;
+#else
 	mouse_capture_ = true;
 #endif
 }
