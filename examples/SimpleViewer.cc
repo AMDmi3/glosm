@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 	FirstPersonViewer viewer;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), 100 * GEOM_UNITSINMETER /* 100 meters */));
 	viewer.SetAspect(800.0/600.0);
-	viewer.HardRotate(-135.0 / 180.0 * M_PI, -60.0 / 180.0 * M_PI);
+	viewer.SetRotation(-135.0 / 180.0 * M_PI, -60.0 / 180.0 * M_PI);
 
 	/*** glosm stuff ends ***/
 

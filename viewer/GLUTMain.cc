@@ -37,6 +37,10 @@ protected:
 	virtual void Flip() {
 		glutSwapBuffers();
 	}
+
+	virtual void ShowCursor(bool show) {
+		glutSetCursor(show ? GLUT_CURSOR_INHERIT : GLUT_CURSOR_NONE);
+	}
 };
 
 GlosmViewerImpl app;
@@ -103,7 +107,6 @@ int real_main(int argc, char** argv) {
 	glutCreateWindow("glosm viewer");
 
 	glutIgnoreKeyRepeat(1);
-	glutSetCursor(GLUT_CURSOR_NONE);
 
 	glutDisplayFunc(Display);
 	glutIdleFunc(Display);

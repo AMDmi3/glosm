@@ -48,6 +48,10 @@ public:
 		HIGHER = 0x0080,
 	};
 
+protected:
+	Vector3f GetDirection() const;
+	void FixRotation();
+
 public:
 	FirstPersonViewer();
 	FirstPersonViewer(const Vector3i& pos);
@@ -61,8 +65,6 @@ public:
 
 	void SetPos(Vector3i pos);
 
-	Vector3f GetDirection() const;
-
 	/**
 	 * Move viewer smoothly
 	 *
@@ -73,12 +75,15 @@ public:
 	 */
 	void Move(int flags, float speed, float time);
 
-	/**
-	 * Rotates viewer
-	 */
-	void HardRotate(float yawdelta, float pitchdelta);
+	void SetRotation(float yaw, float pitch);
 
 	void Rotate(float yawspeed, float pitchspeed, float time);
+
+	float GetPitch() const;
+	float GetYaw() const;
+
+	float GetFov() const;
+	float GetAspect() const;
 
 	Vector3d& MutablePos();
 

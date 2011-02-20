@@ -50,7 +50,11 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	speed_ = 200.0f;
 	lockheight_ = 0;
 
-	rotation_ = slow_ = fast_ = false;
+	mouse_capture_ = drag_ = slow_ = fast_ = false;
+
+#if defined(WITH_TOUCHPAD)
+	mouse_capture_ = true;
+#endif
 }
 
 void GlosmViewer::Usage(const char* progname) {
@@ -92,6 +96,8 @@ void GlosmViewer::Init(int argc, char** argv) {
 }
 
 void GlosmViewer::InitGL() {
+	ShowCursor(!mouse_capture_);
+
 #if defined(WITH_GLEW)
 	GLenum err = glewInit();
 	if (err != GLEW_OK)
@@ -114,7 +120,7 @@ void GlosmViewer::InitGL() {
 #if defined(WITH_TOUCHPAD)
 	lockheight_ = height;
 #endif
-	viewer_->HardRotate(0, -M_PI_4);
+	viewer_->SetRotation(0, -M_PI_4);
 }
 
 void GlosmViewer::Render() {
@@ -155,9 +161,6 @@ void GlosmViewer::Render() {
 	}
 	if (lockheight_ != 0)
 		viewer_->MutablePos().z = lockheight_;
-
-	if (rotation_)
-		viewer_->Rotate(yawspeed_, pitchspeed_, dt);
 
 	/* update FPS */
 	float fpst = (float)(curtime_.tv_sec - fpstime_.tv_sec) + (float)(curtime_.tv_usec - fpstime_.tv_usec)/1000000.0f;
@@ -284,26 +287,43 @@ void GlosmViewer::KeyUp(int key) {
 }
 
 void GlosmViewer::MouseMove(int x, int y) {
-	int dx = x - screenw_/2;
-	int dy = y - screenh_/2;
+	if (drag_) {
+		int dx = x - drag_start_pos_.x;
+		int dy = y - drag_start_pos_.y;
 
-#if !defined(WITH_TOUCHPAD)
-	float YawDelta = (float)dx / 5000.0;
-	float PitchDelta = -(float)dy / 5000.0;
+		float yawdelta = -(float)dx / (float)screenw_ * viewer_->GetFov() * viewer_->GetAspect();
+		float pitchdelta = (float)dy / (float)screenh_ * viewer_->GetFov();
 
-	viewer_->HardRotate(YawDelta, PitchDelta);
+		viewer_->SetRotation(drag_start_yaw_ + yawdelta, drag_start_pitch_ + pitchdelta);
+	}
 
-	if (dx != 0 || dy != 0)
-		WarpCursor(screenw_/2, screenh_/2);
-#else
-	yawspeed_ = (float)dx / 500.0;
-	pitchspeed_ = -(float)dy / 500.0;
-#endif
+	if (mouse_capture_) {
+		int dx = x - screenw_/2;
+		int dy = y - screenh_/2;
+
+		float yawdelta = (float)dx / 500.0;
+		float pitchdelta = -(float)dy / 500.0;
+
+		viewer_->Rotate(yawdelta, pitchdelta, 1.0);
+
+		if (dx != 0 || dy != 0)
+			WarpCursor(screenw_/2, screenh_/2);
+	}
 }
 
 void GlosmViewer::MouseButton(int button, bool pressed, int x, int y) {
-#if defined(WITH_TOUCHPAD)
-	if (button == BUTTON_LEFT)
-		rotation_ = pressed;
-#endif
+	if (button == BUTTON_RIGHT && pressed) {
+		mouse_capture_ = !mouse_capture_;
+		ShowCursor(!mouse_capture_);
+	}
+
+	if (!mouse_capture_ && button == BUTTON_LEFT) {
+		drag_ = pressed;
+		if (pressed) {
+			drag_start_pos_.x = x;
+			drag_start_pos_.y = y;
+			drag_start_yaw_ = viewer_->GetYaw();
+			drag_start_pitch_ = viewer_->GetPitch();
+		}
+	}
 }

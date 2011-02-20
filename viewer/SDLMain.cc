@@ -58,6 +58,10 @@ protected:
 		SDL_GL_SwapBuffers();
 #endif
 	}
+
+	virtual void ShowCursor(bool show) {
+		SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
+	}
 };
 
 #if defined(WITH_GLES)
@@ -180,7 +184,7 @@ int real_main(int argc, char** argv) {
 	SDL_SetVideoMode(800, 480, 0, SDL_SWSURFACE | SDL_FULLSCREEN);
 
 	SDL_GLES_Init(SDL_GLES_VERSION_1_1);
-	
+
 	SDL_GLES_SetAttribute(SDL_GLES_DEPTH_SIZE, 24);
 
 	gles_context = SDL_GLES_CreateContext();
@@ -190,7 +194,6 @@ int real_main(int argc, char** argv) {
 	Reshape(800, 480);
 #endif
 
-	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EnableKeyRepeat(0, 0);
 
 	app.InitGL();

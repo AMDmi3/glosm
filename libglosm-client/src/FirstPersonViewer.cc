@@ -135,11 +135,8 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 		pos_.z = std::numeric_limits<osmint_t>::max();
 }
 
-void FirstPersonViewer::HardRotate(float yawdelta, float pitchdelta) {
+void FirstPersonViewer::FixRotation() {
 	static const float PitchLimit = M_PI/2.0*0.9;
-
-	yaw_ += yawdelta;
-	pitch_ += pitchdelta;
 
 	if (pitch_ > PitchLimit)
 		pitch_ = PitchLimit;
@@ -151,20 +148,34 @@ void FirstPersonViewer::HardRotate(float yawdelta, float pitchdelta) {
 		yaw_ += M_PI*2.0;
 }
 
+void FirstPersonViewer::SetRotation(float yaw, float pitch) {
+	yaw_ = yaw;
+	pitch_ = pitch;
+
+	FixRotation();
+}
+
 void FirstPersonViewer::Rotate(float yawspeed, float pitchspeed, float time) {
-	static const float PitchLimit = M_PI/2.0*0.9;
+	yaw_ += yawspeed;// * time;
+	pitch_ += pitchspeed;// * time;
 
-	yaw_ += yawspeed * time;
-	pitch_ += pitchspeed * time;
+	FixRotation();
+}
 
-	if (pitch_ > PitchLimit)
-		pitch_ = PitchLimit;
-	if (pitch_ < -PitchLimit)
-		pitch_ = -PitchLimit;
-	if (yaw_ > M_PI)
-		yaw_ -= M_PI*2.0;
-	if (yaw_ < -M_PI)
-		yaw_ += M_PI*2.0;
+float FirstPersonViewer::GetYaw() const {
+	return yaw_;
+}
+
+float FirstPersonViewer::GetPitch() const {
+	return pitch_;
+}
+
+float FirstPersonViewer::GetFov() const {
+	return fov_;
+}
+
+float FirstPersonViewer::GetAspect() const {
+	return aspect_;
 }
 
 Vector3d& FirstPersonViewer::MutablePos() {

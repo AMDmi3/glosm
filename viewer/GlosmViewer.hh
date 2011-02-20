@@ -66,13 +66,18 @@ protected:
 	bool slow_;
 	bool fast_;
 	int lockheight_;
-	bool rotation_;
-	float yawspeed_;
-	float pitchspeed_;
+
+	bool mouse_capture_;
+
+	bool drag_;
+	Vector2<int> drag_start_pos_;
+	float drag_start_pitch_;
+	float drag_start_yaw_;
 
 protected:
 	virtual void WarpCursor(int x, int y) = 0;
 	virtual void Flip() = 0;
+	virtual void ShowCursor(bool show) = 0;
 
 public:
 	GlosmViewer();
