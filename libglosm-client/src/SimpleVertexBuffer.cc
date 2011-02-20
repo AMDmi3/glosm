@@ -51,7 +51,9 @@ SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count)
 	switch (type) {
 	case LINES: mode_ = GL_LINES; break;
 	case TRIANGLES: mode_ = GL_TRIANGLES; break;
+#if !defined(WITH_GLES) && !defined(WITH_GLES2)
 	case QUADS: mode_ = GL_QUADS; break;
+#endif
 	default:
 		throw std::logic_error("unhandled geometry type");
 	}

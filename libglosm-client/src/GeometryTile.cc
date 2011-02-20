@@ -45,7 +45,7 @@ GeometryTile::GeometryTile(const Projection& projection, const Geometry& geom, c
 		quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, translated.data(), translated.size()));
 	}
 
-#ifdef TILE_DEBUG
+#if defined(TILE_DEBUG) && !defined(WITH_GLES) && !defined(WITH_GLES2)
 	bound_1[0] = projection.Project(bbox.GetTopLeft(), ref);
 	bound_1[1] = projection.Project(bbox.GetTopRight(), ref);
 	bound_1[2] = projection.Project(bbox.GetBottomRight(), ref);
@@ -113,7 +113,7 @@ void GeometryTile::Render() const {
 		glDisable(GL_POLYGON_OFFSET_FILL);
 	}
 
-#ifdef TILE_DEBUG
+#if defined(TILE_DEBUG) && !defined(WITH_GLES) && !defined(WITH_GLES2)
 	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i < 4; i++)
