@@ -96,7 +96,10 @@ int TileManager::LoadTile(const TileId& id, const BBoxi& bbox, int flags) {
 	} else {
 		bool added = false;
 		pthread_mutex_lock(&queue_mutex_);
-		if (loading_.find(id) == loading_.end()) {
+		/* don't needlessly enqueue more tiles that we can process in a frame time*/
+		/* TODO: this should be user-settable, as we don't necessarily do GC/loading
+		 * every frame */
+		if (loading_.find(id) == loading_.end() && queue.size() < 2) {
 			added = true;
 			queue_.push_back(TileTask(id, bbox));
 		}
@@ -124,12 +127,7 @@ bool TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int 
 
 		BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
 
-		/* since we expect tile loading to be longer than
-		 * on frame rendering time, limit queue length
-		 * TODO: this should be user-settable or depend on
-		 * # of threads. */
-		if (LoadTile(TileId(level, x, y), BBoxi::ForGeoTile(level, x, y), flags) >= 2)
-			return false;
+		LoadTile(TileId(level, x, y), BBoxi::ForGeoTile(level, x, y), flags);
 
 		/* no deeper recursion */
 		return true;
