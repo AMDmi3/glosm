@@ -58,7 +58,7 @@ void Mouse(int x, int y) {
 }
 
 void Button(int button, int state, int x, int y) {
-	int b;
+	int b = GlosmViewer::BUTTON_LEFT;
 	switch (button) {
 	case GLUT_LEFT_BUTTON: b = GlosmViewer::BUTTON_LEFT; break;
 	case GLUT_RIGHT_BUTTON: b = GlosmViewer::BUTTON_RIGHT; break;

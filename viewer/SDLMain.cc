@@ -144,7 +144,7 @@ int GetEvents() {
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			{
-				int b;
+				int b = GlosmViewer::BUTTON_LEFT;
 				switch (event.button.button) {
 				case SDL_BUTTON_LEFT: b = GlosmViewer::BUTTON_LEFT; break;
 				case SDL_BUTTON_RIGHT: b = GlosmViewer::BUTTON_RIGHT; break;
