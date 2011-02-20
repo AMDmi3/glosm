@@ -156,8 +156,8 @@ void FirstPersonViewer::SetRotation(float yaw, float pitch) {
 }
 
 void FirstPersonViewer::Rotate(float yawspeed, float pitchspeed, float time) {
-	yaw_ += yawspeed;// * time;
-	pitch_ += pitchspeed;// * time;
+	yaw_ += yawspeed * time;
+	pitch_ += pitchspeed * time;
 
 	FixRotation();
 }
