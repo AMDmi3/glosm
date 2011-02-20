@@ -169,30 +169,55 @@ static void CreateArea(Geometry& geom, const VertexList& vertices, bool revorder
 }
 
 static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const OsmDatasource::Way& way) {
+	float slope = 30.0;
+	bool along = true;
+
 	OsmDatasource::TagsMap::const_iterator shape, tag;
-	if (vertices.size() == 5 && way.Closed && (shape = way.Tags.find("building:roof:shape")) != way.Tags.end()) {
-		std::vector<Vector3i> vert;
-		vert.resize(5);
 
-		float slope = 30.0;
-		bool along = true;
+	if ((tag = way.Tags.find("building:roof:angle")) != way.Tags.end())
+		slope = strtof(tag->second.c_str(), NULL);
+	if ((tag = way.Tags.find("building:roof:orientation")) != way.Tags.end() && tag->second == "across")
+		along = false;
 
-		if ((tag = way.Tags.find("building:roof:angle")) != way.Tags.end())
-			slope = strtof(tag->second.c_str(), NULL);
-		if ((tag = way.Tags.find("building:roof:orientation")) != way.Tags.end() && tag->second == "across")
-			along = false;
+	std::vector<Vector3i> vert;
+	vert.resize(vertices.size());
 
-		/* tag 5 corner nodes, always clockwise (last node still duplicate of first for convenience) */
-		if (way.Clockwise) {
-			int j = 0;
-			for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); ++i, ++j)
-				vert[j] = Vector3i(*i, z);
-		} else {
-			int j = 4;
-			for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); ++i, --j)
-				vert[j] = Vector3i(*i, z);
+	if (way.Clockwise) {
+		int j = 0;
+		for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); ++i, ++j)
+			vert[j] = Vector3i(*i, z);
+	} else {
+		int j = vertices.size() - 1;
+		for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); ++i, --j)
+			vert[j] = Vector3i(*i, z);
+	}
+
+	if (vertices.size() > 3 && way.Closed &&
+				(shape = way.Tags.find("building:roof:shape")) != way.Tags.end() &&
+				(shape->second == "pyramidal" || shape->second == "conical")
+			) {
+		/* calculate center */
+		Vector3l center;
+		for (int i = 0; i < vert.size() - 1; i++)
+			center += Vector3i(vert[i]);
+		center /= vert.size() - 1;
+
+		/* calculate mean face length */
+		float facelength = 0.0;
+		for (int i = 0; i < vert.size() - 1; i++)
+			facelength += (ToLocalMetric(vert[i], center)/2.0 + ToLocalMetric(vert[i+1], center)/2.0).Length();
+		facelength /= vert.size() - 1;
+
+		center.z += (tan(slope/180.0*M_PI) * facelength) * GEOM_UNITSINMETER;
+
+		for (int i = 0; i < vert.size() - 1; i++) {
+			geom.AddTriangle(vert[i], center, vert[i+1]);
+			geom.AddLine(vert[i], center);
 		}
+	}
 
+	/* only 4-vertex buildings are supported for other types, yet */
+	if (vertices.size() == 5 && way.Closed && (shape = way.Tags.find("building:roof:shape")) != way.Tags.end()) {
 		float length1 = ToLocalMetric(vert[0], vert[1]).Length();
 		float length2 = ToLocalMetric(vert[1], vert[2]).Length();
 
