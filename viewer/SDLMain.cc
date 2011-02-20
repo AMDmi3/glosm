@@ -60,7 +60,11 @@ protected:
 	}
 
 	virtual void ShowCursor(bool show) {
+#if defined(WITH_TOUCHPAD)
+		SDL_ShowCursor(SDL_DISABLE);
+#else
 		SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
+#endif
 	}
 };
 
