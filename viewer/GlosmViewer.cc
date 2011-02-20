@@ -50,7 +50,7 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	speed_ = 200.0f;
 	lockheight_ = 0;
 
-	slow_ = fast_ = false;
+	rotation_ = slow_ = fast_ = false;
 }
 
 void GlosmViewer::Usage(const char* progname) {
@@ -111,6 +111,9 @@ void GlosmViewer::InitGL() {
 
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
+#if defined(WITH_TOUCHPAD)
+	lockheight_ = height;
+#endif
 	viewer_->HardRotate(0, -M_PI_4);
 }
 
@@ -152,6 +155,9 @@ void GlosmViewer::Render() {
 	}
 	if (lockheight_ != 0)
 		viewer_->MutablePos().z = lockheight_;
+
+	if (rotation_)
+		viewer_->Rotate(yawspeed_, pitchspeed_, dt);
 
 	/* update FPS */
 	float fpst = (float)(curtime_.tv_sec - fpstime_.tv_sec) + (float)(curtime_.tv_usec - fpstime_.tv_usec)/1000000.0f;
@@ -205,16 +211,16 @@ void GlosmViewer::KeyDown(int key) {
 	case 27: case 'q':
 		exit(0);
 		break;
-	case 'w': case UP:
+	case 'w': case KEY_UP:
 		movementflags_ |= FirstPersonViewer::FORWARD;
 		break;
-	case 's': case DOWN:
+	case 's': case KEY_DOWN:
 		movementflags_ |= FirstPersonViewer::BACKWARD;
 		break;
-	case 'a': case LEFT:
+	case 'a': case KEY_LEFT:
 		movementflags_ |= FirstPersonViewer::LEFT;
 		break;
-	case 'd': case RIGHT:
+	case 'd': case KEY_RIGHT:
 		movementflags_ |= FirstPersonViewer::RIGHT;
 		break;
 	case 'c':
@@ -235,10 +241,10 @@ void GlosmViewer::KeyDown(int key) {
 	case '-':
 		speed_ /= 5.0f;
 		break;
-	case SHIFT:
+	case KEY_SHIFT:
 		fast_ = true;
 		break;
-	case CTRL:
+	case KEY_CTRL:
 		slow_ = true;
 		break;
 	default:
@@ -248,16 +254,16 @@ void GlosmViewer::KeyDown(int key) {
 
 void GlosmViewer::KeyUp(int key) {
 	switch (key) {
-	case 'w': case UP:
+	case 'w': case KEY_UP:
 		movementflags_ &= ~FirstPersonViewer::FORWARD;
 		break;
-	case 's': case DOWN:
+	case 's': case KEY_DOWN:
 		movementflags_ &= ~FirstPersonViewer::BACKWARD;
 		break;
-	case 'a': case LEFT:
+	case 'a': case KEY_LEFT:
 		movementflags_ &= ~FirstPersonViewer::LEFT;
 		break;
-	case 'd': case RIGHT:
+	case 'd': case KEY_RIGHT:
 		movementflags_ &= ~FirstPersonViewer::RIGHT;
 		break;
 	case 'c':
@@ -266,10 +272,10 @@ void GlosmViewer::KeyUp(int key) {
 	case ' ':
 		movementflags_ &= ~FirstPersonViewer::HIGHER;
 		break;
-	case SHIFT:
+	case KEY_SHIFT:
 		fast_ = false;
 		break;
-	case CTRL:
+	case KEY_CTRL:
 		slow_ = false;
 		break;
 	default:
@@ -281,16 +287,23 @@ void GlosmViewer::MouseMove(int x, int y) {
 	int dx = x - screenw_/2;
 	int dy = y - screenh_/2;
 
-#if defined(WITH_TOUCHPAD)
+#if !defined(WITH_TOUCHPAD)
 	float YawDelta = (float)dx / 5000.0;
 	float PitchDelta = -(float)dy / 5000.0;
-#else
-	float YawDelta = (float)dx / 500.0;
-	float PitchDelta = -(float)dy / 500.0;
-#endif
 
 	viewer_->HardRotate(YawDelta, PitchDelta);
 
 	if (dx != 0 || dy != 0)
 		WarpCursor(screenw_/2, screenh_/2);
+#else
+	yawspeed_ = (float)dx / 500.0;
+	pitchspeed_ = -(float)dy / 500.0;
+#endif
+}
+
+void GlosmViewer::MouseButton(int button, bool pressed, int x, int y) {
+#if defined(WITH_TOUCHPAD)
+	if (button == BUTTON_LEFT)
+		rotation_ = pressed;
+#endif
 }

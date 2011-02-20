@@ -151,6 +151,22 @@ void FirstPersonViewer::HardRotate(float yawdelta, float pitchdelta) {
 		yaw_ += M_PI*2.0;
 }
 
+void FirstPersonViewer::Rotate(float yawspeed, float pitchspeed, float time) {
+	static const float PitchLimit = M_PI/2.0*0.9;
+
+	yaw_ += yawspeed * time;
+	pitch_ += pitchspeed * time;
+
+	if (pitch_ > PitchLimit)
+		pitch_ = PitchLimit;
+	if (pitch_ < -PitchLimit)
+		pitch_ = -PitchLimit;
+	if (yaw_ > M_PI)
+		yaw_ -= M_PI*2.0;
+	if (yaw_ < -M_PI)
+		yaw_ += M_PI*2.0;
+}
+
 Vector3d& FirstPersonViewer::MutablePos() {
 	return pos_;
 }

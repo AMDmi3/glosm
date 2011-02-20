@@ -53,22 +53,33 @@ void Mouse(int x, int y) {
 	app.MouseMove(x, y);
 }
 
+void Button(int button, int state, int x, int y) {
+	int b;
+	switch (button) {
+	case GLUT_LEFT_BUTTON: b = GlosmViewer::BUTTON_LEFT; break;
+	case GLUT_RIGHT_BUTTON: b = GlosmViewer::BUTTON_RIGHT; break;
+	case GLUT_MIDDLE_BUTTON: b = GlosmViewer::BUTTON_MIDDLE; break;
+	}
+
+	app.MouseButton(b, state == GLUT_DOWN, x, y);
+}
+
 void SpecialDown(int key, int, int) {
 	switch (key) {
-	case GLUT_KEY_UP: app.KeyDown(GlosmViewer::UP); break;
-	case GLUT_KEY_DOWN: app.KeyDown(GlosmViewer::DOWN); break;
-	case GLUT_KEY_LEFT: app.KeyDown(GlosmViewer::LEFT); break;
-	case GLUT_KEY_RIGHT: app.KeyDown(GlosmViewer::RIGHT); break;
+	case GLUT_KEY_UP: app.KeyDown(GlosmViewer::KEY_UP); break;
+	case GLUT_KEY_DOWN: app.KeyDown(GlosmViewer::KEY_DOWN); break;
+	case GLUT_KEY_LEFT: app.KeyDown(GlosmViewer::KEY_LEFT); break;
+	case GLUT_KEY_RIGHT: app.KeyDown(GlosmViewer::KEY_RIGHT); break;
 	default: break;
 	}
 }
 
 void SpecialUp(int key, int, int) {
 	switch (key) {
-	case GLUT_KEY_UP: app.KeyUp(GlosmViewer::UP); break;
-	case GLUT_KEY_DOWN: app.KeyUp(GlosmViewer::DOWN); break;
-	case GLUT_KEY_LEFT: app.KeyUp(GlosmViewer::LEFT); break;
-	case GLUT_KEY_RIGHT: app.KeyUp(GlosmViewer::RIGHT); break;
+	case GLUT_KEY_UP: app.KeyUp(GlosmViewer::KEY_UP); break;
+	case GLUT_KEY_DOWN: app.KeyUp(GlosmViewer::KEY_DOWN); break;
+	case GLUT_KEY_LEFT: app.KeyUp(GlosmViewer::KEY_LEFT); break;
+	case GLUT_KEY_RIGHT: app.KeyUp(GlosmViewer::KEY_RIGHT); break;
 	default: break;
 	}
 }
@@ -97,6 +108,8 @@ int real_main(int argc, char** argv) {
 	glutDisplayFunc(Display);
 	glutIdleFunc(Display);
 	glutReshapeFunc(Reshape);
+	glutMouseFunc(Button);
+	glutMotionFunc(Mouse);
 	glutPassiveMotionFunc(Mouse);
 	glutKeyboardFunc(KeyDown);
 	glutKeyboardUpFunc(KeyUp);

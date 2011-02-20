@@ -78,6 +78,8 @@ public:
 	 */
 	void HardRotate(float yawdelta, float pitchdelta);
 
+	void Rotate(float yawspeed, float pitchspeed, float time);
+
 	Vector3d& MutablePos();
 
 protected:

@@ -79,14 +79,14 @@ void KeyDown(SDLKey key) {
 		app.KeyDown(key);
 	else
 		switch(key) {
-		case SDLK_UP: app.KeyDown(GlosmViewer::UP); break;
-		case SDLK_DOWN: app.KeyDown(GlosmViewer::DOWN); break;
-		case SDLK_LEFT: app.KeyDown(GlosmViewer::LEFT); break;
-		case SDLK_RIGHT: app.KeyDown(GlosmViewer::RIGHT); break;
+		case SDLK_UP: app.KeyDown(GlosmViewer::KEY_UP); break;
+		case SDLK_DOWN: app.KeyDown(GlosmViewer::KEY_DOWN); break;
+		case SDLK_LEFT: app.KeyDown(GlosmViewer::KEY_LEFT); break;
+		case SDLK_RIGHT: app.KeyDown(GlosmViewer::KEY_RIGHT); break;
 		case SDLK_KP_PLUS: app.KeyDown('+'); break;
 		case SDLK_KP_MINUS: app.KeyDown('-'); break;
-		case SDLK_LSHIFT: case SDLK_RSHIFT: app.KeyDown(GlosmViewer::SHIFT); break;
-		case SDLK_LCTRL: case SDLK_RCTRL: app.KeyDown(GlosmViewer::CTRL); break;
+		case SDLK_LSHIFT: case SDLK_RSHIFT: app.KeyDown(GlosmViewer::KEY_SHIFT); break;
+		case SDLK_LCTRL: case SDLK_RCTRL: app.KeyDown(GlosmViewer::KEY_CTRL); break;
 		default: break;
 		}
 }
@@ -96,14 +96,14 @@ void KeyUp(SDLKey key) {
 		app.KeyUp(key);
 	else
 		switch(key) {
-		case SDLK_UP: app.KeyUp(GlosmViewer::UP); break;
-		case SDLK_DOWN: app.KeyUp(GlosmViewer::DOWN); break;
-		case SDLK_LEFT: app.KeyUp(GlosmViewer::LEFT); break;
-		case SDLK_RIGHT: app.KeyUp(GlosmViewer::RIGHT); break;
+		case SDLK_UP: app.KeyUp(GlosmViewer::KEY_UP); break;
+		case SDLK_DOWN: app.KeyUp(GlosmViewer::KEY_DOWN); break;
+		case SDLK_LEFT: app.KeyUp(GlosmViewer::KEY_LEFT); break;
+		case SDLK_RIGHT: app.KeyUp(GlosmViewer::KEY_RIGHT); break;
 		case SDLK_KP_PLUS: app.KeyUp('+'); break;
 		case SDLK_KP_MINUS: app.KeyUp('-'); break;
-		case SDLK_LSHIFT: case SDLK_RSHIFT: app.KeyUp(GlosmViewer::SHIFT); break;
-		case SDLK_LCTRL: case SDLK_RCTRL: app.KeyUp(GlosmViewer::CTRL); break;
+		case SDLK_LSHIFT: case SDLK_RSHIFT: app.KeyUp(GlosmViewer::KEY_SHIFT); break;
+		case SDLK_LCTRL: case SDLK_RCTRL: app.KeyUp(GlosmViewer::KEY_CTRL); break;
 		default: break;
 		}
 }
@@ -132,6 +132,18 @@ int GetEvents() {
 			break;
 		case SDL_MOUSEMOTION:
 			app.MouseMove(event.motion.x, event.motion.y);
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			{
+				int b;
+				switch (event.button.button) {
+				case SDL_BUTTON_LEFT: b = GlosmViewer::BUTTON_LEFT; break;
+				case SDL_BUTTON_RIGHT: b = GlosmViewer::BUTTON_RIGHT; break;
+				case SDL_BUTTON_MIDDLE: b = GlosmViewer::BUTTON_MIDDLE; break;
+				}
+				app.MouseButton(b, event.button.state == SDL_PRESSED, event.button.x, event.button.y);
+			}
 			break;
 		case SDL_VIDEORESIZE:
 			Reshape(event.resize.w, event.resize.h);

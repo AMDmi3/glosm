@@ -33,12 +33,18 @@
 class GlosmViewer {
 public:
 	enum Keys {
-		UP = 0x100,
-		DOWN,
-		LEFT,
-		RIGHT,
-		SHIFT,
-		CTRL
+		KEY_UP = 0x100,
+		KEY_DOWN,
+		KEY_LEFT,
+		KEY_RIGHT,
+		KEY_SHIFT,
+		KEY_CTRL
+	};
+
+	enum Buttons {
+		BUTTON_LEFT,
+		BUTTON_MIDDLE,
+		BUTTON_RIGHT
 	};
 
 protected:
@@ -60,6 +66,9 @@ protected:
 	bool slow_;
 	bool fast_;
 	int lockheight_;
+	bool rotation_;
+	float yawspeed_;
+	float pitchspeed_;
 
 protected:
 	virtual void WarpCursor(int x, int y) = 0;
@@ -76,6 +85,7 @@ public:
 	virtual void KeyDown(int key);
 	virtual void KeyUp(int key);
 	virtual void MouseMove(int x, int y);
+	virtual void MouseButton(int button, bool pressed, int x, int y);
 };
 
 #endif
