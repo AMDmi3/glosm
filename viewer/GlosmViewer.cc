@@ -115,7 +115,7 @@ void GlosmViewer::InitGL() {
 	if (tile_level_ >= 0)
 		geometry_layer_->SetTargetLevel(tile_level_);
 	else
-		geometry_layer_->RequestVisible(geometry_generator_->GetBBox(), TileManager::EXPLICIT);
+		geometry_layer_->RequestVisible(geometry_generator_->GetBBox(), TileManager::BLOB);
 
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
@@ -136,8 +136,8 @@ void GlosmViewer::Render() {
 
 	if (tile_level_ >= 0) {
 		int radius = 5000000;
-		geometry_layer_->RequestVisible(BBoxi(viewer_->GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer_->GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
 		geometry_layer_->GarbageCollect();
+		geometry_layer_->RequestVisible(BBoxi(viewer_->GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer_->GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
 	}
 	geometry_layer_->Render(*viewer_);
 

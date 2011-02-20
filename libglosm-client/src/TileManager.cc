@@ -27,6 +27,8 @@
 
 #include <glosm/util/gl.h>
 
+#include <cassert>
+
 TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
 }
 
@@ -38,28 +40,27 @@ bool TileManager::TileId::operator<(const TileId& other) const {
 	return y < other.y;
 }
 
-TileManager::TileData::TileData(): tile(NULL), geometry(NULL), generation(0), loading(false) {
-}
-
-TileManager::TileData::~TileData() {
-	delete tile;
-	delete geometry;
-}
-
-TileManager::TileManager(const Projection projection, const GeometryDatasource& ds): projection_(projection), datasource_(ds) {
+TileManager::TileManager(const Projection projection): projection_(projection) {
 	int errn;
 
 	if ((errn = pthread_mutex_init(&tiles_mutex_, 0)) != 0)
 		throw SystemError(errn) << "pthread_mutex_init failed";
 
-	if ((errn = pthread_cond_init(&tiles_cond_, 0)) != 0) {
+	if ((errn = pthread_mutex_init(&queue_mutex_, 0)) != 0) {
 		pthread_mutex_destroy(&tiles_mutex_);
+		throw SystemError(errn) << "pthread_mutex_init failed";
+	}
+
+	if ((errn = pthread_cond_init(&queue_cond_, 0)) != 0) {
+		pthread_mutex_destroy(&tiles_mutex_);
+		pthread_mutex_destroy(&queue_mutex_);
 		throw SystemError(errn) << "pthread_cond_init failed";
 	}
 
 	if ((errn = pthread_create(&loading_thread_, NULL, LoadingThreadFuncWrapper, (void*)this)) != 0) {
-		pthread_cond_destroy(&tiles_cond_);
 		pthread_mutex_destroy(&tiles_mutex_);
+		pthread_mutex_destroy(&queue_mutex_);
+		pthread_cond_destroy(&queue_cond_);
 		throw SystemError(errn) << "pthread_create failed";
 	}
 
@@ -70,53 +71,62 @@ TileManager::TileManager(const Projection projection, const GeometryDatasource& 
 
 TileManager::~TileManager() {
 	thread_die_flag_ = true;
-	pthread_cond_signal(&tiles_cond_);
+	pthread_cond_signal(&queue_cond_);
 
 	pthread_join(loading_thread_, NULL);
-	pthread_cond_destroy(&tiles_cond_);
+
+	pthread_cond_destroy(&queue_cond_);
+	pthread_mutex_destroy(&queue_mutex_);
 	pthread_mutex_destroy(&tiles_mutex_);
+
+	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ++i)
+		delete i->second.tile;
+}
+
+int TileManager::LoadTile(const TileId& id, const BBoxi& bbox, int flags) {
+	int ret = 0;
+	if (flags & SYNC) {
+		Tile* tile = SpawnTile(bbox);
+		/* TODO: we may call tile->BindBuffers here */
+		tiles_.insert(std::make_pair(id, TileData(tile, generation_)));
+	} else {
+		bool added = false;
+		pthread_mutex_lock(&queue_mutex_);
+		/* don't needlessly enqueue more tiles that we can process in a frame time*/
+		/* TODO: this should be user-settable, as we don't necessarily do GC/loading
+		 * every frame */
+		if (loading_.find(id) == loading_.end() && queue_.size() < 2) {
+			added = true;
+			queue_.push_back(TileTask(id, bbox));
+		}
+		ret = queue_.size();
+		pthread_mutex_unlock(&queue_mutex_);
+		if (added)
+			pthread_cond_signal(&queue_cond_);
+	}
+
+	return ret;
 }
 
 /*
  * recursive quadtree processing
  */
 
-void TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int y) {
+bool TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int y) {
 	if (level == target_level_) {
 		TilesMap::iterator thistile = tiles_.find(TileId(level, x, y));
-		if (thistile == tiles_.end())
-			thistile = tiles_.insert(std::make_pair(TileId(level, x, y), TileData()));
 
-		/* update generation */
-		thistile->second.generation = generation_;
-
-		/* already loaded or loading, skip */
-		if (thistile->second.tile || thistile->second.loading)
-			return;
-
-		/* geometry loaded by thread, turn into tile */
-		if (thistile->second.geometry) {
-			/* XXX: projection and VBO loading still
-			 * takes some time, maybe we need to limit
-			 * this per-frame */
-			thistile->second.tile = SpawnTile(*thistile->second.geometry);
-			delete thistile->second.geometry;
-			thistile->second.geometry = NULL;
-			return;
+		if (thistile != tiles_.end()) {
+			thistile->second.generation = generation_;
+			return true; /* tile already loaded */
 		}
 
-		/* load immediately for sync case */
-		if (flags && SYNC) {
-			BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
-			Geometry geom(bbox);
-			datasource_.GetGeometry(geom, bbox);
-			thistile->second.tile = SpawnTile(geom);
-			return;
-		}
+		BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
 
-		/* in other case, it will be loaded by thread */
-		pthread_cond_signal(&tiles_cond_);
-		return;
+		LoadTile(TileId(level, x, y), BBoxi::ForGeoTile(level, x, y), flags);
+
+		/* no deeper recursion */
+		return true;
 	}
 
 	/* children */
@@ -124,9 +134,12 @@ void TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int 
 		int xx = x * 2 + d % 2;
 		int yy = y * 2 + d / 2;
 		if (BBoxi::ForGeoTile(level + 1, xx, yy).Intersects(bbox)) {
-			LoadTiles(bbox, flags, level + 1, xx, yy);
+			if (!LoadTiles(bbox, flags, level + 1, xx, yy))
+				return false;
 		}
 	}
+
+	return true;
 }
 
 /*
@@ -134,34 +147,35 @@ void TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int 
  */
 
 void TileManager::LoadingThreadFunc() {
+	pthread_mutex_lock(&queue_mutex_);
 	while (!thread_die_flag_) {
-		pthread_mutex_lock(&tiles_mutex_);
-
-		TilesMap::iterator to_load = tiles_.end();
-		for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ++i) {
-			if (!i->second.loading && !i->second.tile && !i->second.geometry) {
-				to_load = i;
-				i->second.loading = true;
-				break;
-			}
-		}
-
 		/* found nothing, sleep */
-		if (to_load == tiles_.end()) {
-			pthread_cond_wait(&tiles_cond_, &tiles_mutex_);
-			pthread_mutex_unlock(&tiles_mutex_);
+		if (queue_.empty()) {
+			pthread_cond_wait(&queue_cond_, &queue_mutex_);
 			continue;
 		}
 
-		pthread_mutex_unlock(&tiles_mutex_);
+		/* take a task from the queue */
+		TileTask task = queue_.front();
+		queue_.pop_front();
+
+		/* mark it as loading */
+		std::pair<LoadingSet::iterator, bool> pair = loading_.insert(task.id);
+		assert(pair.second);
+
+		pthread_mutex_unlock(&queue_mutex_);
 
 		/* load tile */
-		BBoxi bbox = BBoxi::ForGeoTile(to_load->first.level, to_load->first.x, to_load->first.y);
-		to_load->second.geometry = new Geometry(bbox);
-		datasource_.GetGeometry(*(to_load->second.geometry), bbox);
+		Tile* tile = SpawnTile(task.bbox);
 
-		to_load->second.loading = false;
+		pthread_mutex_lock(&tiles_mutex_);
+		tiles_.insert(std::make_pair(task.id, TileData(tile, generation_)));
+		pthread_mutex_unlock(&tiles_mutex_);
+
+		pthread_mutex_lock(&queue_mutex_);
+		loading_.erase(pair.first);
 	}
+	pthread_mutex_unlock(&queue_mutex_);
 }
 
 void* TileManager::LoadingThreadFuncWrapper(void* arg) {
@@ -173,32 +187,27 @@ void* TileManager::LoadingThreadFuncWrapper(void* arg) {
  * protected interface
  */
 
-void TileManager::Render(const Viewer& viewer) const {
-	std::vector<Tile*> tiles;
-
-	/* create array of renderable tiles */
+void TileManager::Render(const Viewer& viewer) {
 	pthread_mutex_lock(&tiles_mutex_);
-	tiles.reserve(tiles_.size());
-	for (TilesMap::const_iterator i = tiles_.begin(); i != tiles_.end(); ++i)
-		if (i->second.tile && i->second.generation == generation_)
-			tiles.push_back(i->second.tile);
-	pthread_mutex_unlock(&tiles_mutex_);
 
 	/* and render them */
-	for (std::vector<Tile*>::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ++i) {
+		if (i->second.generation != generation_)
+			continue;
+
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
 		/* prepare modelview matrix for the tile: position
 		 * it in the right place given that viewer is always
 		 * at (0, 0, 0) */
-		Vector3f offset = projection_.Project((*i)->GetReference(), Vector2i(viewer.GetPos(projection_))) +
+		Vector3f offset = projection_.Project(i->second.tile->GetReference(), Vector2i(viewer.GetPos(projection_))) +
 				projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
 
 		glTranslatef(offset.x, offset.y, offset.z);
 
 		/* same for rotation */
-		Vector3i ref = (*i)->GetReference();
+		Vector3i ref = i->second.tile->GetReference();
 		Vector3i pos = viewer.GetPos(projection_);
 
 		/* normal at tile's reference point */
@@ -230,11 +239,13 @@ void TileManager::Render(const Viewer& viewer) const {
 			glRotatef((double)((osmlong_t)ref.x - (osmlong_t)pos.x) / 10000000.0, polenormal.x, polenormal.y, polenormal.z);
 		}
 
-		(*i)->Render();
+		i->second.tile->Render();
 
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 	}
+
+	pthread_mutex_unlock(&tiles_mutex_);
 }
 
 /*
@@ -246,32 +257,33 @@ void TileManager::SetTargetLevel(int level) {
 }
 
 void TileManager::RequestVisible(const BBoxi& bbox, int flags) {
-	if (!(flags & NOGENBUMP))
-		++generation_;
-
-	if (flags & EXPLICIT) {
-		Geometry geom(bbox);
-		datasource_.GetGeometry(geom, bbox);
-
-		TilesMap::iterator thistile = tiles_.insert(std::make_pair(TileId(0, 0, 0), TileData()));
-		thistile->second.tile = SpawnTile(geom);
-		thistile->second.generation = generation_;
-	} else {
-		pthread_mutex_lock(&tiles_mutex_);
-		LoadTiles(bbox, flags);
-		pthread_mutex_unlock(&tiles_mutex_);
+	if (!flags & SYNC) {
+		pthread_mutex_lock(&queue_mutex_);
+		queue_.clear();
+		pthread_mutex_unlock(&queue_mutex_);
 	}
+
+	pthread_mutex_lock(&tiles_mutex_);
+	if (flags & BLOB)
+		LoadTile(TileId(0, 0, 0), bbox, flags);
+	else
+		LoadTiles(bbox, flags);
+	pthread_mutex_unlock(&tiles_mutex_);
 }
 
 void TileManager::GarbageCollect() {
+	/* TODO: may put deletable tiles into list and delete after
+	 * unlocking mutex for less contention */
 	pthread_mutex_lock(&tiles_mutex_);
 	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ) {
-		if (!i->second.loading && i->second.generation != generation_) {
+		if (i->second.generation != generation_) {
+			delete i->second.tile;
 			TilesMap::iterator tmp = i++;
 			tiles_.erase(tmp);
 		} else {
 			i++;
 		}
 	}
+	generation_++;
 	pthread_mutex_unlock(&tiles_mutex_);
 }

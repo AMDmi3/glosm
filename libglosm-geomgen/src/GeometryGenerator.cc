@@ -495,7 +495,7 @@ static float GetHighwayWidth(const std::string& highway, const OsmDatasource::Wa
 	}
 }
 
-static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
+static void HiresWayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
 	osmint_t minz = GetMinHeight(way) * GEOM_UNITSINMETER;
 	osmint_t maxz = GetMaxHeight(way) * GEOM_UNITSINMETER;
 
@@ -553,10 +553,42 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, const
 	}
 }
 
+static void LowresWayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
+	OsmDatasource::TagsMap::const_iterator t;
+
+	if ((t = way.Tags.find("highway")) != way.Tags.end() && (
+				t->second == "motorway" || t->second == "motorway_link" ||
+				t->second == "trunk" || t->second == "trunk_link" ||
+				t->second == "primary" || t->second == "primary_link" ||
+				t->second == "secondary" || t->second == "secondary_link" ||
+				t->second == "tertiary")
+			) {
+		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("railway")) != way.Tags.end() && (t->second == "rail")) {
+		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("boundary")) != way.Tags.end() && (t->second == "administrative")) {
+		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("waterway")) != way.Tags.end()) {
+		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("natural")) != way.Tags.end()) {
+		/* TODO: add real processing here */
+	} else if ((t = way.Tags.find("landuse")) != way.Tags.end()) {
+		/* TODO: add real processing here */
+	} else {
+		return;
+	}
+
+	VertexList vertices;
+	for (OsmDatasource::Way::NodesList::const_iterator n = way.Nodes.begin(); n != way.Nodes.end(); ++n)
+		vertices.push_back(datasource.GetNode(*n).Pos);
+
+	CreateLines(geom, vertices, 0, way);
+}
+
 GeometryGenerator::GeometryGenerator(const OsmDatasource& datasource) : datasource_(datasource) {
 }
 
-void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) const {
+void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox, int flags) const {
 	std::vector<OsmDatasource::Way> ways;
 
 	/* safe bbox is a bit wider than requested one to be sure
@@ -569,8 +601,13 @@ void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox) const {
 	datasource_.GetWays(ways, safe_bbox);
 
 	Geometry temp;
-	for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w) {
-		WayDispatcher(temp, datasource_, *w);
+
+	if (flags & GeometryDatasource::LOWRES) {
+		for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w)
+			LowresWayDispatcher(temp, datasource_, *w);
+	} else {
+		for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w)
+			HiresWayDispatcher(temp, datasource_, *w);
 	}
 
 	geom.AppendCropped(temp, bbox);

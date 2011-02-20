@@ -27,13 +27,13 @@
 
 #include <glosm/util/gl.h>
 
-GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): TileManager(projection, datasource), projection_(projection) {
+GeometryLayer::GeometryLayer(const Projection projection, const GeometryDatasource& datasource): TileManager(projection), projection_(projection), datasource_(datasource) {
 }
 
 GeometryLayer::~GeometryLayer() {
 }
 
-void GeometryLayer::Render(const Viewer& viewer) const {
+void GeometryLayer::Render(const Viewer& viewer) {
 	/* Setup projection */
 	viewer.SetupViewerMatrix(projection_);
 
@@ -65,6 +65,6 @@ void GeometryLayer::Render(const Viewer& viewer) const {
 	TileManager::Render(viewer);
 }
 
-Tile* GeometryLayer::SpawnTile(const Geometry& geom) const {
-	return new GeometryTile(projection_, geom, geom.GetBBox().GetCenter(), geom.GetBBox());
+Tile* GeometryLayer::SpawnTile(const BBoxi& bbox) const {
+	return new GeometryTile(projection_, datasource_, bbox.GetCenter(), bbox);
 }

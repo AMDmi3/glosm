@@ -34,13 +34,14 @@ class GeometryDatasource;
 class GeometryLayer : public Layer, public TileManager, private NonCopyable {
 protected:
 	const Projection projection_;
+	const GeometryDatasource& datasource_;
 
 public:
 	GeometryLayer(const Projection projection, const GeometryDatasource& datasource);
 	virtual ~GeometryLayer();
 
-	void Render(const Viewer& viewer) const;
-	virtual Tile* SpawnTile(const Geometry& geom) const;
+	void Render(const Viewer& viewer);
+	virtual Tile* SpawnTile(const BBoxi& bbox) const;
 };
 
 #endif

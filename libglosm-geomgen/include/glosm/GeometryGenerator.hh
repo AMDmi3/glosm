@@ -33,7 +33,7 @@ protected:
 
 public:
 	GeometryGenerator(const OsmDatasource& datasource);
-	void GetGeometry(Geometry& geometry, const BBoxi& bbox = BBoxi::ForEarth()) const;
+	void GetGeometry(Geometry& geometry, const BBoxi& bbox, int flags = 0) const;
 
 	virtual Vector2i GetCenter() const;
 	virtual BBoxi GetBBox() const;

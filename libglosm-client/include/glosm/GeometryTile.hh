@@ -25,11 +25,12 @@
 #include <glosm/BBox.hh>
 
 #include <memory>
+#include <vector>
 
 class SimpleVertexBuffer;
 
 class Projection;
-class Geometry;
+class GeometryDatasource;
 
 /**
  * A tile of renderable geometry
@@ -38,6 +39,13 @@ class Geometry;
  */
 class GeometryTile : public Tile, private NonCopyable {
 protected:
+	typedef std::vector<Vector3f> ProjectedVertices;
+
+protected:
+	std::auto_ptr<ProjectedVertices> projected_lines_;
+	std::auto_ptr<ProjectedVertices> projected_triangles_;
+	std::auto_ptr<ProjectedVertices> projected_quads_;
+
 	std::auto_ptr<SimpleVertexBuffer> lines_;
 	std::auto_ptr<SimpleVertexBuffer> triangles_;
 	std::auto_ptr<SimpleVertexBuffer> quads_;
@@ -48,10 +56,12 @@ protected:
 #endif
 
 public:
-	GeometryTile(const Projection& p, const Geometry& geom, const Vector2i& ref, const BBoxi& bbox);
+	GeometryTile(const Projection& p, const GeometryDatasource& datasource, const Vector2i& ref, const BBoxi& bbox);
 	virtual ~GeometryTile();
 
-	virtual void Render() const;
+	void BindBuffers();
+
+	virtual void Render();
 };
 
 #endif
