@@ -22,6 +22,7 @@
 #include <glosm/GeometryOperations.hh>
 
 #include <cassert>
+#include <iostream>
 
 Geometry::Geometry(): bbox_(BBoxi::Full()) {
 }
@@ -39,6 +40,14 @@ void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
 }
 
 void Geometry::AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c) {
+#if defined(WITH_GLES)
+	/* GL ES only supports 65536 vertices in a buffer, so
+	 * drop extra data instead of producing artifacts */
+	/* XXX: move this into client */
+	if (triangles_.size() > 65536-3)
+		return;
+#endif
+
 	triangles_.push_back(a);
 	triangles_.push_back(b);
 	triangles_.push_back(c);
@@ -51,19 +60,9 @@ void Geometry::AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, 
 	quads_.push_back(c);
 	quads_.push_back(d);
 #else
-	/* GL ES doesn't seem to support VBOs with more than 64k
-	 * vertices, so just drop extra instead of producing artifacts */
-	if (triangles_.size() > 65536-6)
-		return;
-
 	/* GL ES doesn't support quads */
-	triangles_.push_back(a);
-	triangles_.push_back(b);
-	triangles_.push_back(c);
-
-	triangles_.push_back(c);
-	triangles_.push_back(d);
-	triangles_.push_back(a);
+	AddTriangle(a, b, c);
+	AddTriangle(c, d, a);
 #endif
 }
 
