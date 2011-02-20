@@ -20,19 +20,24 @@ Features
 Requirements
 ============
 
-  Required libraries: expat2, OpenGL
-                      GLEW (only on windows)
-  Optional libraries: GLUT (required for viewer)
-                      libpng, X11 (required for tiler)
-  Required applications: CMake >= 2.6
+  Libraries:
+    * expat2
+    * OpenGL
+    * GLEW (only required on windows)
+    * SDL or GLUT (only required for viewer)
+    * SDL_gles (only required for viewer on OpenGL ES platforms)
+    * libpng (only required for tiler)
+    * X11 (only required for tiler)
+  Applications:
+    * CMake >= 2.6
 
   since CMake builtin GLUT detection routine requires it for some
   reason, you will also need libXmu and libXi installed.
 
   Summarizing, for Debian-based systems, you'll need to run:
 
-    apt-get install cmake libexpat1-dev libglut3-dev libpng12-dev \
-                    libxmu-dev libxi-dev
+    apt-get install cmake libexpat1-dev libglut3-dev libsdl1.2-dev \
+        libpng12-dev libxmu-dev libxi-dev
 
 Installation
 ============
@@ -184,7 +189,8 @@ OpenStreetMap tag support
     * building:roof:angle
 
   for specific roof shapes support. See [4]. Supported roof shapes
-  are: flat, pitched, hipped, pyramidal, crosspitched.
+  are: flat, pitched, hipped, pyramidal, conical (currently same as
+  pyramidal), crosspitched.
 
   [4] http://wiki.openstreetmap.org/wiki/Proposed_features/Building_attributes
 
