@@ -26,11 +26,4 @@
 #define COMPILE_TIME_ASSERT(V) \
 	{ typedef int __libglosm_compile_time_assert_fail[1 - 2*!(V)]; }
 
-#ifndef NDEBUG
-#define ASSERT(V) \
-	assert(V);
-#else
-#define ASSERT(V)
-#endif
-
 #endif
