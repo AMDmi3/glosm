@@ -31,6 +31,8 @@
 #	include <GL/gl.h>
 #endif
 
+#include <cassert>
+
 TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
 }
 
@@ -92,11 +94,16 @@ int TileManager::LoadTile(const TileId& id, const BBoxi& bbox, int flags) {
 		/* TODO: we may call tile->BindBuffers here */
 		tiles_.insert(std::make_pair(id, TileData(tile, generation_)));
 	} else {
+		bool added = false;
 		pthread_mutex_lock(&queue_mutex_);
-		queue_.push_back(TileTask(id, bbox));
+		if (loading_.find(id) == loading_.end()) {
+			added = true;
+			queue_.push_back(TileTask(id, bbox));
+		}
 		ret = queue_.size();
 		pthread_mutex_unlock(&queue_mutex_);
-		pthread_cond_signal(&queue_cond_);
+		if (added)
+			pthread_cond_signal(&queue_cond_);
 	}
 
 	return ret;
@@ -118,13 +125,10 @@ bool TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int 
 		BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
 
 		/* since we expect tile loading to be longer than
-		 * on frame rendering time, it's meaningless to hold more
-		 * requests in queue than number of threads we have
-		 * TODO: change 1 to variable holding # of threads */
-		/* when we have enough items in queue, it's meaningless
-		 * to process more tiles, so terminate processing by
-		 * returning false */
-		if (LoadTile(TileId(level, x, y), BBoxi::ForGeoTile(level, x, y), flags) >= 1)
+		 * on frame rendering time, limit queue length
+		 * TODO: this should be user-settable or depend on
+		 * # of threads. */
+		if (LoadTile(TileId(level, x, y), BBoxi::ForGeoTile(level, x, y), flags) >= 2)
 			return false;
 
 		/* no deeper recursion */
@@ -149,18 +153,21 @@ bool TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int 
  */
 
 void TileManager::LoadingThreadFunc() {
+	pthread_mutex_lock(&queue_mutex_);
 	while (!thread_die_flag_) {
-		pthread_mutex_lock(&queue_mutex_);
-
 		/* found nothing, sleep */
 		if (queue_.empty()) {
 			pthread_cond_wait(&queue_cond_, &queue_mutex_);
-			pthread_mutex_unlock(&queue_mutex_);
 			continue;
 		}
 
+		/* take a task from the queue */
 		TileTask task = queue_.front();
 		queue_.pop_front();
+
+		/* mark it as loading */
+		std::pair<LoadingSet::iterator, bool> pair = loading_.insert(task.id);
+		assert(pair.second);
 
 		pthread_mutex_unlock(&queue_mutex_);
 
@@ -170,7 +177,11 @@ void TileManager::LoadingThreadFunc() {
 		pthread_mutex_lock(&tiles_mutex_);
 		tiles_.insert(std::make_pair(task.id, TileData(tile, generation_)));
 		pthread_mutex_unlock(&tiles_mutex_);
+
+		pthread_mutex_lock(&queue_mutex_);
+		loading_.erase(pair.first);
 	}
+	pthread_mutex_unlock(&queue_mutex_);
 }
 
 void* TileManager::LoadingThreadFuncWrapper(void* arg) {
@@ -259,11 +270,10 @@ void TileManager::RequestVisible(const BBoxi& bbox, int flags) {
 	}
 
 	pthread_mutex_lock(&tiles_mutex_);
-	if (flags & BLOB) {
+	if (flags & BLOB)
 		LoadTile(TileId(0, 0, 0), bbox, flags);
-	} else  {
+	else
 		LoadTiles(bbox, flags);
-	}
 	pthread_mutex_unlock(&tiles_mutex_);
 }
 

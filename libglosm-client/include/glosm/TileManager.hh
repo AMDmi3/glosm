@@ -27,6 +27,7 @@
 
 #include <list>
 #include <map>
+#include <set>
 
 class Geometry;
 class GeometryDatasource;
@@ -70,6 +71,7 @@ protected:
 	/* TODO: use more clever bbox-based container */
 	typedef std::multimap<TileId, TileData> TilesMap;
 	typedef std::list<TileTask> TilesQueue;
+	typedef std::set<TileId> LoadingSet;
 
 protected:
 	const Projection projection_;
@@ -85,6 +87,7 @@ protected:
 	pthread_cond_t queue_cond_;
 	/* protected by queue_mutex_ */
 	TilesQueue queue_;
+	LoadingSet loading_;
 	/* /protected by queue_mutex_ */
 
 	pthread_t loading_thread_;
