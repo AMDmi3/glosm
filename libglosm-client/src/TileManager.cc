@@ -41,6 +41,10 @@ bool TileManager::TileId::operator<(const TileId& other) const {
 }
 
 TileManager::TileManager(const Projection projection): projection_(projection) {
+	target_level_ = 0;
+	generation_ = 0;
+	thread_die_flag_ = false;
+
 	int errn;
 
 	if ((errn = pthread_mutex_init(&tiles_mutex_, 0)) != 0)
@@ -63,16 +67,13 @@ TileManager::TileManager(const Projection projection): projection_(projection) {
 		pthread_cond_destroy(&queue_cond_);
 		throw SystemError(errn) << "pthread_create failed";
 	}
-
-	target_level_ = 0;
-	generation_ = 0;
-	thread_die_flag_ = false;
 }
 
 TileManager::~TileManager() {
 	thread_die_flag_ = true;
 	pthread_cond_signal(&queue_cond_);
 
+	/* TODO: check exit code */
 	pthread_join(loading_thread_, NULL);
 
 	pthread_cond_destroy(&queue_cond_);
