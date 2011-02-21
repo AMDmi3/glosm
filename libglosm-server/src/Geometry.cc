@@ -28,6 +28,10 @@ Geometry::Geometry() {
 }
 
 void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
+#if defined(WITH_GLES)
+	if (lines_.size() > 65536-2)
+		return;
+#endif
 	lines_.push_back(a);
 	lines_.push_back(b);
 }
