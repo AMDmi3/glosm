@@ -76,7 +76,8 @@ GlosmViewerImpl app;
 
 void Reshape(int w, int h) {
 #if !defined(WITH_GLES)
-	SDL_SetVideoMode(w, h, 0, SDL_OPENGL | SDL_RESIZABLE | SDL_HWSURFACE);
+	if (SDL_SetVideoMode(w, h, 0, SDL_OPENGL | SDL_RESIZABLE | SDL_HWSURFACE) == NULL)
+		throw Exception() << "SDL_SetVideoMode failed: " << (const char*)SDL_GetError();
 #endif
 
 	app.Resize(w, h);
@@ -177,11 +178,18 @@ int real_main(int argc, char** argv) {
 	atexit(Cleanup);
 
 #if !defined(WITH_GLES)
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	Reshape(800, 600);
+	try {
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+		Reshape(800, 600);
+	} catch (Exception& e) {
+		fprintf(stderr, "warning: %s, retrying without multisampling\n", e.what());
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		Reshape(800, 600);
+	}
 #else
 	/* Using fixed resolution for N900
 	 * it should be detected on the fly instead */
