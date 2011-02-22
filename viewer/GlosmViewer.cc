@@ -238,7 +238,7 @@ void GlosmViewer::KeyDown(int key) {
 		lockheight_ = (lockheight_ == 0 ? viewer_->MutablePos().z : 0);
 		break;
 	case 'h':
-		lockheight_ = (lockheight_ == 0 ? 1750 : 0);
+		lockheight_ = (lockheight_ == 0 ? 1.75 * GEOM_UNITSINMETER : 0);
 		break;
 	case '+':
 		speed_ *= 5.0f;
