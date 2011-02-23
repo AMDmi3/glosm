@@ -22,6 +22,7 @@
 #include <glosm/Math.hh>
 #include <glosm/MercatorProjection.hh>
 #include <glosm/SphericalProjection.hh>
+#include <glosm/Timer.hh>
 #include <glosm/geomath.h>
 
 #include <getopt.h>
@@ -42,7 +43,6 @@
 #include <cstdio>
 
 GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new FirstPersonViewer) {
-	tile_level_ = -1;
 	screenw_ = screenh_ = 1;
 	nframes_ = 0;
 
@@ -71,7 +71,6 @@ void GlosmViewer::Init(int argc, char** argv) {
 	while ((c = getopt(argc, argv, "st:")) != -1) {
 		switch (c) {
 		case 's': projection_ = SphericalProjection(); break;
-		case 't': tile_level_ = strtol(optarg, NULL, 10); break;
 		default:
 			Usage(progname);
 		}
@@ -112,11 +111,6 @@ void GlosmViewer::InitGL() {
 	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_));
 	geometry_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
 
-	if (tile_level_ >= 0)
-		geometry_layer_->SetTargetLevel(tile_level_);
-	else
-		geometry_layer_->RequestVisible(geometry_generator_->GetBBox(), TileManager::BLOB);
-
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
 #if defined(WITH_TOUCHPAD)
@@ -134,15 +128,11 @@ void GlosmViewer::Render() {
 	glClearColor(0.5, 0.5, 0.5, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (tile_level_ >= 0) {
-		int radius = 5000000;
-		geometry_layer_->GarbageCollect();
-		geometry_layer_->RequestVisible(BBoxi(viewer_->GetPos(MercatorProjection()) - Vector2i(radius, radius), viewer_->GetPos(MercatorProjection()) + Vector2i(radius, radius)), 0);
-	}
+	geometry_layer_->GarbageCollect();
+	geometry_layer_->LoadLocality(*viewer_);
 	geometry_layer_->Render(*viewer_);
 
 	glFlush();
-
 	Flip();
 
 	/* movement */

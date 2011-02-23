@@ -22,26 +22,13 @@
 #include <glosm/Viewer.hh>
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryDatasource.hh>
+#include <glosm/GeometryOperations.hh>
 #include <glosm/Tile.hh>
 #include <glosm/Exception.hh>
 
 #include <glosm/util/gl.h>
 
-#include <cassert>
-
-TileManager::TileId::TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
-}
-
-bool TileManager::TileId::operator<(const TileId& other) const {
-	if (level < other.level) return true;
-	if (level > other.level) return false;
-	if (x < other.x) return true;
-	if (x > other.x) return false;
-	return y < other.y;
-}
-
-TileManager::TileManager(const Projection projection): projection_(projection) {
-	target_level_ = 0;
+TileManager::TileManager(const Projection projection): projection_(projection), loading_(-1, -1, -1) {
 	generation_ = 0;
 	thread_die_flag_ = false;
 
@@ -67,7 +54,13 @@ TileManager::TileManager(const Projection projection): projection_(projection) {
 		pthread_cond_destroy(&queue_cond_);
 		throw SystemError(errn) << "pthread_create failed";
 	}
+
+	lowres_level_ = 8;
+	hires_level_ = 13;
+	lowres_range_ = 1000000.0f;
+	hires_range_ = 10000.0f;
 }
+
 
 TileManager::~TileManager() {
 	thread_die_flag_ = true;
@@ -80,135 +73,148 @@ TileManager::~TileManager() {
 	pthread_mutex_destroy(&queue_mutex_);
 	pthread_mutex_destroy(&tiles_mutex_);
 
-	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ++i)
-		delete i->second.tile;
-}
-
-int TileManager::LoadTile(const TileId& id, const BBoxi& bbox, int flags) {
-	int ret = 0;
-	if (flags & SYNC) {
-		Tile* tile = SpawnTile(bbox);
-		/* TODO: we may call tile->BindBuffers here */
-		tiles_.insert(std::make_pair(id, TileData(tile, generation_)));
-	} else {
-		bool added = false;
-		pthread_mutex_lock(&queue_mutex_);
-		/* don't needlessly enqueue more tiles that we can process in a frame time*/
-		/* TODO: this should be user-settable, as we don't necessarily do GC/loading
-		 * every frame */
-		if (loading_.find(id) == loading_.end() && queue_.size() < 2) {
-			added = true;
-			queue_.push_back(TileTask(id, bbox));
-		}
-		ret = queue_.size();
-		pthread_mutex_unlock(&queue_mutex_);
-		if (added)
-			pthread_cond_signal(&queue_cond_);
-	}
-
-	return ret;
+	RecDestroyTiles(&root_);
 }
 
 /*
  * recursive quadtree processing
  */
 
-bool TileManager::LoadTiles(const BBoxi& bbox, int flags, int level, int x, int y) {
-	if (level == target_level_) {
-		TilesMap::iterator thistile = tiles_.find(TileId(level, x, y));
+void TileManager::RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int level, int x, int y) {
+	QuadNode* node;
+	float thisdist;
 
-		if (thistile != tiles_.end()) {
-			thistile->second.generation = generation_;
-			return true; /* tile already loaded */
-		}
-
+	if (*pnode == NULL) {
+		/* no node; check if it's in view and if yes, create it */
 		BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
+		thisdist = ApproxDistanceSquare(bbox, info.viewer_pos.Flattened());
+		if (thisdist > hires_range_ * hires_range_)
+			return;
+		node = *pnode = new QuadNode;
+		node->bbox = bbox;
+	} else {
+		/* node exists, visit it if it's in view */
+		node = *pnode;
+		thisdist = ApproxDistanceSquare(node->bbox, info.viewer_pos.Flattened());
+		if (thisdist > hires_range_ * hires_range_)
+			return;
+	}
+	/* range check passed and node exists */
 
-		LoadTile(TileId(level, x, y), BBoxi::ForGeoTile(level, x, y), flags);
+	node->generation = generation_;
 
-		/* no deeper recursion */
-		return true;
+	if (level == hires_level_) {
+		if (node->tile)
+			return; /* tile already loaded */
+
+		if (loading_ != TileId(level, x, y)) {
+			if (queue_.empty()) {
+				info.closest_distance = thisdist;
+				queue_.push_front(TileTask(TileId(level, x, y), node->bbox));
+				info.queue_size++;
+			} else {
+				if (thisdist < info.closest_distance) {
+					/* this tile is closer than the best we have in the queue - push to front so it's downloaded faster */
+					queue_.push_front(TileTask(TileId(level, x, y), node->bbox));
+					info.closest_distance = thisdist;
+					info.queue_size++;
+				} else if (info.queue_size < 100) {
+					/* push into the back of the queue, but not if queue is too long */
+					queue_.push_back(TileTask(TileId(level, x, y), node->bbox));
+					info.queue_size++;
+				}
+			}
+		}
+
+		/* no more recursion is needed */
+		return;
 	}
 
-	/* children */
-	for (int d = 0; d < 4; ++d) {
-		int xx = x * 2 + d % 2;
-		int yy = y * 2 + d / 2;
-		if (BBoxi::ForGeoTile(level + 1, xx, yy).Intersects(bbox)) {
-			if (!LoadTiles(bbox, flags, level + 1, xx, yy))
-				return false;
+	/* recurse */
+	RecLoadTiles(info, node->childs, level+1, x * 2, y * 2);
+	RecLoadTiles(info, node->childs + 1, level+1, x * 2 + 1, y * 2);
+	RecLoadTiles(info, node->childs + 2, level+1, x * 2, y * 2 + 1);
+	RecLoadTiles(info, node->childs + 3, level+1, x * 2 + 1, y * 2 + 1);
+
+	return;
+}
+
+void TileManager::RecPlaceTile(QuadNode* node, Tile* tile, int level, int x, int y) {
+	if (node == NULL) {
+		/* part of quadtree was garbage collected -> tile
+		 * is no longer needed and should just be dropped */
+		delete tile;
+		return;
+	}
+
+	if (level == 0) {
+		if (node->tile != NULL) {
+			/* tile already loaded for some reason (sync loading?)
+			 * -> drop copy */
+			delete tile;
+			return;
+		}
+		node->tile = tile;
+	} else {
+		int mask = 1 << (level-1);
+		int nchild = (!!(y & mask) << 1) | !!(x & mask);
+		RecPlaceTile(node->childs[nchild], tile, level-1, x, y);
+	}
+}
+
+void TileManager::RecDestroyTiles(QuadNode* node) {
+	if (!node)
+		return;
+
+	if (node->tile)
+		delete node->tile;
+
+	for (int i = 0; i < 4; ++i) {
+		RecDestroyTiles(node->childs[i]);
+		delete node->childs[i];
+	}
+}
+
+void TileManager::RecGarbageCollectTiles(QuadNode* node) {
+	/* simplest garbage collection that drops all inactive
+	 * tiles. This should become much more clever */
+	for (int i = 0; i < 4; ++i) {
+		if (node->childs[i] == NULL)
+			continue;
+
+		if (node->childs[i]->generation != generation_) {
+			RecDestroyTiles(node->childs[i]);
+			delete node->childs[i];
+			node->childs[i] = NULL;
+		} else {
+			RecGarbageCollectTiles(node->childs[i]);
 		}
 	}
-
-	return true;
 }
 
-/*
- * loading queue - related
- */
+void TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
+	if (!node || node->generation != generation_)
+		return;
 
-void TileManager::LoadingThreadFunc() {
-	pthread_mutex_lock(&queue_mutex_);
-	while (!thread_die_flag_) {
-		/* found nothing, sleep */
-		if (queue_.empty()) {
-			pthread_cond_wait(&queue_cond_, &queue_mutex_);
-			continue;
-		}
+	RecRenderTiles(node->childs[0], viewer);
+	RecRenderTiles(node->childs[1], viewer);
+	RecRenderTiles(node->childs[2], viewer);
+	RecRenderTiles(node->childs[3], viewer);
 
-		/* take a task from the queue */
-		TileTask task = queue_.front();
-		queue_.pop_front();
-
-		/* mark it as loading */
-		std::pair<LoadingSet::iterator, bool> pair = loading_.insert(task.id);
-		assert(pair.second);
-
-		pthread_mutex_unlock(&queue_mutex_);
-
-		/* load tile */
-		Tile* tile = SpawnTile(task.bbox);
-
-		pthread_mutex_lock(&tiles_mutex_);
-		tiles_.insert(std::make_pair(task.id, TileData(tile, generation_)));
-		pthread_mutex_unlock(&tiles_mutex_);
-
-		pthread_mutex_lock(&queue_mutex_);
-		loading_.erase(pair.first);
-	}
-	pthread_mutex_unlock(&queue_mutex_);
-}
-
-void* TileManager::LoadingThreadFuncWrapper(void* arg) {
-	static_cast<TileManager*>(arg)->LoadingThreadFunc();
-	return NULL;
-}
-
-/*
- * protected interface
- */
-
-void TileManager::Render(const Viewer& viewer) {
-	pthread_mutex_lock(&tiles_mutex_);
-
-	/* and render them */
-	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ++i) {
-		if (i->second.generation != generation_)
-			continue;
-
+	if (node->tile) {
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
 		/* prepare modelview matrix for the tile: position
 		 * it in the right place given that viewer is always
 		 * at (0, 0, 0) */
-		Vector3f offset = projection_.Project(i->second.tile->GetReference(), Vector2i(viewer.GetPos(projection_))) +
+		Vector3f offset = projection_.Project(node->tile->GetReference(), Vector2i(viewer.GetPos(projection_))) +
 				projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
 
 		glTranslatef(offset.x, offset.y, offset.z);
 
 		/* same for rotation */
-		Vector3i ref = i->second.tile->GetReference();
+		Vector3i ref = node->tile->GetReference();
 		Vector3i pos = viewer.GetPos(projection_);
 
 		/* normal at tile's reference point */
@@ -240,12 +246,73 @@ void TileManager::Render(const Viewer& viewer) {
 			glRotatef((double)((osmlong_t)ref.x - (osmlong_t)pos.x) / 10000000.0, polenormal.x, polenormal.y, polenormal.z);
 		}
 
-		i->second.tile->Render();
+		node->tile->Render();
 
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 	}
+}
 
+/*
+ * loading queue - related
+ */
+
+void TileManager::LoadingThreadFunc() {
+	pthread_mutex_lock(&queue_mutex_);
+	while (!thread_die_flag_) {
+		/* found nothing, sleep */
+		if (queue_.empty()) {
+			pthread_cond_wait(&queue_cond_, &queue_mutex_);
+			continue;
+		}
+
+		/* take a task from the queue */
+		TileTask task = queue_.front();
+		queue_.pop_front();
+
+		/* mark it as loading */
+		loading_ = task.id;
+
+		pthread_mutex_unlock(&queue_mutex_);
+
+		/* load tile */
+		Tile* tile = SpawnTile(task.bbox);
+
+		pthread_mutex_lock(&tiles_mutex_);
+		RecPlaceTile(&root_, tile, task.id.level, task.id.x, task.id.y);
+
+		pthread_mutex_unlock(&tiles_mutex_);
+
+		/* The following happens:
+		 * - main thread finishes Render and unlocks tiles_mutex_
+		 * - this thread wakes up and loads MANY tiles without main
+		 *   thread able to run
+		 * - main thread finally runs after ~0.1 sec delay, which
+		 *   is noticeable lag in realtime renderer
+		 *
+		 * Nut sure yet how to fix ot properly, but this sched_yield
+		 * works for now.
+		 */
+		sched_yield();
+
+		pthread_mutex_lock(&queue_mutex_);
+		loading_ = TileId(-1, -1, -1);
+	}
+	pthread_mutex_unlock(&queue_mutex_);
+}
+
+void* TileManager::LoadingThreadFuncWrapper(void* arg) {
+	static_cast<TileManager*>(arg)->LoadingThreadFunc();
+	return NULL;
+}
+
+/*
+ * protected interface
+ */
+
+void TileManager::Render(const Viewer& viewer) {
+	pthread_mutex_lock(&tiles_mutex_);
+	RecRenderTiles(&root_, viewer);
 	pthread_mutex_unlock(&tiles_mutex_);
 }
 
@@ -253,38 +320,36 @@ void TileManager::Render(const Viewer& viewer) {
  * public interface
  */
 
-void TileManager::SetTargetLevel(int level) {
-	target_level_ = level;
+void TileManager::LoadArea(const BBoxi& bbox, int flags) {
 }
 
-void TileManager::RequestVisible(const BBoxi& bbox, int flags) {
-	if (!flags & SYNC) {
+void TileManager::LoadLocality(const Viewer& viewer, int flags) {
+	if (!(flags & SYNC)) {
 		pthread_mutex_lock(&queue_mutex_);
 		queue_.clear();
-		pthread_mutex_unlock(&queue_mutex_);
 	}
 
 	pthread_mutex_lock(&tiles_mutex_);
-	if (flags & BLOB)
-		LoadTile(TileId(0, 0, 0), bbox, flags);
-	else
-		LoadTiles(bbox, flags);
+
+	RecLoadTilesInfo info(viewer, flags);
+	info.viewer_pos = viewer.GetPos(projection_);
+
+	QuadNode* root = &root_;
+	RecLoadTiles(info, &root);
+
 	pthread_mutex_unlock(&tiles_mutex_);
+
+	if (!(flags & SYNC)) {
+		pthread_mutex_unlock(&queue_mutex_);
+
+		if (!queue_.empty())
+			pthread_cond_signal(&queue_cond_);
+	}
 }
 
 void TileManager::GarbageCollect() {
-	/* TODO: may put deletable tiles into list and delete after
-	 * unlocking mutex for less contention */
 	pthread_mutex_lock(&tiles_mutex_);
-	for (TilesMap::iterator i = tiles_.begin(); i != tiles_.end(); ) {
-		if (i->second.generation != generation_) {
-			delete i->second.tile;
-			TilesMap::iterator tmp = i++;
-			tiles_.erase(tmp);
-		} else {
-			i++;
-		}
-	}
+	RecGarbageCollectTiles(&root_);
 	generation_++;
 	pthread_mutex_unlock(&tiles_mutex_);
 }

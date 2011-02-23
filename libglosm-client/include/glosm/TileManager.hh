@@ -47,15 +47,27 @@ protected:
 		int x;
 		int y;
 
-		TileId(int lev, int xx, int yy);
-		bool operator<(const TileId& other) const;
+		TileId(int lev, int xx, int yy) : level(lev), x(xx), y(yy) {
+		}
+
+		inline bool operator==(const TileId& other) const {
+			return x == other.x && y == other.y && level == other.level;
+		}
+
+		inline bool operator!=(const TileId& other) const {
+			return x != other.x || y != other.y || level != other.level;
+		}
 	};
 
-	struct TileData {
+	struct QuadNode {
 		Tile* tile;
 		int generation;
+		BBoxi bbox;
 
-		TileData(Tile* t, int g): tile(t), generation(g) {
+		QuadNode* childs[4];
+
+		QuadNode() : tile(NULL), generation(0), bbox(BBoxi::ForGeoTile(0, 0, 0)) {
+			childs[0] = childs[1] = childs[2] = childs[3] = NULL;
 		}
 	};
 
@@ -67,19 +79,35 @@ protected:
 		}
 	};
 
-protected:
-	/* TODO: use more clever bbox-based container */
-	typedef std::multimap<TileId, TileData> TilesMap;
-	typedef std::list<TileTask> TilesQueue;
-	typedef std::set<TileId> LoadingSet;
+	struct RecLoadTilesInfo {
+		const Viewer& viewer;
+		int flags;
+		Vector3i viewer_pos;
+		float closest_distance;
+		int queue_size;
+
+		RecLoadTilesInfo(const Viewer& v, int f) : viewer(v), flags(f), queue_size(0) {
+		}
+	};
 
 protected:
+	/* TODO: use more clever bbox-based container */
+	typedef std::list<TileTask> TilesQueue;
+
+protected:
+	/* TODO: these is only actual for GeometryLayer so should be
+	 * delegated to layer via pure virtual function or template
+	 * atg */
+	int lowres_level_;
+	int hires_level_;
+	float lowres_range_;
+	float hires_range_;
+
 	const Projection projection_;
-	int target_level_;
 
 	mutable pthread_mutex_t tiles_mutex_;
 	/* protected by tiles_mutex_ */
-	TilesMap tiles_;
+	QuadNode root_;
 	int generation_;
 	/* /protected by tiles_mutex_ */
 
@@ -87,7 +115,7 @@ protected:
 	pthread_cond_t queue_cond_;
 	/* protected by queue_mutex_ */
 	TilesQueue queue_;
-	LoadingSet loading_;
+	TileId loading_;
 	/* /protected by queue_mutex_ */
 
 	pthread_t loading_thread_;
@@ -99,8 +127,11 @@ protected:
 
 	virtual Tile* SpawnTile(const BBoxi& bbox) const = 0;
 
-	int LoadTile(const TileId& id, const BBoxi& bbox, int flags);
-	bool LoadTiles(const BBoxi& bbox, int flags, int level = 0, int x = 0, int y = 0);
+	void RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int level = 0, int x = 0, int y = 0);
+	void RecPlaceTile(QuadNode* node, Tile* tile, int level = 0, int x = 0, int y = 0);
+	void RecRenderTiles(QuadNode* node, const Viewer& viewer);
+	void RecDestroyTiles(QuadNode* node);
+	void RecGarbageCollectTiles(QuadNode* node);
 
 	void LoadingThreadFunc();
 	static void* LoadingThreadFuncWrapper(void* arg);
@@ -108,8 +139,8 @@ protected:
 	void Render(const Viewer& viewer);
 
 public:
-	void SetTargetLevel(int level);
-	void RequestVisible(const BBoxi& bbox, int flags);
+	void LoadArea(const BBoxi& bbox, int flags = 0);
+	void LoadLocality(const Viewer& viewer, int flags = 0);
 	void GarbageCollect();
 };
 
