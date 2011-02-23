@@ -38,6 +38,9 @@ struct BBox {
 	typedef typename LongType<T>::type LT;
 
 	/* ctors */
+	BBox(): left(0), bottom(0), right(0), top(0) {
+	}
+
 	BBox(const Vector2<T>& one, const Vector2<T>& two) {
 		if (one.x < two.x) {
 			left = one.x;
