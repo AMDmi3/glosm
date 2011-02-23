@@ -179,4 +179,3 @@ Vector3i FromLocalMetric(Vector3d what, Vector3i ref) {
 
 	return Vector3i(x, y, z);
 }
-
