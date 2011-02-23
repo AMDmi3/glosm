@@ -105,40 +105,40 @@ struct BBox {
 	}
 
 	/* derivs */
-	Vector2<T> GetCenter() const {
+	inline Vector2<T> GetCenter() const {
 		return Vector2<T>(((LT)left + (LT)right)/2, ((LT)top + (LT)bottom)/2);
 	}
 
-	Vector2<T> GetBottomLeft() const {
+	inline Vector2<T> GetBottomLeft() const {
 		return Vector2<T>(left, bottom);
 	}
 
-	Vector2<T> GetBottomRight() const {
+	inline Vector2<T> GetBottomRight() const {
 		return Vector2<T>(right, bottom);
 	}
 
-	Vector2<T> GetTopLeft() const {
+	inline Vector2<T> GetTopLeft() const {
 		return Vector2<T>(left, top);
 	}
 
-	Vector2<T> GetTopRight() const {
+	inline Vector2<T> GetTopRight() const {
 		return Vector2<T>(right, top);
 	}
 
 	/* tests */
-	bool IsEmpty() const {
+	inline bool IsEmpty() const {
 		return left > right || bottom > top;
 	}
 
-	bool Contains(const Vector2<T>& v) const {
+	inline bool Contains(const Vector2<T>& v) const {
 		return v.x >= left && v.x <= right && v.y >= bottom && v.y <= top;
 	}
 
-	bool Intersects(const BBox<T>& bbox) const {
+	inline bool Intersects(const BBox<T>& bbox) const {
 		return !(bbox.right < left || bbox.left > right || bbox.top < bottom || bbox.bottom > top);
 	}
 
-	bool IsPointOutAtSide(const Vector2i& p, Side s) const {
+	inline bool IsPointOutAtSide(const Vector2i& p, Side s) const {
 		switch (s) {
 		case LEFT: return p.x < left;
 		case RIGHT: return p.x > right;
@@ -149,7 +149,7 @@ struct BBox {
 	}
 
 	template<class V>
-	Vector2<T> NearestPoint(const V& vec) const {
+	inline Vector2<T> NearestPoint(const V& vec) const {
 		if (vec.x < left) {
 			/* to the left */
 			if (vec.y < bottom)
@@ -177,7 +177,7 @@ struct BBox {
 	}
 
 	template<class V>
-	Vector2<T> FarthestPoint(const V& vec) const {
+	inline Vector2<T> FarthestPoint(const V& vec) const {
 		Vector2<T> center = GetCenter();
 		if (vec.x < center.x) {
 			if (vec.y < center.y)
