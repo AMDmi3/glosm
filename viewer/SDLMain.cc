@@ -26,6 +26,7 @@
 #if defined(WITH_GLES)
 #	include <SDL_gles.h>
 #else
+#	define NO_SDL_GLEXT
 #	include <SDL/SDL_opengl.h>
 #endif
 
