@@ -105,7 +105,7 @@ BBoxi::Side IntersectSegmentWithBBox2(const Vector3i& one, const Vector3i& two, 
  */
 bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bbox, Vector3i& outone, Vector3i& outtwo);
 
-Vector3d ToLocalMetric(Vector3i what, Vector3i ref);
-Vector3i FromLocalMetric(Vector3d what, Vector3i ref);
+Vector3d ToLocalMetric(const Vector3i& what, const Vector3i& ref);
+Vector3i FromLocalMetric(const Vector3d& what, const Vector3i& ref);
 
 #endif

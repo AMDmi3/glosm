@@ -157,7 +157,7 @@ bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bb
 	return IntersectSegmentWithBBox(one, two, bbox, outone) && IntersectSegmentWithBBox2(one, two, bbox, outtwo);
 }
 
-Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
+Vector3d ToLocalMetric(const Vector3i& what, const Vector3i& ref) {
 	const double coslat = cos(ref.y * GEOM_DEG_TO_RAD);
 
 	double dx = (double)(what.x - ref.x) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * coslat;
@@ -167,7 +167,7 @@ Vector3d ToLocalMetric(Vector3i what, Vector3i ref) {
 	return Vector3f(dx, dy, dz);
 }
 
-Vector3i FromLocalMetric(Vector3d what, Vector3i ref) {
+Vector3i FromLocalMetric(const Vector3d& what, const Vector3i& ref) {
 	const double coslat = cos(ref.y * GEOM_DEG_TO_RAD);
 
 	int x = ref.x;
