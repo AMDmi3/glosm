@@ -34,11 +34,12 @@ ENDIF(WITH_GLES)
 
 # Targets
 SET(SOURCES
-	src/Geometry.cc
 	src/BBox.cc
 	src/Exception.cc
-	src/PreloadedXmlDatasource.cc
+	src/Geometry.cc
 	src/GeometryOperations.cc
+	src/PreloadedXmlDatasource.cc
+	src/Timer.cc
 )
 
 SET(HEADERS
