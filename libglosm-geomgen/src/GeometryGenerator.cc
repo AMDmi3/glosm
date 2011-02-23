@@ -31,93 +31,62 @@
 typedef std::list<Vector2i> VertexList;
 typedef std::vector<Vector2i> VertexVector;
 
-static void CreateLines(Geometry& geom, const VertexList& vertices, int z, const OsmDatasource::Way& way) {
-	if (vertices.size() < 2)
-		return;
-
-	VertexList::const_iterator prev = vertices.begin();
-	for (VertexList::const_iterator i = ++(vertices.begin()); i != vertices.end(); i++) {
-		geom.AddLine(Vector3i(*prev, z), Vector3i(*i, z));
-		prev = i;
-	}
+static void CreateLines(Geometry& geom, const VertexVector& vertices, int z, const OsmDatasource::Way& /*unused*/) {
+	for (unsigned int i = 1; i < vertices.size(); ++i)
+		geom.AddLine(Vector3i(vertices[i-1], z), Vector3i(vertices[i], z));
 }
 
-static void CreateVerticalLines(Geometry& geom, const VertexList& vertices, int minz, int maxz, const OsmDatasource::Way& way) {
-	VertexList::const_iterator i = vertices.begin();
-	if (way.Closed)
-		++i; /* avoid duplicate line */
-
-	for (; i != vertices.end(); i++)
-		geom.AddLine(Vector3i(*i, minz), Vector3i(*i, maxz));
+static void CreateVerticalLines(Geometry& geom, const VertexVector& vertices, int minz, int maxz, const OsmDatasource::Way& way) {
+	for (unsigned int i = way.Closed ? 1 : 0; i < vertices.size(); ++i)
+		geom.AddLine(Vector3i(vertices[i], minz), Vector3i(vertices[i], maxz));
 }
 
-static void CreateSmartVerticalLines(Geometry& geom, const VertexList& vertices, int minz, int maxz, float minslope, const OsmDatasource::Way& way) {
-	return CreateVerticalLines(geom, vertices, minz, maxz, way);
-
-	VertexList::const_iterator i, prev, next;
-
+static void CreateSmartVerticalLines(Geometry& geom, const VertexVector& vertices, int minz, int maxz, float minslope, const OsmDatasource::Way& way) {
 	double cosminslope = cos(minslope/180.0*M_PI);
 
 	if (vertices.size() < 2)
 		return CreateVerticalLines(geom, vertices, minz, maxz, way);
 
 	if (way.Closed) {
-		prev = vertices.begin();
-		++(i = prev);
-		++(next = i);
-	} else {
-		prev = vertices.end();
-		i = vertices.begin();
-		++(next) = i;
-	}
+		for (unsigned int i = 0; i < vertices.size() - 1; ++i) {
+			Vector3d to_prev = ToLocalMetric(vertices[i == 0 ? vertices.size() - 2 : i - 1], vertices[i]).Normalized();
+			Vector3d to_next = ToLocalMetric(vertices[i + 1], vertices[i]).Normalized();
 
-	for (; i != vertices.end(); i++, next++, prev++) {
-		if (next == vertices.end() && way.Closed)
-			++(++next); /* rewind to second point, as first is the same as last */
-
-		if (next != vertices.end() && prev != vertices.end()) {
-			Vector3d to_prev = ToLocalMetric(*prev, *i).Normalized();
-			Vector3d to_next = ToLocalMetric(*next, *i).Normalized();
-			if (fabs(to_prev.DotProduct(to_next)) > cosminslope)
-				continue;
+			if (fabs(to_prev.DotProduct(to_next)) < cosminslope)
+				geom.AddLine(Vector3i(vertices[i], minz), Vector3i(vertices[i], maxz));
 		}
+	} else {
+		for (unsigned int i = 1; i < vertices.size() - 1; ++i) {
+			Vector3d to_prev = ToLocalMetric(vertices[i - 1], vertices[i]).Normalized();
+			Vector3d to_next = ToLocalMetric(vertices[i + 1], vertices[i]).Normalized();
 
-		geom.AddLine(Vector3i(*i, minz), Vector3i(*i, maxz));
+			if (fabs(to_prev.DotProduct(to_next)) < cosminslope)
+				geom.AddLine(Vector3i(vertices[i], minz), Vector3i(vertices[i], maxz));
+		}
+		geom.AddLine(Vector3i(vertices.front(), minz), Vector3i(vertices.front(), maxz));
+		geom.AddLine(Vector3i(vertices.back(), minz), Vector3i(vertices.back(), maxz));
 	}
 }
 
-static void CreateWalls(Geometry& geom, const VertexList& vertices, int minz, int maxz, const OsmDatasource::Way& way) {
-	if (vertices.size() < 2 || !way.Closed)
-		return;
+static void CreateWalls(Geometry& geom, const VertexVector& vertices, int minz, int maxz, const OsmDatasource::Way& /*unused*/) {
+	for (unsigned int i = 1; i < vertices.size(); ++i)
+		geom.AddQuad(Vector3i(vertices[i-1], minz), Vector3i(vertices[i-1], maxz), Vector3i(vertices[i], maxz), Vector3i(vertices[i], minz));
+}
 
-	VertexList::const_iterator prev = vertices.begin();
-	for (VertexList::const_iterator i = ++(vertices.begin()); i != vertices.end(); i++) {
-		if (way.Clockwise)
-			geom.AddQuad(Vector3i(*prev, minz), Vector3i(*prev, maxz), Vector3i(*i, maxz), Vector3i(*i, minz));
-		else
-			geom.AddQuad(Vector3i(*prev, maxz), Vector3i(*prev, minz), Vector3i(*i, minz), Vector3i(*i, maxz));
-
-		prev = i;
+static void CreateWall(Geometry& geom, const VertexVector& vertices, int minz, int maxz, const OsmDatasource::Way& /*unused*/) {
+	for (unsigned int i = 1; i < vertices.size(); ++i) {
+		geom.AddQuad(Vector3i(vertices[i-1], minz), Vector3i(vertices[i-1], maxz), Vector3i(vertices[i], maxz), Vector3i(vertices[i], minz));
+		geom.AddQuad(Vector3i(vertices[i-1], maxz), Vector3i(vertices[i-1], minz), Vector3i(vertices[i], minz), Vector3i(vertices[i], maxz));
 	}
 }
 
-static void CreateWall(Geometry& geom, const VertexList& vertices, int minz, int maxz, const OsmDatasource::Way& way) {
-	if (vertices.size() < 2)
-		return;
-
-	VertexList::const_iterator prev = vertices.begin();
-	for (VertexList::const_iterator i = ++(vertices.begin()); i != vertices.end(); i++) {
-		geom.AddQuad(Vector3i(*prev, minz), Vector3i(*prev, maxz), Vector3i(*i, maxz), Vector3i(*i, minz));
-		geom.AddQuad(Vector3i(*prev, maxz), Vector3i(*prev, minz), Vector3i(*i, minz), Vector3i(*i, maxz));
-		prev = i;
-	}
-}
-
-static void CreateArea(Geometry& geom, const VertexList& vertices, bool revorder, int z, const OsmDatasource::Way& way) {
+static void CreateArea(Geometry& geom, const VertexVector& vertices, bool revorder, int z, const OsmDatasource::Way& way) {
 	if (vertices.size() < 3 || !way.Closed)
 		return;
 
-	VertexList vert = vertices;
+	VertexList vert;
+	for (VertexVector::const_iterator i = vertices.begin(); i != vertices.end(); ++i)
+		vert.push_back(*i);
 	vert.pop_back();
 
 	VertexList::iterator i0, i1, i2, o;
@@ -131,9 +100,9 @@ static void CreateArea(Geometry& geom, const VertexList& vertices, bool revorder
 	int iters = 1000;
 	while (vert.size() >= 3) {
 		if (++(i1 = i0) == vert.end())
-			++i1;
+			i1 = vert.begin();
 		if (++(i2 = i1) == vert.end())
-			++i2;
+			i2 = vert.begin();
 
 		osmlong_t area = 0;
 		area += (osmlong_t)i0->x*(osmlong_t)i1->y - (osmlong_t)i0->y*(osmlong_t)i1->x;
@@ -141,15 +110,22 @@ static void CreateArea(Geometry& geom, const VertexList& vertices, bool revorder
 		area += (osmlong_t)i2->x*(osmlong_t)i0->y - (osmlong_t)i2->y*(osmlong_t)i0->x;
 
 		bool ok = true;
-		for (++(o = i2); o != i0; ++o) {
-			if (o != vert.end() && Vector2l(*o).IsInTriangle(*i0, *i1, *i2)) {
+		o = i2;
+		while (1) {
+			if (++o == vert.end())
+				o = vert.begin();
+
+			if (o == i0)
+				break;
+
+			if (Vector2l(*o).IsInTriangle(*i0, *i1, *i2)) {
 				ok = false;
 				break;
 			}
 		}
 
-		if ((area < 0) == way.Clockwise && ok) {
-			if (!!way.Clockwise ^ !revorder)
+		if ((area < 0) && ok) {
+			if (revorder)
 				geom.AddTriangle(Vector3i(*i0, z), Vector3i(*i1, z), Vector3i(*i2, z));
 			else
 				geom.AddTriangle(Vector3i(*i0, z), Vector3i(*i2, z), Vector3i(*i1, z));
@@ -158,7 +134,7 @@ static void CreateArea(Geometry& geom, const VertexList& vertices, bool revorder
 		}
 
 		if (++i0 == vert.end())
-			++i0;
+			i0 = vert.begin();
 
 		if (--iters == 0) {
 			/* FIXME: add way ID here, lacks interface to datasource */
@@ -168,7 +144,7 @@ static void CreateArea(Geometry& geom, const VertexList& vertices, bool revorder
 	}
 }
 
-static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const OsmDatasource::Way& way) {
+static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, const OsmDatasource::Way& way) {
 	float slope = 30.0;
 	bool along = true;
 
@@ -180,44 +156,37 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 		along = false;
 
 	std::vector<Vector3i> vert;
-	vert.resize(vertices.size());
+	vert.reserve(vertices.size());
+	for (VertexVector::const_iterator i = vertices.begin(); i != vertices.end(); ++i)
+		vert.push_back(Vector3i(*i, z));
 
-	if (way.Clockwise) {
-		int j = 0;
-		for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); ++i, ++j)
-			vert[j] = Vector3i(*i, z);
-	} else {
-		int j = vertices.size() - 1;
-		for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); ++i, --j)
-			vert[j] = Vector3i(*i, z);
-	}
-
-	if (vertices.size() > 3 && way.Closed &&
+	if (vert.size() > 3 && way.Closed &&
 				(shape = way.Tags.find("building:roof:shape")) != way.Tags.end() &&
 				(shape->second == "pyramidal" || shape->second == "conical")
 			) {
 		/* calculate center */
 		Vector3l center;
-		for (int i = 0; i < vert.size() - 1; i++)
+		for (unsigned int i = 0; i < vert.size() - 1; i++)
 			center += Vector3i(vert[i]);
 		center /= vert.size() - 1;
 
 		/* calculate mean face length */
 		float facelength = 0.0;
-		for (int i = 0; i < vert.size() - 1; i++)
+		for (unsigned int i = 0; i < vert.size() - 1; i++)
 			facelength += (ToLocalMetric(vert[i], center)/2.0 + ToLocalMetric(vert[i+1], center)/2.0).Length();
 		facelength /= vert.size() - 1;
 
 		center.z += (tan(slope/180.0*M_PI) * facelength) * GEOM_UNITSINMETER;
 
-		for (int i = 0; i < vert.size() - 1; i++) {
+		for (unsigned int i = 0; i < vert.size() - 1; i++) {
 			geom.AddTriangle(vert[i], center, vert[i+1]);
 			geom.AddLine(vert[i], center);
 		}
+		return;
 	}
 
-	/* only 4-vertex buildings are supported for other types, yet */
-	if (vertices.size() == 5 && way.Closed && (shape = way.Tags.find("building:roof:shape")) != way.Tags.end()) {
+	/* only 4-vert buildings are supported for other types, yet */
+	if (vert.size() == 5 && way.Closed && (shape = way.Tags.find("building:roof:shape")) != way.Tags.end()) {
 		float length1 = ToLocalMetric(vert[0], vert[1]).Length();
 		float length2 = ToLocalMetric(vert[1], vert[2]).Length();
 
@@ -341,15 +310,15 @@ static void CreateRoof(Geometry& geom, const VertexList& vertices, int z, const 
 	return CreateArea(geom, vertices, false, z, way);
 }
 
-static void CreateRoad(Geometry& geom, const VertexList& vertices, float width, const OsmDatasource::Way& way) {
+static void CreateRoad(Geometry& geom, const VertexVector& vertices, float width, const OsmDatasource::Way& /*unused*/) {
 	if (vertices.size() < 2)
 		return;
 
-	VertexList::const_iterator prev = vertices.end();
-	VertexList::const_iterator next;
+	VertexVector::const_iterator prev = vertices.end();
+	VertexVector::const_iterator next;
 	Vector2i prev_points[2];
 	Vector2i new_points[2];
-	for (VertexList::const_iterator i = vertices.begin(); i != vertices.end(); i++) {
+	for (VertexVector::const_iterator i = vertices.begin(); i != vertices.end(); i++) {
 		++(next = i);
 
 		Vector3d to_prev, to_next;
@@ -406,8 +375,6 @@ static void CreateRoad(Geometry& geom, const VertexList& vertices, float width, 
 
 static float GetMaxHeight(const OsmDatasource::Way& way) {
 	OsmDatasource::TagsMap::const_iterator building, tag;
-
-	float h = 0.0f; /* in meters */
 
 	if ((tag = way.Tags.find("building:part:height")) != way.Tags.end()) {
 		/* building:part:height is topmost precedence (hack for Ostankino tower) */
@@ -508,9 +475,15 @@ static void HiresWayDispatcher(Geometry& geom, const OsmDatasource& datasource, 
 
 	OsmDatasource::TagsMap::const_iterator t;
 
-	VertexList vertices;
-	for (OsmDatasource::Way::NodesList::const_iterator n = way.Nodes.begin(); n != way.Nodes.end(); ++n)
-		vertices.push_back(datasource.GetNode(*n).Pos);
+	VertexVector vertices;
+	vertices.reserve(way.Nodes.size());
+
+	if (way.Clockwise)
+		for (OsmDatasource::Way::NodesList::const_iterator n = way.Nodes.begin(); n != way.Nodes.end(); ++n)
+			vertices.push_back(datasource.GetNode(*n).Pos);
+	else
+		for (OsmDatasource::Way::NodesList::const_reverse_iterator n = way.Nodes.rbegin(); n != way.Nodes.rend(); ++n)
+			vertices.push_back(datasource.GetNode(*n).Pos);
 
 	if ((way.Tags.find("building") != way.Tags.end() || way.Tags.find("building:part") != way.Tags.end()) && minz != maxz) {
 		CreateWalls(geom, vertices, minz, maxz, way);
@@ -578,7 +551,7 @@ static void LowresWayDispatcher(Geometry& geom, const OsmDatasource& datasource,
 		return;
 	}
 
-	VertexList vertices;
+	VertexVector vertices;
 	for (OsmDatasource::Way::NodesList::const_iterator n = way.Nodes.begin(); n != way.Nodes.end(); ++n)
 		vertices.push_back(datasource.GetNode(*n).Pos);
 
