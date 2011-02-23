@@ -148,6 +148,50 @@ struct BBox {
 		}
 	}
 
+	template<class V>
+	Vector2<T> NearestPoint(const V& vec) const {
+		if (vec.x < left) {
+			/* to the left */
+			if (vec.y < bottom)
+				return GetBottomLeft();
+			else if (vec.y > top)
+				return GetTopLeft();
+			else
+				return Vector2<T>(left, vec.y);
+		} else if (vec.x > right) {
+			/* to the right */
+			if (vec.y < bottom)
+				return GetBottomRight();
+			else if (vec.y > top)
+				return GetTopRight();
+			else
+				return Vector2<T>(right, vec.y);
+		} else {
+			if (vec.y < bottom)
+				return Vector2<T>(vec.x, bottom);
+			else if (vec.y > top)
+				return Vector2<T>(vec.x, top);
+			else
+				return vec; /* inside bbox */
+		}
+	}
+
+	template<class V>
+	Vector2<T> FarthestPoint(const V& vec) const {
+		Vector2<T> center = GetCenter();
+		if (vec.x < center.x) {
+			if (vec.y < center.y)
+				return GetTopRight();
+			else
+				return GetBottomRight();
+		} else {
+			if (vec.y < center.y)
+				return GetTopLeft();
+			else
+				return GetBottomLeft();
+		}
+	}
+
 	/* data */
 	T left, bottom, right, top;
 };
