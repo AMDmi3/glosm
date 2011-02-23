@@ -108,4 +108,6 @@ bool CropSegmentByBBox(const Vector3i& one, const Vector3i& two, const BBoxi& bb
 Vector3d ToLocalMetric(const Vector3i& what, const Vector3i& ref);
 Vector3i FromLocalMetric(const Vector3d& what, const Vector3i& ref);
 
+float ApproxDistanceSquare(const BBoxi& bbox, const Vector3i& vec);
+
 #endif

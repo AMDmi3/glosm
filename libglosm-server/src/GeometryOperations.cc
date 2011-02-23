@@ -179,3 +179,23 @@ Vector3i FromLocalMetric(const Vector3d& what, const Vector3i& ref) {
 
 	return Vector3i(x, y, z);
 }
+
+/*
+ * rough approximation suitable for calculating cosine of latitude
+ */
+static inline float cosapprox(float x) {
+	float xx = x*x;
+	return 1.0 - xx/2.0 + xx*xx/24.0;
+}
+
+float ApproxDistanceSquare(const BBoxi& bbox, const Vector3i& vec) {
+	const float coslat = cosapprox(vec.y * GEOM_DEG_TO_RAD);
+
+	Vector2i near = bbox.NearestPoint(vec);
+
+	float dx = (float)(near.x - vec.x) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * coslat;
+	float dy = (float)(near.y - vec.y) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH;
+	float dz = (float)(vec.z) / GEOM_UNITSINMETER;
+
+	return dx*dx + dy*dy + dz*dz;
+}
