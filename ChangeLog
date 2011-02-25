@@ -14,7 +14,9 @@ glosm-0.0.2 ????-??-??
  * Added OpenGL ES 1.1 platforms support (namely Maemo)
  * Added Spherical projection (in which Earth looks like globe) in
    addition to Mercator (flat Earth)
- * Support man_made=tower and man_made=chimney area objects
+ * Added support for man_made=tower and man_made=chimney area objects
+ * Added support for building:roof:shape=conical as the alias for
+   pyramidal, both are now supported for arbitrary shaped buildings
  * Fixed crash in geometry generator
 
 glosm-0.0.1 2011-01-18
