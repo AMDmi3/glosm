@@ -66,7 +66,7 @@ TileManager::~TileManager() {
 	thread_die_flag_ = true;
 	pthread_cond_signal(&queue_cond_);
 
-	/* TODO: check exit code */
+	/* @todo check exit code? */
 	pthread_join(loading_thread_, NULL);
 
 	pthread_cond_destroy(&queue_cond_);

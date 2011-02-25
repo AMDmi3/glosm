@@ -109,13 +109,11 @@ protected:
 	};
 
 protected:
-	/* TODO: use more clever bbox-based container */
 	typedef std::list<TileTask> TilesQueue;
 
 protected:
-	/* TODO: these is only actual for GeometryLayer so should be
-	 * delegated to layer via pure virtual function or template
-	 * atg */
+	/* @todo it would be optimal to delegate these to layer via either
+	 * virtual methods or templates */
 	int level_;
 	float range_;
 	int flags_;
