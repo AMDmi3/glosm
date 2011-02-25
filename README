@@ -81,7 +81,7 @@ Usage
   glosm-viewer
   ------------
 
-    glosm-viewer [-s] [-t N] <file.osm|->
+    glosm-viewer [-sf] <file.osm|->
 
   runs interactive 3D map viewer for a specified map dump. Dumps can
   be obtained from OpenStreetMap editing applications (jOSM,
@@ -98,7 +98,7 @@ Usage
   Options:
 
     -s      - enable spherical Earth view (instead of mercator)
-    -t N    - enable tiling of level N (experimental)
+    -f      - disable GLEW OpenGL version check (for testing purposes)
 
   Controls:
 
@@ -112,6 +112,8 @@ Usage
     H           - same as L, but locks you at human height
     +           - increase movement speed by 10x
     -           - decrease movement speed by 10x
+    1           - toggle lowres (ground) layer
+    2           - toggle hires (buildings) layer
     Q or Escape - close application
 
   glosm-tiler
@@ -158,6 +160,11 @@ OpenGL details
 
   Application requires OpenGL version >= 1.5. Currently, only notable
   required feature is buffer objects support (glGenBuffers et al.)
+
+  When GLEW is used, two checks for required OpenGL functionality
+  are done: GLEW check for GL_VERSION_1_5 and check for required
+  functions != NULL. The first is disabled with -f option to viewer,
+  if this options makes viewer work for you, please report.
 
   Additionally, glosm-tiler requires pbuffer support and that is
   currently only available through GLX, thus X11 installation is
