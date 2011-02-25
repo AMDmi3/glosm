@@ -34,6 +34,12 @@ class GeometryDatasource;
 class Viewer;
 class Tile;
 
+/**
+ * Generic quadtree tile manager
+ *
+ * This class is serves as a base class for layers and manages tile
+ * loading, displaying and disposal.
+ */
 class TileManager {
 public:
 	enum RequestFlags {
@@ -42,6 +48,9 @@ public:
 	};
 
 protected:
+	/**
+	 * Tile identifier
+	 */
 	struct TileId {
 		int level;
 		int x;
@@ -59,6 +68,9 @@ protected:
 		}
 	};
 
+	/**
+	 * Single node of a quadtree
+	 */
 	struct QuadNode {
 		Tile* tile;
 		int generation;
@@ -71,6 +83,9 @@ protected:
 		}
 	};
 
+	/**
+	 * Single tile loading request
+	 */
 	struct TileTask {
 		TileId id;
 		BBoxi bbox;
@@ -79,6 +94,9 @@ protected:
 		}
 	};
 
+	/**
+	 * Holder of data for LoadLocality request
+	 */
 	struct RecLoadTilesInfo {
 		const Viewer& viewer;
 		int flags;
@@ -122,30 +140,105 @@ protected:
 	volatile bool thread_die_flag_;
 
 protected:
+	/**
+	 * Constructs Tile
+	 */
 	TileManager(const Projection projection);
+
+	/**
+	 * Destructor
+	 */
 	virtual ~TileManager();
 
+	/**
+	 * Spawns a single tile with specified bbox
+	 */
 	virtual Tile* SpawnTile(const BBoxi& bbox, int flags) const = 0;
 
+	/**
+	 * Recursive tile loading function
+	 */
 	void RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int level = 0, int x = 0, int y = 0);
+
+	/**
+	 * Recursive function that places tile into specified quadtree point
+	 */
 	void RecPlaceTile(QuadNode* node, Tile* tile, int level = 0, int x = 0, int y = 0);
+
+	/**
+	 * Recursive function for tile rendering
+	 */
 	void RecRenderTiles(QuadNode* node, const Viewer& viewer);
+
+	/**
+	 * Recursive function for destroying tiles and quadtree nodes
+	 */
 	void RecDestroyTiles(QuadNode* node);
+
+	/**
+	 * Recursive function for garbage collecting unneeded tiles
+	 */
 	void RecGarbageCollectTiles(QuadNode* node);
 
+	/**
+	 * Thread function for tile loading
+	 */
 	void LoadingThreadFunc();
+
+	/**
+	 * Static wrapper for thread function
+	 */
 	static void* LoadingThreadFuncWrapper(void* arg);
 
+	/**
+	 * Renders visible tiles
+	 */
 	void Render(const Viewer& viewer);
 
 public:
+	/**
+	 * Loads square area of tiles
+	 */
 	void LoadArea(const BBoxi& bbox, int flags = 0);
+
+	/**
+	 * Loads tiles in locality of Viewer
+	 */
 	void LoadLocality(const Viewer& viewer, int flags = 0);
+
+	/**
+	 * Destroys unneeded tiles
+	 */
 	void GarbageCollect();
 
+	/**
+	 * Sets designated tile level
+	 *
+	 * @param level desired level
+	 */
 	void SetLevel(int level);
+
+	/**
+	 * Sets range in which tiles are visible
+	 *
+	 * @param range range in meters
+	 */
 	void SetRange(float range);
+
+	/**
+	 * Sets flags for tile spawinig
+	 *
+	 * @param flags flags
+	 * @see GeometryGenerator::GetGeometry
+	 */
 	void SetFlags(int flags);
+
+	/**
+	 * Sets mode of taking viewer height into account
+	 *
+	 * @param enabled if true, height is taken into account
+	 *        when calculating distance from viewer to tile
+	 */
 	void SetHeightEffect(bool enabled);
 };
 

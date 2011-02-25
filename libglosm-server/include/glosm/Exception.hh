@@ -59,9 +59,28 @@ namespace Private {
 		void EnsureSize(unsigned int size);
 
 	public:
+		/**
+		 * Constructs empty string buffer
+		 *
+		 * @param reserve specifies length of reserved buffer part
+		 */
 		SafeStringBuffer(unsigned int reserve = 0);
+
+		/**
+		 * Constructs buffer and initializes it with giver string
+		 *
+		 * @param message initial value
+		 */
 		SafeStringBuffer(const char* message);
-		SafeStringBuffer(const SafeStringBuffer& s);
+
+		/**
+		 * Constricts copy of other
+		 */
+		SafeStringBuffer(const SafeStringBuffer& other);
+
+		/**
+		 * Destructor
+		 */
 		~SafeStringBuffer();
 
 		/**
@@ -118,16 +137,33 @@ namespace Private {
 		mutable SafeStringBuffer message_;
 
 	public:
+		/**
+		 * Constructs empty exception
+		 */
 		ExceptionBase();
+
+		/**
+		 * Constructs copy of e
+		 */
 		ExceptionBase(const ExceptionBase& e);
+
+		/**
+		 * Destructor
+		 */
 		virtual ~ExceptionBase() throw();
 
+		/**
+		 * Appends data to exception's string buffer
+		 */
 		template <class T>
 		void Append(const T& t) const {
 			std::ostream stream(&message_);
 			(std::ostream&)stream << t;
 		}
 
+		/**
+		 * Returns exception buffer contetns as a C string
+		 */
 		virtual const char* what() const throw();
 	};
 

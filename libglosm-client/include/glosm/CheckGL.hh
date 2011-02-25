@@ -22,9 +22,17 @@
 
 #include <glosm/Exception.hh>
 
+/**
+ * Exception that denotes unsupported OpenGL function
+ */
 class GLUnsupportedException: public Exception {
 };
 
+/**
+ * Checks whether OpenGL functions required by glosm are available
+ *
+ * Throws exception in case of error
+ */
 void CheckGL();
 
 #endif

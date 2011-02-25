@@ -56,11 +56,35 @@ protected:
 #endif
 
 public:
-	GeometryTile(const Projection& p, const Geometry& datasource, const Vector2i& ref, const BBoxi& bbox);
+	/**
+	 * Constructs tile from given geometry
+	 *
+	 * @param projection projection used to convert fixed-point geometry
+	 * @param geometry source geometry
+	 * @param ref reference point of this tile
+	 * @param bbox bounding box of this tile
+	 */
+	GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox);
+
+	/**
+	 * Destructor
+	 */
 	virtual ~GeometryTile();
 
+	/**
+	 * Moves projected geometry into OpenGL vertex buffers
+	 *
+	 * This can't be done in constructor as it may be called
+	 * from another thread, so this is done in Render()
+	 *
+	 * @todo doing tihs many times in a single frame may produce
+	 * noticeable lag so maybe it should be limited somehow
+	 */
 	void BindBuffers();
 
+	/**
+	 * Render this tile
+	 */
 	virtual void Render();
 };
 

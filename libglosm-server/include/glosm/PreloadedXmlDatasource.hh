@@ -25,9 +25,15 @@
 #include <glosm/NonCopyable.hh>
 #include <glosm/id_map.hh>
 
+/**
+ * Excepion that denotes XML parsing error
+ */
 class ParsingException : public Exception {
 };
 
+/**
+ * Excepion that denotes inconsistent OSM data
+ */
 class DataException : public Exception {
 };
 
@@ -70,34 +76,61 @@ protected:
 	BBoxi bbox_;
 
 protected:
-
-protected:
 	static void StartElementWrapper(void* userData, const char* name, const char** atts);
 	static void EndElementWrapper(void* userData, const char* name);
 
+	/**
+	 * Processes start XML element
+	 */
 	void StartElement(const char* name, const char** atts);
+
+	/**
+	 * Processes end XML element
+	 */
 	void EndElement(const char* name);
 
 public:
+	/**
+	 * Constructs empty datasource
+	 */
 	PreloadedXmlDatasource();
+
+	/**
+	 * Destructor
+	 */
 	virtual ~PreloadedXmlDatasource();
 
 	/**
-	 * Loads OSM dump into memory
+	 * Parses OSM dump file and loads map data into memory
 	 *
 	 * @param filename path to dump file
 	 */
 	void Load(const char* filename);
 
 	/**
-	 * Drop all loaded data
+	 * Drops all loaded data
 	 *
 	 * This is used to free memory used by loaded data when
 	 * it's no longer needed. Datasource may be further reused.
 	 */
 	void Clear();
 
+	/**
+	 * Returns center of loaded dump
+	 *
+	 * Center is calculated from bounding box
+	 *
+	 * @see GetBBox()
+	 */
 	virtual Vector2i GetCenter() const;
+
+	/**
+	 * Returns bounding box of loaded dump
+	 *
+	 * BBox is taken from either <bound> or <bounds> tag, or,
+	 * in absence of these, is automatically calculated to covert
+	 * all available nodes
+	 */
 	virtual BBoxi GetBBox() const;
 
 public:

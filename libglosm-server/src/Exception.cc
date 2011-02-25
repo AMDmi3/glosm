@@ -52,13 +52,13 @@ namespace Private {
 		strcpy(buffer_, message);
 	}
 
-	SafeStringBuffer::SafeStringBuffer(const SafeStringBuffer& s)
+	SafeStringBuffer::SafeStringBuffer(const SafeStringBuffer& other)
 		: std::streambuf(),
-		  reserve_(s.reserve_),
-		  allocated_(s.allocated_),
-		  used_(s.used_),
+		  reserve_(other.reserve_),
+		  allocated_(other.allocated_),
+		  used_(other.used_),
 		  buffer_( new char[allocated_]) {
-		memcpy(buffer_, s.buffer_, used_);
+		memcpy(buffer_, other.buffer_, used_);
 	}
 
 	SafeStringBuffer::~SafeStringBuffer() {

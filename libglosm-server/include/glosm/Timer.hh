@@ -22,9 +22,22 @@
 
 #include <sys/time.h>
 
+/**
+ * Simple timer class
+ */
 class Timer {
 public:
+	/**
+	 * Constructs timer and initializes it with current time
+	 */
 	Timer();
+
+	/**
+	 * Updates timer and returns time passed
+	 *
+	 * @return seconds passed since construction or last Count()
+	 *         call
+	 */
 	float Count();
 
 protected:

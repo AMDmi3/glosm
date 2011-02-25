@@ -25,11 +25,20 @@
 #include <cmath>
 #include <limits>
 
+/**
+ * Long type trait
+ *
+ * For type T this defines type that can hold result of T*T (e.g.
+ * results of LengthSquare, DotProduct, area etc.)
+ */
 template <typename T>
 struct LongType {
 	typedef T type;
 };
 
+/**
+ * Long type for osmint_t
+ */
 template<>
 struct LongType<osmint_t> {
 	typedef osmlong_t type;

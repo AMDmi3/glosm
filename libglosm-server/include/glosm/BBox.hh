@@ -27,6 +27,10 @@
  */
 template <typename T>
 struct BBox {
+public:
+	/**
+	 * Sides of boundng box
+	 */
 	enum Side {
 		NONE = 0,
 		LEFT = 1,
@@ -35,12 +39,24 @@ struct BBox {
 		TOP = 4
 	};
 
+public:
 	typedef typename LongType<T>::type LT;
 
-	/* ctors */
-	BBox(): left(0), bottom(0), right(0), top(0) {
+public:
+	/* CTORS */
+
+	/**
+	 * Constructs empty bounding box
+	 */
+	BBox(): BBox<T>::Empty() {
 	}
 
+	/**
+	 * Constructs bbox by two corners
+	 *
+	 * @param one one corner
+	 * @param two another corner
+	 */
 	BBox(const Vector2<T>& one, const Vector2<T>& two) {
 		if (one.x < two.x) {
 			left = one.x;
@@ -59,29 +75,79 @@ struct BBox {
 		}
 	}
 
+	/**
+	 * Constructs bbox by its sides
+	 *
+	 * @param l left side
+	 * @param b bottom side
+	 * @param r right side
+	 * @param t top side
+	 */
 	BBox(T l, T b, T r, T t): left(l), bottom(b), right(r), top(t) {
 	}
 
-	BBox(const BBox<T>& b): left(b.left), bottom(b.bottom), right(b.right), top(b.top) {
+	/**
+	 * Constructs copy of other
+	 */
+	BBox(const BBox<T>& other): left(other.left), bottom(other.bottom), right(other.right), top(other.top) {
 	}
 
-	/* static `ctors' */
+	/* STATIC CTORS */
+
+	/**
+	 * Creates bbox that contains all possible points
+	 */
 	static BBox<T> Full() {
 		return BBox<T>(std::numeric_limits<T>::min(), std::numeric_limits<T>::min(), std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
 	}
 
+	/**
+	 * Creates bbox that contains no points
+	 */
 	static BBox<T> Empty() {
 		return BBox<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::max(), std::numeric_limits<T>::min(), std::numeric_limits<T>::min());
 	}
 
-	/* specialized only for <osmint_t>, see BBox.cc */
+	/* following are specialized only for <osmint_t>, see BBox.cc */
+
+	/**
+	 * Creates bbox that covers earth surface
+	 *
+	 * @note only specialized for <osmint_t>, see BBox.cc
+	 */
 	static BBox<T> ForEarth();
+
+	/**
+	 * Creates bbox for specified mercator tile
+	 *
+	 * @param zoom zoom
+	 * @param x x-coordinate (longitued)
+	 * @param y t-coordinate (latitude)
+	 *
+	 * Mercator tile numbering is similar with those used in mapnik
+	 *
+	 * @note only specialized for <osmint_t>, see BBox.cc
+	 */
 	static BBox<T> ForMercatorTile(int zoom, int x, int y);
+
+	/**
+	 * Creates bbox for specified geo tile
+	 *
+	 * @param zoom zoom
+	 * @param x x-coordinate (longitued)
+	 * @param y t-coordinate (latitude)
+	 *
+	 * Geo tiles uniformly split earth rectangle and are numbered from topleft
+	 *
+	 * @note only specialized for <osmint_t>, see BBox.cc
+	 */
 	static BBox<T> ForGeoTile(int zoom, int x, int y);
 
-	/* operators - may be added later if needed: addition/substraction/intersection */
+	/* MUTATORS */
 
-	/* modifiers */
+	/**
+	 * Includes a single point into bbox, expanding it if necessary
+	 */
 	void Include(const Vector2<T>& point) {
 		if (point.x < left)
 			left = point.x;
@@ -93,6 +159,9 @@ struct BBox {
 			top = point.y;
 	}
 
+	/**
+	 * Includes another bbox into bbox, expanding it if necessary
+	 */
 	void Include(const BBox<T>& bbox) {
 		if (bbox.left < left)
 			left = bbox.left;
@@ -104,50 +173,86 @@ struct BBox {
 			top = bbox.top;
 	}
 
-	/* derivs */
+	/**
+	 * Returns geometrical center of a bbox
+	 */
 	inline Vector2<T> GetCenter() const {
 		return Vector2<T>(((LT)left + (LT)right)/2, ((LT)top + (LT)bottom)/2);
 	}
 
+	/**
+	 * Returns bottom left corner of a bbox
+	 */
 	inline Vector2<T> GetBottomLeft() const {
 		return Vector2<T>(left, bottom);
 	}
 
+	/**
+	 * Returns bottom right corner of a bbox
+	 */
 	inline Vector2<T> GetBottomRight() const {
 		return Vector2<T>(right, bottom);
 	}
 
+	/**
+	 * Returns top left corner of a bbox
+	 */
 	inline Vector2<T> GetTopLeft() const {
 		return Vector2<T>(left, top);
 	}
 
+	/**
+	 * Returns top right corner of a bbox
+	 */
 	inline Vector2<T> GetTopRight() const {
 		return Vector2<T>(right, top);
 	}
 
-	/* tests */
+	/* CHECKS */
+
+	/**
+	 * Checks whether bbox is empty
+	 *
+	 * @return true if bbox is empty, false otherwise
+	 */
 	inline bool IsEmpty() const {
 		return left > right || bottom > top;
 	}
 
-	inline bool Contains(const Vector2<T>& v) const {
-		return v.x >= left && v.x <= right && v.y >= bottom && v.y <= top;
+	/**
+	 * Checks whether bbox contains specific point
+	 *
+	 * @return true if bbox contains point, false otherwise
+	 */
+	inline bool Contains(const Vector2<T>& point) const {
+		return point.x >= left && point.x <= right && point.y >= bottom && point.y <= top;
 	}
 
+	/**
+	 * Checks whether bbox fully contains another bbox
+	 *
+	 * @return true if bbox contains another bbox, false otherwise
+	 */
 	inline bool Intersects(const BBox<T>& bbox) const {
 		return !(bbox.right < left || bbox.left > right || bbox.top < bottom || bbox.bottom > top);
 	}
 
-	inline bool IsPointOutAtSide(const Vector2i& p, Side s) const {
-		switch (s) {
-		case LEFT: return p.x < left;
-		case RIGHT: return p.x > right;
-		case TOP: return p.y > top;
-		case BOTTOM: return p.y < bottom;
+	/**
+	 * Checks whether point is located to the specific side from bbox
+	 */
+	inline bool IsPointOutAtSide(const Vector2i& point, Side side) const {
+		switch (side) {
+		case LEFT: return point.x < left;
+		case RIGHT: return point.x > right;
+		case TOP: return point.y > top;
+		case BOTTOM: return point.y < bottom;
 		default: return false;
 		}
 	}
 
+	/**
+	 * Returns point of bbox nearest to specific point
+	 */
 	template<class V>
 	inline Vector2<T> NearestPoint(const V& vec) const {
 		if (vec.x < left) {
@@ -176,6 +281,9 @@ struct BBox {
 		}
 	}
 
+	/**
+	 * Returns point of bbox farthest from specific point
+	 */
 	template<class V>
 	inline Vector2<T> FarthestPoint(const V& vec) const {
 		Vector2<T> center = GetCenter();

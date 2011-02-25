@@ -93,12 +93,12 @@ public:
 	/* multiple - object accessors subject to change */
 	virtual void GetWays(std::vector<Way>& out, const BBoxi& bbox) const = 0;
 
-	/** Returns the center of available area */
+	/** Returns center of available area */
 	virtual Vector2i GetCenter() const {
 		return Vector2i(0, 0);
 	}
 
-	/** Returns the bounding box of available area */
+	/** Returns bounding box of available area */
 	virtual BBoxi GetBBox() const {
 		return BBoxi::ForEarth();
 	}
