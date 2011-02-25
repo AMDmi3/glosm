@@ -29,6 +29,7 @@ Geometry::Geometry() {
 
 void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
 #if defined(WITH_GLES)
+	/* @todo this really belongs to libglosm-client */
 	if (lines_.size() > 65536-2)
 		return;
 #endif
@@ -40,7 +41,7 @@ void Geometry::AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i&
 #if defined(WITH_GLES)
 	/* GL ES only supports 65536 vertices in a buffer, so
 	 * drop extra data instead of producing artifacts */
-	/* XXX: move this into client */
+	/* @todo this really belongs to libglosm-client */
 	if (triangles_.size() > 65536-3)
 		return;
 #endif
@@ -184,9 +185,9 @@ void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Ve
 }
 
 void Geometry::Serialize() const {
-	/* XXX: Implement serialization to stream/file/buffer/whatever */
+	/* @todo implement serialization to stream/file/buffer/whatever */
 }
 
 void Geometry::DeSerialize() {
-	/* XXX: Implement deserialization from stream/file/buffer/whatever */
+	/* @todo implement deserialization from stream/file/buffer/whatever */
 }

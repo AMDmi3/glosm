@@ -318,12 +318,12 @@ protected:
 	/* hash table */
 	size_t nbuckets; /* always power of 2, so nbuckets-1 is bitmask for hashing */
 	hash_node** buckets;
-	size_t count; /* XXX: superfluous - may be derived from nchunks and urrent_ptr */
+	size_t count; /* @todo superfluous - may be derived from nchunks and urrent_ptr */
 
 	/* memory pool */
 	chunk_list chunks;
 	size_t last_chunk_free;
-	hash_node* current_ptr; /* XXX: superfluous - either last_chunk free or current_ptr should be removed */
+	hash_node* current_ptr; /* @todo superfluous - either last_chunk free or current_ptr should be removed */
 };
 
 #endif

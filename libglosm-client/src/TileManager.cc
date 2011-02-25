@@ -235,7 +235,7 @@ void TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
 				(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, 0), pos)
 			).Normalized();
 
-		/* XXX: IsValid() check basically detects
+		/* @todo IsValid() check basically detects
 		 * MercatorProjection and does no rotation for it.
 		 * While is's ok for now, this may need more generic
 		 * approach in future */
