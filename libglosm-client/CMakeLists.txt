@@ -17,16 +17,17 @@ ENDIF(HAVE_SINCOS)
 
 # Targets
 SET(SOURCES
+	src/CheckGL.cc
 	src/FirstPersonViewer.cc
 	src/GeometryLayer.cc
 	src/GeometryTile.cc
 	src/MercatorProjection.cc
-	src/SphericalProjection.cc
 	src/OrthoViewer.cc
 	src/Projection.cc
 	src/SimpleVertexBuffer.cc
-	src/VBO.cc
+	src/SphericalProjection.cc
 	src/TileManager.cc
+	src/VBO.cc
 	src/mglu.cc
 )
 

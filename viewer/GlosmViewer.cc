@@ -23,22 +23,15 @@
 #include <glosm/MercatorProjection.hh>
 #include <glosm/SphericalProjection.hh>
 #include <glosm/Timer.hh>
+#include <glosm/CheckGL.hh>
 #include <glosm/geomath.h>
+
+#include <glosm/util/gl.h>
 
 #include <getopt.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdlib.h>
-
-#if defined(WITH_GLEW)
-#   include <GL/glew.h>
-#endif
-
-#if defined(__APPLE__)
-#	include <OpenGL/gl.h>
-#else
-#	include <GL/gl.h>
-#endif
 
 #include <cstdio>
 
@@ -119,6 +112,7 @@ void GlosmViewer::InitGL() {
 			throw e;
 	}
 #endif
+	CheckGL();
 
 	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_));
 	ground_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
