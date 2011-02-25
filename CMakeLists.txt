@@ -35,7 +35,8 @@ SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
 
 # Conditionals
 IF(MINGW)
-	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
+	# Leave console till we have better way to display "Loading..." message
+	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mconsole")
 ENDIF(MINGW)
 
 # TODO: these should be disabled if only server software is built
