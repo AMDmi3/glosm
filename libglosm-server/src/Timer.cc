@@ -19,9 +19,11 @@
 
 #include <glosm/Timer.hh>
 
+#include <stddef.h> /* for NULL */
+
 Timer::Timer() {
-		Count();
-	}
+	Count();
+}
 
 float Timer::Count() {
 	struct timeval current;
