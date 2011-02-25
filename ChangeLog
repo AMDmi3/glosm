@@ -1,5 +1,21 @@
 glosm-0.0.2 ????-??-??
 --------------------------------
+ * Geometry tiling was implemented: there are now two layers of
+   geometry, ground (lowres) and detail (3D objects) which are split
+   into tiles which are loaded on demand in background thread
+ * Viewer may now be built with either of SDL and GLUT. SDL version
+   is recommended and is enabled by default
+ * Library was split into three: libglosm-server (core features),
+   libglosm-client (OpenGL stuff), libglosm-geomgen (geometry
+   generator)
+ * Navigation was improved (more speed control, height locking,
+   disabling mouse grab, touchpad-friendly navigation mode)
+ * Added Windows support through cross-compilation with mingw32
+ * Added OpenGL ES 1.1 platforms support (namely Maemo)
+ * Added Spherical projection (in which Earth looks like globe) in
+   addition to Mercator (flat Earth)
+ * Support man_made=tower and man_made=chimney area objects
+ * Fixed crash in geometry generator
 
 glosm-0.0.1 2011-01-18
 --------------------------------
