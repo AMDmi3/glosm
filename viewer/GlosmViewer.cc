@@ -60,10 +60,12 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 
 	ground_shown_ = true;
 	detail_shown_ = true;
+
+	no_glew_check_ = false;
 }
 
 void GlosmViewer::Usage(const char* progname) {
-	fprintf(stderr, "Usage: %s [-s] file.osm\n", progname);
+	fprintf(stderr, "Usage: %s [-sf] file.osm\n", progname);
 	exit(1);
 }
 
@@ -74,6 +76,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 	while ((c = getopt(argc, argv, "st:")) != -1) {
 		switch (c) {
 		case 's': projection_ = SphericalProjection(); break;
+		case 'f': no_glew_check_ = true; break;
 		default:
 			Usage(progname);
 		}
@@ -107,8 +110,14 @@ void GlosmViewer::InitGL() {
 	if (err != GLEW_OK)
 		throw Exception() << "Cannot init glew: " << glewGetErrorString(err);
 	const char *gl_requirements = "GL_VERSION_1_5";
-	if (!glewIsSupported(gl_requirements))
-		throw Exception() << "Minimal OpenGL requirements (" << gl_requirements << ") not met, unable to continue";
+	if (!glewIsSupported(gl_requirements)) {
+		Exception e;
+		e << "Minimal OpenGL requirements (" << gl_requirements << ") not met, unable to continue";
+		if (no_glew_check_)
+			fprintf(stderr, "%s\n", e.what());
+		else
+			throw e;
+	}
 #endif
 
 	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_));

@@ -48,7 +48,11 @@ public:
 	};
 
 protected:
+	/* flags */
 	Projection projection_;
+	bool no_glew_check_;
+
+	/* glosm objects */
 	std::auto_ptr<FirstPersonViewer> viewer_;
 	std::auto_ptr<PreloadedXmlDatasource> osm_datasource_;
 	std::auto_ptr<GeometryGenerator> geometry_generator_;
@@ -58,7 +62,6 @@ protected:
 	bool ground_shown_;
 	bool detail_shown_;
 
-	int tile_level_;
 	int screenw_;
 	int screenh_;
 
