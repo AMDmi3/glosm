@@ -34,9 +34,9 @@ SET(BINDIR "bin" CACHE STRING "Install subdirectory for binaries")
 SET(LIBDIR "lib" CACHE STRING "Install subdirectory for libraries")
 
 # Conditionals
-#IF(MINGW)
-#	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
-#ENDIF(MINGW)
+IF(MINGW)
+	SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-mwindows")
+ENDIF(MINGW)
 
 # TODO: these should be disabled if only server software is built
 IF(WITH_GLES)
