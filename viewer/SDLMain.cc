@@ -29,6 +29,9 @@
 #	define NO_SDL_GLEXT
 #	include <SDL/SDL_opengl.h>
 #endif
+#if defined(WIN32)
+#	include <winuser.h>
+#endif
 
 #include <cstdio>
 
@@ -222,9 +225,17 @@ int main(int argc, char** argv) {
 	try {
 		return real_main(argc, argv);
 	} catch (std::exception &e) {
-		fprintf(stderr, "Exception: %s\n", e.what());
-	} catch (...) {
-		fprintf(stderr, "Unknown exception\n");
+#ifdef(WIN32)
+		MessageBox(NULL, e.what(), "Fatal error", MB_OK | MB_ICONERROR);
+#else
+		fprintf(stderr, "Fatal error: %s\n", e.what());
+#endif
+    } catch (...) {
+#ifdef(WIN32)
+		MessageBox(NULL, e.what(), "Fatal error", MB_OK | MB_ICONERROR);
+#else
+		fprintf(stderr, "Fatal error: unknown exception\n");
+#endif
 	}
 
 	return 1;

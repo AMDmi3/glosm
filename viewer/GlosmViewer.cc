@@ -107,7 +107,7 @@ void GlosmViewer::InitGL() {
 		Exception e;
 		e << "Minimal OpenGL requirements (" << gl_requirements << ") not met, unable to continue";
 		if (no_glew_check_)
-			fprintf(stderr, "%s\n", e.what());
+			fprintf(stderr, "(ignored) %s\n", e.what());
 		else
 			throw e;
 	}
