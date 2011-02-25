@@ -50,6 +50,8 @@ protected:
 	std::auto_ptr<SimpleVertexBuffer> triangles_;
 	std::auto_ptr<SimpleVertexBuffer> quads_;
 
+	size_t size_;
+
 #ifdef TILE_DEBUG
 	Vector3f bound_1[4];
 	Vector3f bound_2[40];
