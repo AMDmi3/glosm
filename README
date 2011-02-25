@@ -110,11 +110,16 @@ Usage
     Space       - move up
     L           - toggle height lock (useful for fly-by's)
     H           - same as L, but locks you at human height
-    +           - increase movement speed by 10x
-    -           - decrease movement speed by 10x
+    +           - increase movement speed by 5x
+    -           - decrease movement speed by 5x
+    Shift       - increase movement speed by 5x when pressed (SDL only)
+    Ctrl        - decrease movement speed by 5x when pressed (SDL only)
     1           - toggle lowres (ground) layer
     2           - toggle hires (buildings) layer
     Q or Escape - close application
+
+    Right mouse button toggles mouse grab. When grab is off, view
+    may be dragged with left mouse button.
 
   glosm-tiler
   -----------
