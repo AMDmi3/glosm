@@ -118,12 +118,12 @@ void GlosmViewer::InitGL() {
 	ground_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
 	detail_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
 
-	ground_layer_->SetLevel(8);
+	ground_layer_->SetLevel(9);
 	ground_layer_->SetRange(1000000.0);
 	ground_layer_->SetFlags(GeometryDatasource::GROUND);
 	ground_layer_->SetHeightEffect(false);
 
-	detail_layer_->SetLevel(13);
+	detail_layer_->SetLevel(12);
 	detail_layer_->SetRange(10000.0);
 	detail_layer_->SetFlags(GeometryDatasource::DETAIL);
 	detail_layer_->SetHeightEffect(true);
