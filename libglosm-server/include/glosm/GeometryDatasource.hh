@@ -32,7 +32,8 @@ class Geometry;
 class GeometryDatasource {
 public:
 	enum Flags {
-		LOWRES = 0x01,
+		GROUND = 0x1,
+		DETAIL = 0x2,
 	};
 
 public:

@@ -26,23 +26,20 @@
 #include <glosm/GeometryDatasource.hh>
 #include <glosm/SimpleVertexBuffer.hh>
 
-GeometryTile::GeometryTile(const Projection& projection, const GeometryDatasource& datasource, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
-	Geometry geom;
-	datasource.GetGeometry(geom, bbox);
-
-	if (geom.GetLines().size() != 0) {
+GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
+	if (geometry.GetLines().size() != 0) {
 		projected_lines_.reset(new ProjectedVertices);
-		projection.ProjectPoints(geom.GetLines(), ref, *projected_lines_);
+		projection.ProjectPoints(geometry.GetLines(), ref, *projected_lines_);
 	}
 
-	if (geom.GetTriangles().size() != 0) {
+	if (geometry.GetTriangles().size() != 0) {
 		projected_triangles_.reset(new ProjectedVertices);
-		projection.ProjectPoints(geom.GetTriangles(), ref, *projected_triangles_);
+		projection.ProjectPoints(geometry.GetTriangles(), ref, *projected_triangles_);
 	}
 
-	if (geom.GetQuads().size() != 0) {
+	if (geometry.GetQuads().size() != 0) {
 		projected_quads_.reset(new ProjectedVertices);
-		projection.ProjectPoints(geom.GetQuads(), ref, *projected_quads_);
+		projection.ProjectPoints(geometry.GetQuads(), ref, *projected_quads_);
 	}
 
 #if defined(TILE_DEBUG) && !defined(WITH_GLES) && !defined(WITH_GLES2)

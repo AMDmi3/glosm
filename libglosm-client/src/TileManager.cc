@@ -55,10 +55,10 @@ TileManager::TileManager(const Projection projection): projection_(projection), 
 		throw SystemError(errn) << "pthread_create failed";
 	}
 
-	lowres_level_ = 8;
-	hires_level_ = 13;
-	lowres_range_ = 1000000.0f;
-	hires_range_ = 10000.0f;
+	level_ = 10;
+	range_ = 100000.0f;
+	flags_ = GeometryDatasource::GROUND | GeometryDatasource::DETAIL;
+	height_effect_ = false;
 }
 
 
@@ -87,23 +87,23 @@ void TileManager::RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int lev
 	if (*pnode == NULL) {
 		/* no node; check if it's in view and if yes, create it */
 		BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
-		thisdist = ApproxDistanceSquare(bbox, info.viewer_pos.Flattened());
-		if (thisdist > hires_range_ * hires_range_)
+		thisdist = ApproxDistanceSquare(bbox, info.viewer_pos);
+		if (thisdist > range_ * range_)
 			return;
 		node = *pnode = new QuadNode;
 		node->bbox = bbox;
 	} else {
 		/* node exists, visit it if it's in view */
 		node = *pnode;
-		thisdist = ApproxDistanceSquare(node->bbox, info.viewer_pos.Flattened());
-		if (thisdist > hires_range_ * hires_range_)
+		thisdist = ApproxDistanceSquare(node->bbox, info.viewer_pos);
+		if (thisdist > range_ * range_)
 			return;
 	}
 	/* range check passed and node exists */
 
 	node->generation = generation_;
 
-	if (level == hires_level_) {
+	if (level == level_) {
 		if (node->tile)
 			return; /* tile already loaded */
 
@@ -276,7 +276,7 @@ void TileManager::LoadingThreadFunc() {
 		pthread_mutex_unlock(&queue_mutex_);
 
 		/* load tile */
-		Tile* tile = SpawnTile(task.bbox);
+		Tile* tile = SpawnTile(task.bbox, flags_);
 
 		pthread_mutex_lock(&tiles_mutex_);
 		RecPlaceTile(&root_, tile, task.id.level, task.id.x, task.id.y);
@@ -332,7 +332,11 @@ void TileManager::LoadLocality(const Viewer& viewer, int flags) {
 	pthread_mutex_lock(&tiles_mutex_);
 
 	RecLoadTilesInfo info(viewer, flags);
-	info.viewer_pos = viewer.GetPos(projection_);
+
+	if (height_effect_)
+		info.viewer_pos = viewer.GetPos(projection_);
+	else
+		info.viewer_pos = viewer.GetPos(projection_).Flattened();
 
 	QuadNode* root = &root_;
 	RecLoadTiles(info, &root);
@@ -352,4 +356,20 @@ void TileManager::GarbageCollect() {
 	RecGarbageCollectTiles(&root_);
 	generation_++;
 	pthread_mutex_unlock(&tiles_mutex_);
+}
+
+void TileManager::SetLevel(int level) {
+	level_ = level;
+}
+
+void TileManager::SetRange(float range) {
+	range_ = range;
+}
+
+void TileManager::SetFlags(int flags) {
+	flags_ = flags;
+}
+
+void TileManager::SetHeightEffect(bool enabled) {
+	height_effect_ = enabled;
 }

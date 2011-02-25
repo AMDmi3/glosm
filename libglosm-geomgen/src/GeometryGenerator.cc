@@ -462,7 +462,7 @@ static float GetHighwayWidth(const std::string& highway, const OsmDatasource::Wa
 	}
 }
 
-static void HiresWayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
+static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, int flags, const OsmDatasource::Way& way) {
 	osmint_t minz = GetMinHeight(way) * GEOM_UNITSINMETER;
 	osmint_t maxz = GetMaxHeight(way) * GEOM_UNITSINMETER;
 
@@ -485,77 +485,81 @@ static void HiresWayDispatcher(Geometry& geom, const OsmDatasource& datasource, 
 		for (OsmDatasource::Way::NodesList::const_reverse_iterator n = way.Nodes.rbegin(); n != way.Nodes.rend(); ++n)
 			vertices.push_back(datasource.GetNode(*n).Pos);
 
+	/* dispatch */
 	if ((way.Tags.find("building") != way.Tags.end() || way.Tags.find("building:part") != way.Tags.end()) && minz != maxz) {
-		CreateWalls(geom, vertices, minz, maxz, way);
-		CreateRoof(geom, vertices, maxz, way);
+		if (flags & GeometryDatasource::DETAIL) {
+			CreateWalls(geom, vertices, minz, maxz, way);
+			CreateRoof(geom, vertices, maxz, way);
 
-		CreateLines(geom, vertices, minz, way);
-		CreateLines(geom, vertices, maxz, way);
-		CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
-
-		if (minz > 1) {
-			CreateArea(geom, vertices, true, minz, way);
 			CreateLines(geom, vertices, minz, way);
+			CreateLines(geom, vertices, maxz, way);
+			CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
+
+			if (minz > 1) {
+				CreateArea(geom, vertices, true, minz, way);
+				CreateLines(geom, vertices, minz, way);
+			}
 		}
 	} else if ((t = way.Tags.find("man_made")) != way.Tags.end() && (t->second == "tower" || t->second == "chimney") && minz != maxz) {
-		CreateWalls(geom, vertices, minz, maxz, way);
-		CreateArea(geom, vertices, false, maxz, way);
+		if (flags & GeometryDatasource::DETAIL) {
+			CreateWalls(geom, vertices, minz, maxz, way);
+			CreateArea(geom, vertices, false, maxz, way);
 
-		CreateLines(geom, vertices, minz, way);
-		CreateLines(geom, vertices, maxz, way);
-		CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
-	} else if (way.Tags.find("barrier") != way.Tags.end()) {
-		if (maxz == minz)
-			maxz += 2 * GEOM_UNITSINMETER;
-		CreateWall(geom, vertices, minz, maxz, way);
-
-		CreateLines(geom, vertices, minz, way);
-		CreateLines(geom, vertices, maxz, way);
-		CreateVerticalLines(geom, vertices, minz, maxz, way);
-	} else if ((t = way.Tags.find("highway")) != way.Tags.end()) {
-		OsmDatasource::TagsMap::const_iterator t1;
-
-		if ((t1 = way.Tags.find("area")) != way.Tags.end() && t1->second != "no") {
-			/* area */
-			CreateArea(geom, vertices, false, 0, way);
-		} else {
-			CreateRoad(geom, vertices, GetHighwayWidth(t->second, way), way);
+			CreateLines(geom, vertices, minz, way);
+			CreateLines(geom, vertices, maxz, way);
+			CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
 		}
-	} else {
-		CreateLines(geom, vertices, minz, way);
-	}
-}
+	} else if (way.Tags.find("barrier") != way.Tags.end()) {
+		if (flags & GeometryDatasource::DETAIL) {
+			if (maxz == minz)
+				maxz += 2 * GEOM_UNITSINMETER;
+			CreateWall(geom, vertices, minz, maxz, way);
 
-static void LowresWayDispatcher(Geometry& geom, const OsmDatasource& datasource, const OsmDatasource::Way& way) {
-	OsmDatasource::TagsMap::const_iterator t;
+			CreateLines(geom, vertices, minz, way);
+			CreateLines(geom, vertices, maxz, way);
+			CreateVerticalLines(geom, vertices, minz, maxz, way);
+		}
+	} else if ((t = way.Tags.find("highway")) != way.Tags.end()) {
+		if (flags & GeometryDatasource::DETAIL) {
+			OsmDatasource::TagsMap::const_iterator t1;
 
-	if ((t = way.Tags.find("highway")) != way.Tags.end() && (
+			if ((t1 = way.Tags.find("area")) != way.Tags.end() && t1->second != "no") {
+				/* area */
+				CreateArea(geom, vertices, false, 0, way);
+			} else {
+				CreateRoad(geom, vertices, GetHighwayWidth(t->second, way), way);
+			}
+		} else if ((flags & GeometryDatasource::GROUND) && (
 				t->second == "motorway" || t->second == "motorway_link" ||
 				t->second == "trunk" || t->second == "trunk_link" ||
 				t->second == "primary" || t->second == "primary_link" ||
 				t->second == "secondary" || t->second == "secondary_link" ||
-				t->second == "tertiary")
-			) {
-		/* TODO: add real processing here */
+				t->second == "tertiary")) {
+			CreateLines(geom, vertices, minz, way);
+		}
 	} else if ((t = way.Tags.find("railway")) != way.Tags.end() && (t->second == "rail")) {
-		/* TODO: add real processing here */
+		if (flags & GeometryDatasource::DETAIL) {
+			CreateLines(geom, vertices, minz, way);
+		} else if (flags & GeometryDatasource::GROUND) {
+			if (t->second == "rail")
+				CreateLines(geom, vertices, minz, way);
+		}
 	} else if ((t = way.Tags.find("boundary")) != way.Tags.end() && (t->second == "administrative")) {
-		/* TODO: add real processing here */
+		if (flags & GeometryDatasource::GROUND)
+			CreateLines(geom, vertices, minz, way);
 	} else if ((t = way.Tags.find("waterway")) != way.Tags.end()) {
-		/* TODO: add real processing here */
+		if (flags & GeometryDatasource::GROUND)
+			CreateLines(geom, vertices, minz, way);
 	} else if ((t = way.Tags.find("natural")) != way.Tags.end()) {
-		/* TODO: add real processing here */
+		if (flags & GeometryDatasource::GROUND)
+			CreateLines(geom, vertices, minz, way);
 	} else if ((t = way.Tags.find("landuse")) != way.Tags.end()) {
-		/* TODO: add real processing here */
+		if (flags & GeometryDatasource::GROUND)
+			CreateLines(geom, vertices, minz, way);
 	} else {
-		return;
+		if (flags & GeometryDatasource::DETAIL)
+			CreateLines(geom, vertices, minz, way);
 	}
-
-	VertexVector vertices;
-	for (OsmDatasource::Way::NodesList::const_iterator n = way.Nodes.begin(); n != way.Nodes.end(); ++n)
-		vertices.push_back(datasource.GetNode(*n).Pos);
-
-	CreateLines(geom, vertices, 0, way);
 }
 
 GeometryGenerator::GeometryGenerator(const OsmDatasource& datasource) : datasource_(datasource) {
@@ -575,13 +579,8 @@ void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox, int flags
 
 	Geometry temp;
 
-	if (flags & GeometryDatasource::LOWRES) {
-		for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w)
-			LowresWayDispatcher(temp, datasource_, *w);
-	} else {
-		for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w)
-			HiresWayDispatcher(temp, datasource_, *w);
-	}
+	for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w)
+		WayDispatcher(temp, datasource_, flags, *w);
 
 	geom.AppendCropped(temp, bbox);
 }

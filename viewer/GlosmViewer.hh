@@ -52,7 +52,11 @@ protected:
 	std::auto_ptr<FirstPersonViewer> viewer_;
 	std::auto_ptr<PreloadedXmlDatasource> osm_datasource_;
 	std::auto_ptr<GeometryGenerator> geometry_generator_;
-	std::auto_ptr<GeometryLayer> geometry_layer_;
+	std::auto_ptr<GeometryLayer> ground_layer_;
+	std::auto_ptr<GeometryLayer> detail_layer_;
+
+	bool ground_shown_;
+	bool detail_shown_;
 
 	int tile_level_;
 	int screenw_;

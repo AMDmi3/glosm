@@ -65,6 +65,8 @@ void GeometryLayer::Render(const Viewer& viewer) {
 	TileManager::Render(viewer);
 }
 
-Tile* GeometryLayer::SpawnTile(const BBoxi& bbox) const {
-	return new GeometryTile(projection_, datasource_, bbox.GetCenter(), bbox);
+Tile* GeometryLayer::SpawnTile(const BBoxi& bbox, int flags) const {
+	Geometry geom;
+	datasource_.GetGeometry(geom, bbox, flags);
+	return new GeometryTile(projection_, geom, bbox.GetCenter(), bbox);
 }

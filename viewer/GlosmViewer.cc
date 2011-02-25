@@ -57,6 +57,9 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 #else
 	mouse_capture_ = true;
 #endif
+
+	ground_shown_ = true;
+	detail_shown_ = true;
 }
 
 void GlosmViewer::Usage(const char* progname) {
@@ -109,7 +112,18 @@ void GlosmViewer::InitGL() {
 #endif
 
 	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_));
-	geometry_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
+	ground_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
+	detail_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
+
+	ground_layer_->SetLevel(8);
+	ground_layer_->SetRange(1000000.0);
+	ground_layer_->SetFlags(GeometryDatasource::GROUND);
+	ground_layer_->SetHeightEffect(false);
+
+	detail_layer_->SetLevel(13);
+	detail_layer_->SetRange(10000.0);
+	detail_layer_->SetFlags(GeometryDatasource::DETAIL);
+	detail_layer_->SetHeightEffect(true);
 
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
@@ -128,9 +142,17 @@ void GlosmViewer::Render() {
 	glClearColor(0.5, 0.5, 0.5, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	geometry_layer_->GarbageCollect();
-	geometry_layer_->LoadLocality(*viewer_);
-	geometry_layer_->Render(*viewer_);
+	if (ground_shown_) {
+		ground_layer_->GarbageCollect();
+		ground_layer_->LoadLocality(*viewer_);
+		ground_layer_->Render(*viewer_);
+	}
+
+	if (detail_shown_) {
+		detail_layer_->GarbageCollect();
+		detail_layer_->LoadLocality(*viewer_);
+		detail_layer_->Render(*viewer_);
+	}
 
 	glFlush();
 	Flip();
@@ -235,6 +257,12 @@ void GlosmViewer::KeyDown(int key) {
 		break;
 	case '-':
 		speed_ /= 5.0f;
+		break;
+	case '1':
+		ground_shown_ = !ground_shown_;
+		break;
+	case '2':
+		detail_shown_ = !detail_shown_;
 		break;
 	case KEY_SHIFT:
 		fast_ = true;

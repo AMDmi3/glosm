@@ -98,10 +98,10 @@ protected:
 	/* TODO: these is only actual for GeometryLayer so should be
 	 * delegated to layer via pure virtual function or template
 	 * atg */
-	int lowres_level_;
-	int hires_level_;
-	float lowres_range_;
-	float hires_range_;
+	int level_;
+	float range_;
+	int flags_;
+	bool height_effect_;
 
 	const Projection projection_;
 
@@ -125,7 +125,7 @@ protected:
 	TileManager(const Projection projection);
 	virtual ~TileManager();
 
-	virtual Tile* SpawnTile(const BBoxi& bbox) const = 0;
+	virtual Tile* SpawnTile(const BBoxi& bbox, int flags) const = 0;
 
 	void RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int level = 0, int x = 0, int y = 0);
 	void RecPlaceTile(QuadNode* node, Tile* tile, int level = 0, int x = 0, int y = 0);
@@ -142,6 +142,11 @@ public:
 	void LoadArea(const BBoxi& bbox, int flags = 0);
 	void LoadLocality(const Viewer& viewer, int flags = 0);
 	void GarbageCollect();
+
+	void SetLevel(int level);
+	void SetRange(float range);
+	void SetFlags(int flags);
+	void SetHeightEffect(bool enabled);
 };
 
 #endif

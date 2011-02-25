@@ -30,7 +30,7 @@
 class SimpleVertexBuffer;
 
 class Projection;
-class GeometryDatasource;
+class Geometry;
 
 /**
  * A tile of renderable geometry
@@ -56,7 +56,7 @@ protected:
 #endif
 
 public:
-	GeometryTile(const Projection& p, const GeometryDatasource& datasource, const Vector2i& ref, const BBoxi& bbox);
+	GeometryTile(const Projection& p, const Geometry& datasource, const Vector2i& ref, const BBoxi& bbox);
 	virtual ~GeometryTile();
 
 	void BindBuffers();
