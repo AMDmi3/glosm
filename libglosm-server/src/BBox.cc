@@ -34,9 +34,9 @@ BBox<osmint_t> BBox<osmint_t>::ForMercatorTile(int zoom, int x, int y) {
 
 	return BBox<osmint_t>(
 			(osmint_t)round(((double)x) * zoommult * 3600000000.0 - 1800000000.0),
-			(osmint_t)round(-unmercator(((float)y) * zoommult * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0),
+			(osmint_t)round(-unmercator(((float)y + 1.0) * zoommult * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0),
 			(osmint_t)round(((double)x + 1.0) * zoommult * 3600000000.0 - 1800000000.0),
-			(osmint_t)round(-unmercator(((float)y + 1.0) * zoommult * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0)
+			(osmint_t)round(-unmercator(((float)y) * zoommult * M_PI * 2.0 - M_PI) / M_PI * 1800000000.0)
 		);
 }
 
