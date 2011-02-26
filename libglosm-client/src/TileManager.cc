@@ -212,7 +212,7 @@ void TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
 	RecRenderTiles(node->childs[2], viewer);
 	RecRenderTiles(node->childs[3], viewer);
 
-	if (node->tile) {
+	if (node->tile && node->tile->GetSize() != 0) {
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
