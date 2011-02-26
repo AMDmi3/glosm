@@ -115,7 +115,11 @@ void TileManager::RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int lev
 		if (node->tile)
 			return; /* tile already loaded */
 
-		if (loading_ != TileId(level, x, y)) {
+		if (info.flags & SYNC) {
+			node->tile = SpawnTile(node->bbox, info.flags);
+			tile_count_++;
+			total_size_ += node->tile->GetSize();
+		} else if (loading_ != TileId(level, x, y)) {
 			if (queue_.empty()) {
 				info.closest_distance = thisdist;
 				queue_.push_front(TileTask(TileId(level, x, y), node->bbox));
