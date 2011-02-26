@@ -229,12 +229,12 @@ public:
 	}
 
 	/**
-	 * Checks whether bbox fully contains another bbox
+	 * Checks whether bbox intersects with another bbox
 	 *
 	 * @return true if bbox contains another bbox, false otherwise
 	 */
-	inline bool Intersects(const BBox<T>& bbox) const {
-		return !(bbox.right < left || bbox.left > right || bbox.top < bottom || bbox.bottom > top);
+	inline bool Intersects(const BBox<T>& other) const {
+		return !(other.right < left || other.left > right || other.top < bottom || other.bottom > top);
 	}
 
 	/**
