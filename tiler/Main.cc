@@ -64,9 +64,12 @@ int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, GeometryLayer& layer, con
 			for (y = minytile; y <= maxytile; ++y) {
 				snprintf(path, sizeof(path), "%s/%d/%d/%d.png", target, zoom, x, y);
 
-				viewer.SetBBoxForTile(x, y, zoom);
+				BBoxi bbox = BBoxi::ForMercatorTile(zoom, x, y);
+				viewer.SetBBox(bbox);
 
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				layer.GarbageCollect();
+				layer.LoadArea(bbox, TileManager::SYNC);
 				layer.Render(viewer);
 				glFinish();
 
@@ -142,7 +145,9 @@ int real_main(int argc, char** argv) {
 	GeometryGenerator geometry_generator(osm_datasource);
 
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
-	layer.RequestVisible(geometry_generator.GetBBox(), TileManager::BLOB);
+	layer.SetLevel(8);
+	layer.SetFlags(GeometryDatasource::GROUND | GeometryDatasource::DETAIL);
+	layer.SetSizeLimit(128*1024*1024);
 
 	/* Rendering */
 	fprintf(stderr, "Rendering...\n");

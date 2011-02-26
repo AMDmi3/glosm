@@ -39,6 +39,9 @@ class Tile;
  *
  * This class is serves as a base class for layers and manages tile
  * loading, displaying and disposal.
+ *
+ * @todo this class is planned to handle multilayer tile hierarchies,
+ * however for now level is fixed
  */
 class TileManager {
 public:
@@ -98,13 +101,23 @@ protected:
 	 * Holder of data for LoadLocality request
 	 */
 	struct RecLoadTilesInfo {
-		const Viewer& viewer;
+		enum Modes {
+			BBOX,
+			LOCALITY
+		};
+
+		union {
+			const Viewer* viewer;
+			const BBoxi* bbox;
+		};
+
+		int mode;
 		int flags;
 		Vector3i viewer_pos;
 		float closest_distance;
 		int queue_size;
 
-		RecLoadTilesInfo(const Viewer& v, int f) : viewer(v), flags(f), queue_size(0) {
+		RecLoadTilesInfo() : queue_size(0) {
 		}
 	};
 
@@ -117,7 +130,7 @@ protected:
 	 * virtual methods or templates */
 	int level_;
 	float range_;
-	int flags_;
+	volatile int flags_;
 	bool height_effect_;
 	size_t size_limit_;
 
@@ -158,9 +171,18 @@ protected:
 	virtual Tile* SpawnTile(const BBoxi& bbox, int flags) const = 0;
 
 	/**
-	 * Recursive tile loading function
+	 * Recursive tile loading function for viewer's locality
+	 *
+	 * @todo remove code duplication with RecLoadTilesBBox
 	 */
-	void RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int level = 0, int x = 0, int y = 0);
+	void RecLoadTilesLocality(RecLoadTilesInfo& info, QuadNode** pnode, int level = 0, int x = 0, int y = 0);
+
+	/**
+	 * Recursive tile loading function for given bbox
+	 *
+	 * @todo remove code duplication with RecLoadTilesLocality
+	 */
+	void RecLoadTilesBBox(RecLoadTilesInfo& info, QuadNode** pnode, int level = 0, int x = 0, int y = 0);
 
 	/**
 	 * Recursive function that places tile into specified quadtree point
@@ -192,6 +214,12 @@ protected:
 	 */
 	static void* LoadingThreadFuncWrapper(void* arg);
 
+	/**
+	 * Loads tiles
+	 */
+	void Load(RecLoadTilesInfo& info);
+
+protected:
 	/**
 	 * Renders visible tiles
 	 */

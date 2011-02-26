@@ -58,9 +58,9 @@ TileManager::TileManager(const Projection projection): projection_(projection), 
 		throw SystemError(errn) << "pthread_create failed";
 	}
 
-	level_ = 10;
-	range_ = 100000.0f;
-	flags_ = GeometryDatasource::GROUND | GeometryDatasource::DETAIL;
+	level_ = 12;
+	range_ = 1000.0f;
+	flags_ = GeometryDatasource::EVERYTHING;
 	height_effect_ = false;
 
 	total_size_ = 0;
@@ -88,7 +88,69 @@ TileManager::~TileManager() {
  * recursive quadtree processing
  */
 
-void TileManager::RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int level, int x, int y) {
+/*
+class TilePickPolicy {
+};
+
+class LocalityPickPolicy : public TilePickPolicy {
+	float thisdist;
+
+	bool Traverse(RecLoadTilesInfo& info, const BBoxi& bbox) {
+		thisdist = ApproxDistanceSquare(bbox, info.viewer_pos);
+		if (thisdist > range_ * range_
+
+	}
+};*/
+
+void TileManager::RecLoadTilesBBox(RecLoadTilesInfo& info, QuadNode** pnode, int level, int x, int y) {
+	QuadNode* node;
+
+	if (*pnode == NULL) {
+		/* no node; check if it's in bbox and if yes, create it */
+		BBoxi bbox = BBoxi::ForGeoTile(level, x, y);
+		if (!info.bbox->Intersects(bbox))
+			return;
+		node = *pnode = new QuadNode;
+		node->bbox = bbox;
+	} else {
+		/* node exists, visit it if it's in bbox */
+		node = *pnode;
+		if (!info.bbox->Intersects(node->bbox))
+			return;
+	}
+	/* range check passed and node exists */
+
+	node->generation = generation_;
+
+	if (level == level_) {
+		if (node->tile)
+			return; /* tile already loaded */
+
+		if (info.flags & SYNC) {
+			node->tile = SpawnTile(node->bbox, flags_);
+			tile_count_++;
+			total_size_ += node->tile->GetSize();
+		} else if (loading_ != TileId(level, x, y)) {
+			if (info.queue_size < 100) {
+				queue_.push_front(TileTask(TileId(level, x, y), node->bbox));
+				info.queue_size++;
+			}
+		}
+
+		/* no more recursion is needed */
+		return;
+	}
+
+	/* recurse */
+	RecLoadTilesBBox(info, node->childs, level+1, x * 2, y * 2);
+	RecLoadTilesBBox(info, node->childs + 1, level+1, x * 2 + 1, y * 2);
+	RecLoadTilesBBox(info, node->childs + 2, level+1, x * 2, y * 2 + 1);
+	RecLoadTilesBBox(info, node->childs + 3, level+1, x * 2 + 1, y * 2 + 1);
+
+	return;
+}
+
+void TileManager::RecLoadTilesLocality(RecLoadTilesInfo& info, QuadNode** pnode, int level, int x, int y) {
 	QuadNode* node;
 	float thisdist;
 
@@ -116,7 +178,7 @@ void TileManager::RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int lev
 			return; /* tile already loaded */
 
 		if (info.flags & SYNC) {
-			node->tile = SpawnTile(node->bbox, info.flags);
+			node->tile = SpawnTile(node->bbox, flags_);
 			tile_count_++;
 			total_size_ += node->tile->GetSize();
 		} else if (loading_ != TileId(level, x, y)) {
@@ -143,10 +205,10 @@ void TileManager::RecLoadTiles(RecLoadTilesInfo& info, QuadNode** pnode, int lev
 	}
 
 	/* recurse */
-	RecLoadTiles(info, node->childs, level+1, x * 2, y * 2);
-	RecLoadTiles(info, node->childs + 1, level+1, x * 2 + 1, y * 2);
-	RecLoadTiles(info, node->childs + 2, level+1, x * 2, y * 2 + 1);
-	RecLoadTiles(info, node->childs + 3, level+1, x * 2 + 1, y * 2 + 1);
+	RecLoadTilesLocality(info, node->childs, level+1, x * 2, y * 2);
+	RecLoadTilesLocality(info, node->childs + 1, level+1, x * 2 + 1, y * 2);
+	RecLoadTilesLocality(info, node->childs + 2, level+1, x * 2, y * 2 + 1);
+	RecLoadTilesLocality(info, node->childs + 3, level+1, x * 2 + 1, y * 2 + 1);
 
 	return;
 }
@@ -331,39 +393,60 @@ void TileManager::Render(const Viewer& viewer) {
 	pthread_mutex_unlock(&tiles_mutex_);
 }
 
-/*
- * public interface
- */
+void TileManager::Load(RecLoadTilesInfo& info) {
+	QuadNode* root = &root_;
 
-void TileManager::LoadArea(const BBoxi& bbox, int flags) {
-}
-
-void TileManager::LoadLocality(const Viewer& viewer, int flags) {
-	if (!(flags & SYNC)) {
+	/* @todo add guard here instead of implicit locking,
+	 * so we don't deadlock on exception */
+	if (!(info.flags & SYNC)) {
 		pthread_mutex_lock(&queue_mutex_);
 		queue_.clear();
 	}
 
 	pthread_mutex_lock(&tiles_mutex_);
 
-	RecLoadTilesInfo info(viewer, flags);
-
-	if (height_effect_)
-		info.viewer_pos = viewer.GetPos(projection_);
-	else
-		info.viewer_pos = viewer.GetPos(projection_).Flattened();
-
-	QuadNode* root = &root_;
-	RecLoadTiles(info, &root);
+	switch (info.mode) {
+	case RecLoadTilesInfo::BBOX:
+		RecLoadTilesBBox(info, &root);
+		break;
+	case RecLoadTilesInfo::LOCALITY:
+		info.viewer_pos = height_effect_ ? info.viewer->GetPos(projection_) : info.viewer->GetPos(projection_).Flattened();
+		RecLoadTilesLocality(info, &root);
+		break;
+	}
 
 	pthread_mutex_unlock(&tiles_mutex_);
 
-	if (!(flags & SYNC)) {
+	if (!(info.flags & SYNC)) {
 		pthread_mutex_unlock(&queue_mutex_);
 
 		if (!queue_.empty())
 			pthread_cond_signal(&queue_cond_);
 	}
+}
+
+/*
+ * public interface
+ */
+
+void TileManager::LoadArea(const BBoxi& bbox, int flags) {
+	RecLoadTilesInfo info;
+
+	info.bbox = &bbox;
+	info.flags = flags;
+	info.mode = RecLoadTilesInfo::BBOX;
+
+	Load(info);
+}
+
+void TileManager::LoadLocality(const Viewer& viewer, int flags) {
+	RecLoadTilesInfo info;
+
+	info.viewer = &viewer;
+	info.flags = flags;
+	info.mode = RecLoadTilesInfo::LOCALITY;
+
+	Load(info);
 }
 
 bool TileManager::GenerationCompare(QuadNode** x, QuadNode** y) {

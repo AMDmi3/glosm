@@ -34,6 +34,8 @@ public:
 	enum Flags {
 		GROUND = 0x1,
 		DETAIL = 0x2,
+
+		EVERYTHING = 0x3,
 	};
 
 public:

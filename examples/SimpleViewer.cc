@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
 
 	/* 4) Request all data to be loaded synchronously */
-	layer.RequestVisible(BBoxi::Full(), TileManager::SYNC);
+	layer.LoadArea(geometry_generator.GetBBox(), TileManager::SYNC);
 
 	/* 5) Create viewer to control eye position and direction */
 	FirstPersonViewer viewer;
