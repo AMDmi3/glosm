@@ -22,6 +22,8 @@
 
 #include <glosm/Math.hh>
 
+#include <sys/types.h> /* for size_t */
+
 /**
  * Abstract class for all geodata tiles.
  *
@@ -39,11 +41,29 @@ protected:
 	const Vector2i reference_;
 
 public:
+	/**
+	 * Constructs tile
+	 */
 	Tile(const Vector2i& ref) : reference_(ref) {}
+
+	/**
+	 * Destructor
+	 */
 	virtual ~Tile() {}
 
+	/**
+	 * Renders tile
+	 */
 	virtual void Render() = 0;
 
+	/**
+	 * Returns tile size in bytes
+	 */
+	virtual size_t GetSize() const = 0;
+
+	/**
+	 * Returns tile reference point
+	 */
 	const Vector2i& GetReference() const {
 		return reference_;
 	}

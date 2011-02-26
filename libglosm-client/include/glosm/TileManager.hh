@@ -110,6 +110,7 @@ protected:
 
 protected:
 	typedef std::list<TileTask> TilesQueue;
+	typedef std::vector<QuadNode**> GCQueue;
 
 protected:
 	/* @todo it would be optimal to delegate these to layer via either
@@ -118,6 +119,7 @@ protected:
 	float range_;
 	int flags_;
 	bool height_effect_;
+	size_t size_limit_;
 
 	const Projection projection_;
 
@@ -125,6 +127,8 @@ protected:
 	/* protected by tiles_mutex_ */
 	QuadNode root_;
 	int generation_;
+	size_t total_size_;
+	int tile_count_;
 	/* /protected by tiles_mutex_ */
 
 	mutable pthread_mutex_t queue_mutex_;
@@ -176,7 +180,7 @@ protected:
 	/**
 	 * Recursive function for garbage collecting unneeded tiles
 	 */
-	void RecGarbageCollectTiles(QuadNode* node);
+	void RecGarbageCollectTiles(QuadNode* node, GCQueue& gcqueue);
 
 	/**
 	 * Thread function for tile loading
@@ -192,6 +196,9 @@ protected:
 	 * Renders visible tiles
 	 */
 	void Render(const Viewer& viewer);
+
+protected:
+	static bool GenerationCompare(QuadNode** x, QuadNode** y);
 
 public:
 	/**
@@ -238,6 +245,13 @@ public:
 	 *        when calculating distance from viewer to tile
 	 */
 	void SetHeightEffect(bool enabled);
+
+	/**
+	 * Sets limit on cumulative tiles size
+	 *
+	 * @param limit size limit in bytes
+	 */
+	void SetSizeLimit(size_t limit);
 };
 
 #endif

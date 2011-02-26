@@ -154,3 +154,7 @@ void GeometryTile::Render() {
 	glEnd();
 #endif
 }
+
+size_t GeometryTile::GetSize() const {
+	return size_;
+}

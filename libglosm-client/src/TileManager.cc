@@ -28,6 +28,9 @@
 
 #include <glosm/util/gl.h>
 
+#include <algorithm>
+#include <cstdio>
+
 TileManager::TileManager(const Projection projection): projection_(projection), loading_(-1, -1, -1) {
 	generation_ = 0;
 	thread_die_flag_ = false;
@@ -59,6 +62,9 @@ TileManager::TileManager(const Projection projection): projection_(projection), 
 	range_ = 100000.0f;
 	flags_ = GeometryDatasource::GROUND | GeometryDatasource::DETAIL;
 	height_effect_ = false;
+
+	total_size_ = 0;
+	tile_count_ = 0;
 }
 
 
@@ -73,7 +79,9 @@ TileManager::~TileManager() {
 	pthread_mutex_destroy(&queue_mutex_);
 	pthread_mutex_destroy(&tiles_mutex_);
 
+	fprintf(stderr, "Tile statistics before cleanup: %d tiles, %d bytes\n", tile_count_, total_size_);
 	RecDestroyTiles(&root_);
+	fprintf(stderr, "Tile statistics after cleanup: %d tiles, %d bytes\n", tile_count_, total_size_);
 }
 
 /*
@@ -155,6 +163,8 @@ void TileManager::RecPlaceTile(QuadNode* node, Tile* tile, int level, int x, int
 			return;
 		}
 		node->tile = tile;
+		tile_count_++;
+		total_size_ += tile->GetSize();
 	} else {
 		int mask = 1 << (level-1);
 		int nchild = (!!(y & mask) << 1) | !!(x & mask);
@@ -166,8 +176,11 @@ void TileManager::RecDestroyTiles(QuadNode* node) {
 	if (!node)
 		return;
 
-	if (node->tile)
+	if (node->tile) {
+		tile_count_--;
+		total_size_ -= node->tile->GetSize();
 		delete node->tile;
+	}
 
 	for (int i = 0; i < 4; ++i) {
 		RecDestroyTiles(node->childs[i]);
@@ -175,7 +188,7 @@ void TileManager::RecDestroyTiles(QuadNode* node) {
 	}
 }
 
-void TileManager::RecGarbageCollectTiles(QuadNode* node) {
+void TileManager::RecGarbageCollectTiles(QuadNode* node, GCQueue& gcqueue) {
 	/* simplest garbage collection that drops all inactive
 	 * tiles. This should become much more clever */
 	for (int i = 0; i < 4; ++i) {
@@ -183,11 +196,9 @@ void TileManager::RecGarbageCollectTiles(QuadNode* node) {
 			continue;
 
 		if (node->childs[i]->generation != generation_) {
-			RecDestroyTiles(node->childs[i]);
-			delete node->childs[i];
-			node->childs[i] = NULL;
+			gcqueue.push_back(&node->childs[i]);
 		} else {
-			RecGarbageCollectTiles(node->childs[i]);
+			RecGarbageCollectTiles(node->childs[i], gcqueue);
 		}
 	}
 }
@@ -351,9 +362,29 @@ void TileManager::LoadLocality(const Viewer& viewer, int flags) {
 	}
 }
 
+bool TileManager::GenerationCompare(QuadNode** x, QuadNode** y) {
+	return (*x)->generation < (*y)->generation;
+}
+
 void TileManager::GarbageCollect() {
 	pthread_mutex_lock(&tiles_mutex_);
-	RecGarbageCollectTiles(&root_);
+	if (total_size_ > size_limit_) {
+		GCQueue gcqueue;
+		gcqueue.reserve(tile_count_);
+
+		/* collect tiles for garbage collecting */
+		RecGarbageCollectTiles(&root_, gcqueue);
+
+		/* sort by generation */
+		std::sort(gcqueue.begin(), gcqueue.end(), GenerationCompare);
+
+		for (GCQueue::iterator i = gcqueue.begin(); i != gcqueue.end() && total_size_ > size_limit_; ++i) {
+			RecDestroyTiles(**i);
+			delete **i;
+			**i = NULL;
+		}
+	}
+
 	generation_++;
 	pthread_mutex_unlock(&tiles_mutex_);
 }
@@ -372,4 +403,8 @@ void TileManager::SetFlags(int flags) {
 
 void TileManager::SetHeightEffect(bool enabled) {
 	height_effect_ = enabled;
+}
+
+void TileManager::SetSizeLimit(size_t limit) {
+	size_limit_ = limit;
 }

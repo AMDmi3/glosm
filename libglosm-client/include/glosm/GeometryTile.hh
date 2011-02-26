@@ -88,6 +88,11 @@ public:
 	 * Render this tile
 	 */
 	virtual void Render();
+
+	/**
+	 * Returns tile size in bytes
+	 */
+	virtual size_t GetSize() const;
 };
 
 #endif

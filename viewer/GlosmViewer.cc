@@ -122,11 +122,13 @@ void GlosmViewer::InitGL() {
 	ground_layer_->SetRange(1000000.0);
 	ground_layer_->SetFlags(GeometryDatasource::GROUND);
 	ground_layer_->SetHeightEffect(false);
+	ground_layer_->SetSizeLimit(32*1024*1024);
 
 	detail_layer_->SetLevel(12);
 	detail_layer_->SetRange(10000.0);
 	detail_layer_->SetFlags(GeometryDatasource::DETAIL);
 	detail_layer_->SetHeightEffect(true);
+	detail_layer_->SetSizeLimit(32*1024*1024);
 
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
