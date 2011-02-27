@@ -179,6 +179,8 @@ int real_main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		throw Exception() << "Couldn't initialize SDL: " << (const char*)SDL_GetError();
 
+	SDL_WM_SetCaption("glosm", "glosm");
+
 	atexit(Cleanup);
 
 #if !defined(WITH_GLES)
