@@ -88,20 +88,6 @@ TileManager::~TileManager() {
  * recursive quadtree processing
  */
 
-/*
-class TilePickPolicy {
-};
-
-class LocalityPickPolicy : public TilePickPolicy {
-	float thisdist;
-
-	bool Traverse(RecLoadTilesInfo& info, const BBoxi& bbox) {
-		thisdist = ApproxDistanceSquare(bbox, info.viewer_pos);
-		if (thisdist > range_ * range_
-
-	}
-};*/
-
 void TileManager::RecLoadTilesBBox(RecLoadTilesInfo& info, QuadNode** pnode, int level, int x, int y) {
 	QuadNode* node;
 
@@ -474,6 +460,13 @@ void TileManager::GarbageCollect() {
 		}
 	}
 
+	generation_++;
+	pthread_mutex_unlock(&tiles_mutex_);
+}
+
+void TileManager::Clear() {
+	pthread_mutex_lock(&tiles_mutex_);
+	RecDestroyTiles(&root_);
 	generation_++;
 	pthread_mutex_unlock(&tiles_mutex_);
 }

@@ -245,6 +245,11 @@ public:
 	void GarbageCollect();
 
 	/**
+	 * Destroys all tiles
+	 */
+	void Clear();
+
+	/**
 	 * Sets designated tile level
 	 *
 	 * @param level desired level
