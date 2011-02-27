@@ -262,6 +262,9 @@ const OsmDatasource::Relation& PreloadedXmlDatasource::GetRelation(osmid_t id) c
 }
 
 void PreloadedXmlDatasource::GetWays(std::vector<OsmDatasource::Way>& out, const BBoxi& bbox) const {
+	if (!bbox.Intersects(bbox_))
+		return;
+
 	for (WaysMap::const_iterator i = ways_.begin(); i != ways_.end(); ++i)
 		if (i->second.BBox.Intersects(bbox))
 			out.push_back(i->second);
