@@ -1,4 +1,4 @@
-glosm-0.0.2 ????-??-??
+glosm-0.0.2 2011-02-27
 --------------------------------
  * Geometry tiling was implemented: there are now two layers of
    geometry, ground (lowres) and detail (3D objects) which are split
