@@ -106,6 +106,8 @@ int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, GeometryLayer& layer, con
 				BBoxi request_bbox = bbox;
 				/* expand request 1km down for skewed buildings to show correctly
 				 * that is, we assume maximum object height of 1km */
+
+				/* @todo take skew into account */
 				request_bbox.bottom -= 1000.0 / WGS84_EARTH_EQ_LENGTH * 360.0 * GEOM_UNITSINDEGREE;
 
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
