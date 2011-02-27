@@ -22,6 +22,7 @@
 #include <glosm/OsmDatasource.hh>
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryOperations.hh>
+#include <glosm/MetricBasis.hh>
 #include <glosm/geomath.h>
 
 #include <list>
@@ -373,6 +374,160 @@ static void CreateRoad(Geometry& geom, const VertexVector& vertices, float width
 	}
 }
 
+static void CreatePowerTower(Geometry& geom, const Vector3i& pos, const Vector3d& side) {
+	MetricBasis b(pos, side);
+
+	float w1 = 1.05;
+	float w2 = 0.5;
+	float h1 = 11.0;
+	float h2 = 21.0;
+	float h3 = 23.0;
+
+	/* lower section */
+	geom.AddQuad(b.Get(w1, w1, 0.0), b.Get(-w1, w1, 0.0), b.Get(-w2, w2, h1), b.Get(w2, w2, h1));
+	geom.AddQuad(b.Get(-w1, w1, 0.0), b.Get(-w1, -w1, 0.0), b.Get(-w2, -w2, h1), b.Get(-w2, w2, h1));
+	geom.AddQuad(b.Get(-w1, -w1, 0.0), b.Get(w1, -w1, 0.0), b.Get(w2, -w2, h1), b.Get(-w2, -w2, h1));
+	geom.AddQuad(b.Get(w1, -w1, 0.0), b.Get(w1, w1, 0.0), b.Get(w2, w2, h1), b.Get(w2, -w2, h1));
+
+	geom.AddLine(b.Get(w1, w1, 0.0), b.Get(-w1, w1, 0.0));
+	geom.AddLine(b.Get(-w1, w1, 0.0), b.Get(-w1, -w1, 0.0));
+	geom.AddLine(b.Get(-w1, -w1, 0.0), b.Get(w1, -w1, 0.0));
+	geom.AddLine(b.Get(w1, -w1, 0.0), b.Get(w1, w1, 0.0));
+
+	geom.AddLine(b.Get(-w1, w1, 0.0), b.Get(-w2, w2, h1));
+	geom.AddLine(b.Get(-w1, -w1, 0.0), b.Get(-w2, -w2, h1));
+	geom.AddLine(b.Get(w1, -w1, 0.0), b.Get(w2, -w2, h1));
+	geom.AddLine(b.Get(w1, w1, 0.0), b.Get(w2, w2, h1));
+
+	/* middle section */
+	geom.AddQuad(b.Get(w2, w2, h1), b.Get(-w2, w2, h1), b.Get(-w2, w2, h2), b.Get(w2, w2, h2));
+	geom.AddQuad(b.Get(-w2, w2, h1), b.Get(-w2, -w2, h1), b.Get(-w2, -w2, h2), b.Get(-w2, w2, h2));
+	geom.AddQuad(b.Get(-w2, -w2, h1), b.Get(w2, -w2, h1), b.Get(w2, -w2, h2), b.Get(-w2, -w2, h2));
+	geom.AddQuad(b.Get(w2, -w2, h1), b.Get(w2, w2, h1), b.Get(w2, w2, h2), b.Get(w2, -w2, h2));
+
+	geom.AddLine(b.Get(w2, w2, h1), b.Get(-w2, w2, h1));
+	geom.AddLine(b.Get(-w2, w2, h1), b.Get(-w2, -w2, h1));
+	geom.AddLine(b.Get(-w2, -w2, h1), b.Get(w2, -w2, h1));
+	geom.AddLine(b.Get(w2, -w2, h1), b.Get(w2, w2, h1));
+
+	geom.AddLine(b.Get(-w2, w2, h1), b.Get(-w2, w2, h2));
+	geom.AddLine(b.Get(-w2, -w2, h1), b.Get(-w2, -w2, h2));
+	geom.AddLine(b.Get(w2, -w2, h1), b.Get(w2, -w2, h2));
+	geom.AddLine(b.Get(w2, w2, h1), b.Get(w2, w2, h2));
+
+	/* top section */
+	geom.AddTriangle(b.Get(w2, w2, h2), b.Get(-w2, w2, h2), b.Get(0, 0, h3));
+	geom.AddTriangle(b.Get(-w2, w2, h2), b.Get(-w2, -w2, h2), b.Get(0, 0, h3));
+	geom.AddTriangle(b.Get(-w2, -w2, h2), b.Get(w2, -w2, h2), b.Get(0, 0, h3));
+	geom.AddTriangle(b.Get(w2, -w2, h2), b.Get(w2, w2, h2), b.Get(0, 0, h3));
+
+	geom.AddLine(b.Get(w2, w2, h2), b.Get(-w2, w2, h2));
+//	geom.AddLine(b.Get(-w2, w2, h2), b.Get(-w2, -w2, h2));
+	geom.AddLine(b.Get(-w2, -w2, h2), b.Get(w2, -w2, h2));
+//	geom.AddLine(b.Get(w2, -w2, h2), b.Get(w2, w2, h2));
+
+	geom.AddLine(b.Get(w2, w2, h2), b.Get(0, 0, h3));
+	geom.AddLine(b.Get(-w2, w2, h2), b.Get(0, 0, h3));
+	geom.AddLine(b.Get(-w2, -w2, h2), b.Get(0, 0, h3));
+	geom.AddLine(b.Get(w2, -w2, h2), b.Get(0, 0, h3));
+
+	/* arms */
+	for (int h = 14; h <= 21; h += 3) {
+		float l = (h == 17) ? 3.3 : 2.0;
+		geom.AddTriangle(b.Get(w2, -w2, h), b.Get(w2, w2, h), b.Get(l, 0.0, h));
+		geom.AddTriangle(b.Get(w2, -w2, h+1), b.Get(w2, -w2, h), b.Get(l, 0.0, h));
+		geom.AddTriangle(b.Get(w2, w2, h+1), b.Get(w2, -w2, h+1), b.Get(l, 0.0, h));
+		geom.AddTriangle(b.Get(w2, w2, h), b.Get(w2, w2, h+1), b.Get(l, 0.0, h));
+
+		geom.AddLine(b.Get(w2, -w2, h), b.Get(w2, w2, h));
+		geom.AddLine(b.Get(w2, -w2, h+1), b.Get(w2, w2, h+1));
+
+		geom.AddLine(b.Get(w2, w2, h), b.Get(l, 0.0, h));
+		geom.AddLine(b.Get(w2, -w2, h), b.Get(l, 0.0, h));
+		geom.AddLine(b.Get(w2, w2, h+1), b.Get(l, 0.0, h));
+		geom.AddLine(b.Get(w2, -w2, h+1), b.Get(l, 0.0, h));
+
+		geom.AddTriangle(b.Get(-w2, w2, h), b.Get(-w2, -w2, h), b.Get(-l, 0.0, h));
+		geom.AddTriangle(b.Get(-w2, -w2, h), b.Get(-w2, -w2, h+1), b.Get(-l, 0.0, h));
+		geom.AddTriangle(b.Get(-w2, -w2, h+1), b.Get(-w2, w2, h+1), b.Get(-l, 0.0, h));
+		geom.AddTriangle(b.Get(-w2, w2, h+1), b.Get(-w2, w2, h), b.Get(-l, 0.0, h));
+
+		geom.AddLine(b.Get(-w2, w2, h), b.Get(-l, 0.0, h));
+		geom.AddLine(b.Get(-w2, -w2, h), b.Get(-l, 0.0, h));
+		geom.AddLine(b.Get(-w2, w2, h+1), b.Get(-l, 0.0, h));
+		geom.AddLine(b.Get(-w2, -w2, h+1), b.Get(-l, 0.0, h));
+
+		geom.AddLine(b.Get(-w2, -w2, h), b.Get(-w2, w2, h));
+		geom.AddLine(b.Get(-w2, -w2, h+1), b.Get(-w2, w2, h+1));
+	}
+}
+
+static void CreatePhysicalLine(Geometry& geom, const Vector3i& one, const Vector3i& two, float radius) {
+	Vector3d side = ToLocalMetric(one, two).Normalized().CrossProduct(Vector3d(0.0, 0.0, 1.0)) * radius;
+	Vector3d up = Vector3d(0.0, 0.0, radius);
+
+	geom.AddQuad(FromLocalMetric(-up, one), FromLocalMetric(-up, two), FromLocalMetric(-side, two), FromLocalMetric(-side, one));
+	geom.AddQuad(FromLocalMetric(-side, one), FromLocalMetric(-side, two), FromLocalMetric(up, two), FromLocalMetric(up, one));
+	geom.AddQuad(FromLocalMetric(up, one), FromLocalMetric(up, two), FromLocalMetric(side, two), FromLocalMetric(side, one));
+	geom.AddQuad(FromLocalMetric(side, one), FromLocalMetric(side, two), FromLocalMetric(-up, two), FromLocalMetric(-up, one));
+}
+
+template<class T>
+static inline T catenary(T x, T a) {
+	return a * cosh(x/a);
+}
+
+static void CreateWire(Geometry& geom, const Vector3i& one, const Vector3i& two) {
+	/* @todo take wire diameter from tags; for now 8cm is used which is common for 35kV */
+
+	float length = ToLocalMetric(two, one).Length();
+	float a = 10.0; /* catenary argument */
+	float dh = catenary(1.0f, a);
+
+	int sections = 8;
+	float prevh = 0.0;
+	for (int node = 1; node <= sections; ++node) {
+		float h = (catenary((float)node/(float)sections * 2.0f - 1.0f, a) - dh) * length / 2.0f;
+		CreatePhysicalLine(geom,
+				FromLocalMetric(ToLocalMetric(two, one) * (double)(node-1)/(double)(sections) + Vector3d(0.0, 0.0, prevh), one),
+				FromLocalMetric(ToLocalMetric(two, one) * (double)(node)/(double)(sections) + Vector3d(0.0, 0.0, h), one),
+				0.08/2
+			);
+		prevh = h;
+	}
+}
+
+static void CreatePowerLine(Geometry& geom, const VertexVector& vertices, const OsmDatasource::Way& /*unused*/) {
+	if (vertices.size() < 2)
+		return;
+
+	Vector3d prev_side, to_prev, to_next, side;
+	for (int i = 0; i < vertices.size(); ++i) {
+		if (i != vertices.size() - 1)
+			to_next = ToLocalMetric(vertices[i+1], vertices[i]).Normalized();
+		to_prev = i == 0 ? -to_next : ToLocalMetric(vertices[i-1], vertices[i]).Normalized();
+		if (i == vertices.size() - 1)
+			to_next = -to_prev;
+
+		side = (to_next == to_prev) ? to_next : (to_next - to_prev).Normalized().CrossProduct(Vector3d(0.0, 0.0, 1.0));
+
+		if (i != 0) {
+			CreateWire(geom, FromLocalMetric(Vector3d(prev_side*2.0, 14.0-0.5), vertices[i-1]), FromLocalMetric(Vector3d(side*2.0, 14.0-0.5), vertices[i]));
+			CreateWire(geom, FromLocalMetric(Vector3d(prev_side*3.3, 17.0-0.5), vertices[i-1]), FromLocalMetric(Vector3d(side*3.3, 17.0-0.5), vertices[i]));
+			CreateWire(geom, FromLocalMetric(Vector3d(prev_side*2.0, 20.0-0.5), vertices[i-1]), FromLocalMetric(Vector3d(side*2.0, 20.0-0.5), vertices[i]));
+			CreateWire(geom, FromLocalMetric(Vector3d(-prev_side*2.0, 14.0-0.5), vertices[i-1]), FromLocalMetric(Vector3d(-side*2.0, 14.0-0.5), vertices[i]));
+			CreateWire(geom, FromLocalMetric(Vector3d(-prev_side*3.3, 17.0-0.5), vertices[i-1]), FromLocalMetric(Vector3d(-side*3.3, 17.0-0.5), vertices[i]));
+			CreateWire(geom, FromLocalMetric(Vector3d(-prev_side*2.0, 20.0-0.5), vertices[i-1]), FromLocalMetric(Vector3d(-side*2.0, 20.0-0.5), vertices[i]));
+			CreateWire(geom, FromLocalMetric(Vector3d(0.0, 0.0, 23.0), vertices[i-1]), FromLocalMetric(Vector3d(0.0, 0.0, 23.0), vertices[i]));
+		}
+
+		/* Placeholder "tower" until models are added */
+		CreatePowerTower(geom, vertices[i], side);
+
+		prev_side = side;
+	}
+}
+
 static float GetMaxHeight(const OsmDatasource::Way& way) {
 	OsmDatasource::TagsMap::const_iterator building, tag;
 
@@ -556,6 +711,9 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, int f
 	} else if ((t = way.Tags.find("landuse")) != way.Tags.end()) {
 		if (flags & GeometryDatasource::GROUND)
 			CreateLines(geom, vertices, minz, way);
+	} else if ((t = way.Tags.find("power")) != way.Tags.end() && (t->second == "line")) {
+		if (flags & GeometryDatasource::DETAIL)
+			CreatePowerLine(geom, vertices, way);
 	} else {
 		if (flags & GeometryDatasource::DETAIL)
 			CreateLines(geom, vertices, minz, way);
