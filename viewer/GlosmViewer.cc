@@ -66,7 +66,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 	/* argument parsing */
 	int c;
 	const char* progname = argv[0];
-	while ((c = getopt(argc, argv, "st:")) != -1) {
+	while ((c = getopt(argc, argv, "sf")) != -1) {
 		switch (c) {
 		case 's': projection_ = SphericalProjection(); break;
 		case 'f': no_glew_check_ = true; break;
