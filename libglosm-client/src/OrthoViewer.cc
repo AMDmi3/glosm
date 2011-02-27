@@ -60,13 +60,6 @@ void OrthoViewer::SetBBox(const BBoxi& bbox) {
 	bbox_ = bbox;
 }
 
-void OrthoViewer::SetBBoxForTile(int nx, int ny, int zoom) {
-	bbox_.left = round(((double)nx) / pow(2.0, zoom) * GEOM_LONSPAN - GEOM_MAXLON);
-	bbox_.right = round(((double)nx + 1.0) / pow(2.0, zoom) * GEOM_LONSPAN - GEOM_MAXLON);
-	bbox_.bottom = round(-unmercator(((float)ny) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) * GEOM_RAD_TO_DEG);
-	bbox_.top = round(-unmercator(((float)ny + 1.0) / powf(2.0, zoom) * M_PI * 2.0 - M_PI) * GEOM_RAD_TO_DEG);
-}
-
 void OrthoViewer::SetSkew(float skew) {
 	skew_ = skew;
 }
