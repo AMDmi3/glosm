@@ -45,14 +45,6 @@
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/ParsingHelpers.hh>
 
-#include <fcntl.h>
-#include <expat.h>
-
-#include <cstring>
-#include <stdexcept>
-#include <limits>
-#include <sstream>
-
 PreloadedXmlDatasource::PreloadedXmlDatasource() : bbox_(BBoxi::Empty()) {
 }
 
