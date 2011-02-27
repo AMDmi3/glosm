@@ -237,8 +237,10 @@ void TileManager::RecDestroyTiles(QuadNode* node) {
 
 	for (int i = 0; i < 4; ++i) {
 		RecDestroyTiles(node->childs[i]);
-		delete node->childs[i];
-		node->childs[i] = NULL;
+		if (node->childs[i]) {
+			delete node->childs[i];
+			node->childs[i] = NULL;
+		}
 	}
 }
 
