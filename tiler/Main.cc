@@ -61,12 +61,12 @@ static LevelInfo LevelInfos[] = {
 	{ 10, GeometryDatasource::GROUND }, /* 10 */
 	{ 11, GeometryDatasource::EVERYTHING }, /* 11 */
 	{ 12, GeometryDatasource::EVERYTHING }, /* 12 */
-	{ 13, GeometryDatasource::EVERYTHING }, /* 13 */
-	{ 14, GeometryDatasource::EVERYTHING }, /* 14 */
-	{ 15, GeometryDatasource::EVERYTHING }, /* 15 */
-	{ 16, GeometryDatasource::EVERYTHING }, /* 16 */
-	{ 17, GeometryDatasource::EVERYTHING }, /* 17 */
-	{ 18, GeometryDatasource::EVERYTHING }, /* 18 */
+	{ 12, GeometryDatasource::EVERYTHING }, /* 13 */
+	{ 12, GeometryDatasource::EVERYTHING }, /* 14 */
+	{ 12, GeometryDatasource::EVERYTHING }, /* 15 */
+	{ 13, GeometryDatasource::EVERYTHING }, /* 16 */
+	{ 13, GeometryDatasource::EVERYTHING }, /* 17 */
+	{ 14, GeometryDatasource::EVERYTHING }, /* 18 */
 };
 
 void usage(const char* progname) {
