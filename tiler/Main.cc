@@ -101,9 +101,12 @@ int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, GeometryLayer& layer, con
 				snprintf(path, sizeof(path), "%s/%d/%d/%d.png", target, zoom, x, y);
 
 				BBoxi bbox = BBoxi::ForMercatorTile(zoom, x, y);
-				BBoxi request_bbox = bbox;
-				request_bbox.bottom -= 90000; /* 0.009°, ~1km - for skewed buildings to show correctly */
 				viewer.SetBBox(bbox);
+
+				BBoxi request_bbox = bbox;
+				/* expand request 1km down for skewed buildings to show correctly
+				 * that is, we assume maximum object height of 1km */
+				request_bbox.bottom -= 1000.0 / WGS84_EARTH_EQ_LENGTH * 360.0 * GEOM_UNITSINDEGREE;
 
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				layer.GarbageCollect();
