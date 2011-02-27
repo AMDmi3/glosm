@@ -1,6 +1,7 @@
 # Targets
 SET(SOURCES
 	src/GeometryGenerator.cc
+	src/MetricBasis.cc
 )
 
 SET(HEADERS
