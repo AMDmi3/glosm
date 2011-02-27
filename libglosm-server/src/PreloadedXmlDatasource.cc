@@ -43,6 +43,7 @@
  */
 
 #include <glosm/PreloadedXmlDatasource.hh>
+#include <glosm/ParsingHelpers.hh>
 
 #include <fcntl.h>
 #include <expat.h>
@@ -52,80 +53,10 @@
 #include <limits>
 #include <sstream>
 
-/* when we know that a string may be only one of e.g. "node", "way",
- * "relation", we can only check first letter which will give us
- * ~10% parsing performance, however this increases chance
- *
- * this is shortcut for string comparison used where we know
- * that the string e.g. bay only be 'way', 'node', or 'relation'
- * in which case we can only check first letter - this lends
- * ~10% performance gain */
-#ifdef TRUSTED_XML
-template <int I>
-inline bool StrEq(const char* one, const char* two) {
-	return strncmp(one, two, I) == 0;
+PreloadedXmlDatasource::PreloadedXmlDatasource() : bbox_(BBoxi::Empty()) {
 }
 
-template<>
-inline bool StrEq<-1>(const char* one, const char* two) {
-	return strcmp(one, two) == 0;
-}
-
-template<>
-inline bool StrEq<0>(const char* one, const char* two) {
-	return true;
-}
-
-template<>
-inline bool StrEq<1>(const char* one, const char* two) {
-	return one[0] == two[0];
-}
-
-template<>
-inline bool StrEq<2>(const char* one, const char* two) {
-	return one[0] == two[0] && one[0] != '\0' && one[1] == two[1];
-}
-#else
-template <int I>
-inline bool StrEq(const char* one, const char* two) {
-	return strcmp(one, two) == 0;
-}
-#endif
-
-/* Parse langitude/latitude in osm format, e.g. [-]NNN.NNNNNNN */
-static int ParseCoord(const char* str) {
-	int value = 0;
-	int fracdig = 0;
-	int haddot = 0;
-	bool neg = false;
-	const char* cur = str;
-
-	if (*cur == '-') {
-		neg = true;
-		cur++;
-	}
-
-	for (; *cur != '\0'; ++cur) {
-		if (*cur >= '0' && *cur <= '9') {
-			value = value * 10 + *cur - '0';
-			if (!haddot && value > 180)
-				throw ParsingException() << "bad coordinate format (value too large)";
-			if (haddot && ++fracdig == 7)
-				break;
-		} else if (*cur == '.') {
-			haddot++;
-		} else {
-			throw ParsingException() << "bad coordinate format (unexpected symbol)";
-		}
-	}
-
-	if (haddot > 1)
-		throw ParsingException() << "bad coordinate format (multiple dots)";
-
-	for (; fracdig < 7; ++fracdig)
-		value *= 10;
-
-	return neg ? -value : value;
+PreloadedXmlDatasource::~PreloadedXmlDatasource() {
 }
 
 static void ParseTag(OsmDatasource::TagsMap& map, const char** atts) {
@@ -141,69 +72,6 @@ static void ParseTag(OsmDatasource::TagsMap& map, const char** atts) {
 	}
 
 	map.insert(std::make_pair(key, value));
-}
-
-static BBoxi ParseBounds(const char** atts) {
-	BBoxi bbox(BBoxi::Empty());
-
-	for (const char** att = atts; *att; ++att) {
-		if (StrEq<-1>(*att, "minlat"))
-			bbox.bottom = ParseCoord(*(++att));
-		else if (StrEq<-1>(*att, "maxlat"))
-			bbox.top = ParseCoord(*(++att));
-		else if (StrEq<-1>(*att, "minlon"))
-			bbox.left = ParseCoord(*(++att));
-		else if (StrEq<-1>(*att, "maxlon"))
-			bbox.right = ParseCoord(*(++att));
-		else
-			++att;
-	}
-
-	if (bbox.IsEmpty())
-		throw ParsingException() << "incorrect bounding box";
-
-	return bbox;
-}
-
-static BBoxi ParseBound(const char** atts) {
-	BBoxi bbox(BBoxi::Empty());
-
-	for (const char** att = atts; *att; ++att) {
-		if (StrEq<-1>(*att, "box")) {
-			std::string s(*(++att));
-			/* comma positions */
-			size_t cpos1, cpos2, cpos3;
-			if ((cpos1 = s.find(',')) == std::string::npos)
-				throw ParsingException() << "bad bbox format";
-			if ((cpos2 = s.find(',', cpos1+1)) == std::string::npos)
-				throw ParsingException() << "bad bbox format";
-			if ((cpos3 = s.find(',', cpos2+1)) == std::string::npos)
-				throw ParsingException() << "bad bbox format";
-
-			bbox.bottom = ParseCoord(s.substr(0, cpos1).c_str());
-			bbox.left = ParseCoord(s.substr(cpos1+1, cpos2-cpos1-1).c_str());
-			bbox.top = ParseCoord(s.substr(cpos2+1, cpos3-cpos2-1).c_str());
-			bbox.right = ParseCoord(s.substr(cpos3+1).c_str());
-		} else {
-			++att;
-		}
-	}
-
-	return bbox;
-}
-
-PreloadedXmlDatasource::PreloadedXmlDatasource() : bbox_(BBoxi::Empty()) {
-}
-
-PreloadedXmlDatasource::~PreloadedXmlDatasource() {
-}
-
-void PreloadedXmlDatasource::StartElementWrapper(void* userData, const char* name, const char** atts) {
-	static_cast<PreloadedXmlDatasource*>(userData)->StartElement(name, atts);
-}
-
-void PreloadedXmlDatasource::EndElementWrapper(void* userData, const char* name) {
-	static_cast<PreloadedXmlDatasource*>(userData)->EndElement(name);
 }
 
 void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
@@ -353,55 +221,14 @@ BBoxi PreloadedXmlDatasource::GetBBox() const {
 }
 
 void PreloadedXmlDatasource::Load(const char* filename) {
-	int f = 0;
-	XML_Parser parser = NULL;
-
 	bbox_ = BBoxi::Empty();
-
-	/* if filename = "-", work with stdin */
-	if (strcmp(filename, "-") != 0 && (f = open(filename, O_RDONLY)) == -1)
-		throw SystemError() << "cannot open input file";
-
-	/* Create and setup parser */
-	if ((parser = XML_ParserCreate(NULL)) == NULL) {
-		close(f);
-		throw Exception() << "cannot create XML parser";
-	}
-
-	XML_SetElementHandler(parser, StartElementWrapper, EndElementWrapper);
-	XML_SetUserData(parser, this);
-
 	InsideWhich = NONE;
 	tag_level_ = 0;
 
-	/* Parse file */
-	try {
-		char buf[65536];
-		ssize_t len;
-		do {
-			if ((len = read(f, buf, sizeof(buf))) < 0)
-				throw SystemError() << "input read error";
-			if (XML_Parse(parser, buf, len, len == 0) == XML_STATUS_ERROR)
-				throw ParsingException() << XML_ErrorString(XML_GetErrorCode(parser));
-		} while (len != 0);
-	} catch (ParsingException &e) {
-		ParsingException verbose;
-		verbose << "input parsing error: " << e.what() << " at line " << XML_GetCurrentLineNumber(parser) << " pos " << XML_GetCurrentColumnNumber(parser);
-		close(f);
-		XML_ParserFree(parser);
-		throw verbose;
-	} catch (...) {
-		close(f);
-		XML_ParserFree(parser);
-		throw;
-	}
+	XMLParser::Load(filename);
 
-	XML_ParserFree(parser);
-	close(f);
-
-	/* Postprocessing */
+	/* if file lacked bounding box, generate one ourselves */
 	if (bbox_.IsEmpty()) {
-		/* bounding box in the file missing or is invalid - generate ourselves */
 		for (NodesMap::iterator node = nodes_.begin(); node != nodes_.end(); ++node)
 			bbox_.Include(node->second.Pos);
 	}

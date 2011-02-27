@@ -22,14 +22,9 @@
 
 #include <glosm/OsmDatasource.hh>
 #include <glosm/Exception.hh>
+#include <glosm/XMLParser.hh>
 #include <glosm/NonCopyable.hh>
 #include <glosm/id_map.hh>
-
-/**
- * Excepion that denotes XML parsing error
- */
-class ParsingException : public Exception {
-};
 
 /**
  * Excepion that denotes inconsistent OSM data
@@ -44,7 +39,7 @@ class DataException : public Exception {
  * with XML parser and stores node/way/relation information in
  * memory.
  */
-class PreloadedXmlDatasource : public OsmDatasource, private NonCopyable {
+class PreloadedXmlDatasource : public XMLParser, public OsmDatasource, private NonCopyable {
 protected:
 	typedef id_map<osmid_t, Node> NodesMap;
 	//typedef id_map<osmid_t, TagsMap> NodeTagsMap;
@@ -76,18 +71,15 @@ protected:
 	BBoxi bbox_;
 
 protected:
-	static void StartElementWrapper(void* userData, const char* name, const char** atts);
-	static void EndElementWrapper(void* userData, const char* name);
-
 	/**
 	 * Processes start XML element
 	 */
-	void StartElement(const char* name, const char** atts);
+	virtual void StartElement(const char* name, const char** atts);
 
 	/**
 	 * Processes end XML element
 	 */
-	void EndElement(const char* name);
+	virtual void EndElement(const char* name);
 
 public:
 	/**
@@ -105,7 +97,7 @@ public:
 	 *
 	 * @param filename path to dump file
 	 */
-	void Load(const char* filename);
+	virtual void Load(const char* filename);
 
 	/**
 	 * Drops all loaded data

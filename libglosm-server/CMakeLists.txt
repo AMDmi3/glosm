@@ -40,6 +40,7 @@ SET(SOURCES
 	src/GeometryOperations.cc
 	src/PreloadedXmlDatasource.cc
 	src/Timer.cc
+	src/XMLParser.cc
 )
 
 SET(HEADERS
