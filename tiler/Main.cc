@@ -38,6 +38,37 @@
 
 #include <cstdio>
 
+struct LevelInfo {
+	int tiling;
+	int flags;
+
+	bool operator!= (const LevelInfo& other) const {
+		return tiling != other.tiling || flags != other.flags;
+	}
+};
+
+static LevelInfo LevelInfos[] = {
+	{ 0, GeometryDatasource::GROUND }, /* 0 */
+	{ 1, GeometryDatasource::GROUND }, /* 1 */
+	{ 2, GeometryDatasource::GROUND }, /* 2 */
+	{ 3, GeometryDatasource::GROUND }, /* 3 */
+	{ 4, GeometryDatasource::GROUND }, /* 4 */
+	{ 5, GeometryDatasource::GROUND }, /* 5 */
+	{ 6, GeometryDatasource::GROUND }, /* 6 */
+	{ 7, GeometryDatasource::GROUND }, /* 7 */
+	{ 8, GeometryDatasource::GROUND }, /* 8 */
+	{ 9, GeometryDatasource::GROUND }, /* 9 */
+	{ 10, GeometryDatasource::GROUND }, /* 10 */
+	{ 11, GeometryDatasource::EVERYTHING }, /* 11 */
+	{ 12, GeometryDatasource::EVERYTHING }, /* 12 */
+	{ 13, GeometryDatasource::EVERYTHING }, /* 13 */
+	{ 14, GeometryDatasource::EVERYTHING }, /* 14 */
+	{ 15, GeometryDatasource::EVERYTHING }, /* 15 */
+	{ 16, GeometryDatasource::EVERYTHING }, /* 16 */
+	{ 17, GeometryDatasource::EVERYTHING }, /* 17 */
+	{ 18, GeometryDatasource::EVERYTHING }, /* 18 */
+};
+
 void usage(const char* progname) {
 	fprintf(stderr, "Usage: %s [-0123456789] [-s skew] [-z minzoom] [-Z maxzoom] -x minlon -X maxlon -y minlat -Y maxlat infile.osm outdir\n", progname);
 	exit(1);
@@ -51,6 +82,11 @@ int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, GeometryLayer& layer, con
 	snprintf(path, sizeof(path), "%s", target);
 	mkdir(path, 0777);
 	for (zoom = minzoom; zoom <= maxzoom; zoom++) {
+		layer.SetLevel(LevelInfos[zoom].tiling);
+		layer.SetFlags(LevelInfos[zoom].flags);
+		if (zoom > 0 && LevelInfos[zoom-1] != LevelInfos[zoom])
+			layer.Clear();
+
 		int minxtile = (int)((minlon + 180.0)/360.0*powf(2.0, zoom));
 		int maxxtile = (int)((maxlon + 180.0)/360.0*powf(2.0, zoom));
 		int minytile = (int)((-mercator(maxlat/180.0*M_PI)/M_PI*180.0 + 180.0)/360.0*powf(2.0, zoom));
@@ -65,11 +101,13 @@ int RenderTiles(PBuffer& pbuffer, OrthoViewer& viewer, GeometryLayer& layer, con
 				snprintf(path, sizeof(path), "%s/%d/%d/%d.png", target, zoom, x, y);
 
 				BBoxi bbox = BBoxi::ForMercatorTile(zoom, x, y);
+				BBoxi request_bbox = bbox;
+				request_bbox.bottom -= 90000; /* 0.009°, ~1km - for skewed buildings to show correctly */
 				viewer.SetBBox(bbox);
 
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				layer.GarbageCollect();
-				layer.LoadArea(bbox, TileManager::SYNC);
+				layer.LoadArea(request_bbox, TileManager::SYNC);
 				layer.Render(viewer);
 				glFinish();
 
@@ -145,8 +183,6 @@ int real_main(int argc, char** argv) {
 	GeometryGenerator geometry_generator(osm_datasource);
 
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
-	layer.SetLevel(8);
-	layer.SetFlags(GeometryDatasource::GROUND | GeometryDatasource::DETAIL);
 	layer.SetSizeLimit(128*1024*1024);
 
 	/* Rendering */
