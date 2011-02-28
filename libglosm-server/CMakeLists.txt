@@ -38,6 +38,7 @@ SET(SOURCES
 	src/Exception.cc
 	src/Geometry.cc
 	src/GeometryOperations.cc
+	src/PreloadedGPXDatasource.cc
 	src/PreloadedXmlDatasource.cc
 	src/Timer.cc
 	src/XMLParser.cc
