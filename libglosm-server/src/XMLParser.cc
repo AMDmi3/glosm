@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <expat.h>
 
+#include <cstring>
+
 XMLParser::XMLParser(int flags) : flags_(flags) {
 }
 
