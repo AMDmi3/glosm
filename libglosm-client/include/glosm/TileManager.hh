@@ -191,8 +191,10 @@ protected:
 
 	/**
 	 * Recursive function for tile rendering
+	 *
+	 * @return 1 if whole tile was rendered, 0 otherwise
 	 */
-	void RecRenderTiles(QuadNode* node, const Viewer& viewer);
+	int RecRenderTiles(QuadNode* node, const Viewer& viewer);
 
 	/**
 	 * Recursive function for destroying tiles and quadtree nodes

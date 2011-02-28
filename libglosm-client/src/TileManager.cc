@@ -259,65 +259,82 @@ void TileManager::RecGarbageCollectTiles(QuadNode* node, GCQueue& gcqueue) {
 	}
 }
 
-void TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
+int TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
 	if (!node || node->generation != generation_)
-		return;
+		return 0;
 
-	RecRenderTiles(node->childs[0], viewer);
-	RecRenderTiles(node->childs[1], viewer);
-	RecRenderTiles(node->childs[2], viewer);
-	RecRenderTiles(node->childs[3], viewer);
+	/* traverse tree depth-first */
+	int childs = 0;
+	childs += RecRenderTiles(node->childs[0], viewer);
+	childs += RecRenderTiles(node->childs[1], viewer);
+	childs += RecRenderTiles(node->childs[2], viewer);
+	childs += RecRenderTiles(node->childs[3], viewer);
 
-	if (node->tile && node->tile->GetSize() != 0) {
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
+	/* ...and do not render a tile where all its childs were
+	 * fully rendered */
+	if (childs == 4)
+		return 1;
 
-		/* prepare modelview matrix for the tile: position
-		 * it in the right place given that viewer is always
-		 * at (0, 0, 0) */
-		Vector3f offset = projection_.Project(node->tile->GetReference(), Vector2i(viewer.GetPos(projection_))) +
-				projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
+	/* no tile */
+	if (!node->tile)
+		return 0;
 
-		glTranslatef(offset.x, offset.y, offset.z);
+	/* empty tile */
+	if (node->tile->GetSize() == 0)
+		return 1;
 
-		/* same for rotation */
-		Vector3i ref = node->tile->GetReference();
-		Vector3i pos = viewer.GetPos(projection_);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
 
-		/* normal at tile's reference point */
-		Vector3d refnormal = (
-				(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, std::numeric_limits<osmint_t>::max()), pos) -
-				(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, 0), pos)
-			).Normalized();
+	/* prepare modelview matrix for the tile: position
+	 * it in the right place given that viewer is always
+	 * at (0, 0, 0) */
+	Vector3f offset = projection_.Project(node->tile->GetReference(), Vector2i(viewer.GetPos(projection_))) +
+			projection_.Project(Vector2i(viewer.GetPos(projection_)), viewer.GetPos(projection_));
 
-		/* normal at reference point projected to equator */
-		Vector3d refeqnormal = (
-				(Vector3d)projection_.Project(Vector3i(ref.x, 0, std::numeric_limits<osmint_t>::max()), pos) -
-				(Vector3d)projection_.Project(Vector3i(ref.x, 0, 0), pos)
-			).Normalized();
+	glTranslatef(offset.x, offset.y, offset.z);
 
-		/* normal at north pole */
-		Vector3d polenormal = (
-				(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, std::numeric_limits<osmint_t>::max()), pos) -
-				(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, 0), pos)
-			).Normalized();
+	/* same for rotation */
+	Vector3i ref = node->tile->GetReference();
+	Vector3i pos = viewer.GetPos(projection_);
 
-		/* @todo IsValid() check basically detects
-		 * MercatorProjection and does no rotation for it.
-		 * While is's ok for now, this may need more generic
-		 * approach in future */
-		if (polenormal.IsValid()) {
-			Vector3d side = refnormal.CrossProduct(polenormal).Normalized();
+	/* normal at tile's reference point */
+	Vector3d refnormal = (
+			(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, std::numeric_limits<osmint_t>::max()), pos) -
+			(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, 0), pos)
+		).Normalized();
 
-			glRotatef((double)((osmlong_t)ref.y - (osmlong_t)pos.y) / 10000000.0, side.x, side.y, side.z);
-			glRotatef((double)((osmlong_t)ref.x - (osmlong_t)pos.x) / 10000000.0, polenormal.x, polenormal.y, polenormal.z);
-		}
+	/* normal at reference point projected to equator */
+	Vector3d refeqnormal = (
+			(Vector3d)projection_.Project(Vector3i(ref.x, 0, std::numeric_limits<osmint_t>::max()), pos) -
+			(Vector3d)projection_.Project(Vector3i(ref.x, 0, 0), pos)
+		).Normalized();
 
-		node->tile->Render();
+	/* normal at north pole */
+	Vector3d polenormal = (
+			(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, std::numeric_limits<osmint_t>::max()), pos) -
+			(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, 0), pos)
+		).Normalized();
 
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
+	/* @todo IsValid() check basically detects
+	 * MercatorProjection and does no rotation for it.
+	 * While is's ok for now, this may need more generic
+	 * approach in future */
+	if (polenormal.IsValid()) {
+		Vector3d side = refnormal.CrossProduct(polenormal).Normalized();
+
+		glRotatef((double)((osmlong_t)ref.y - (osmlong_t)pos.y) / 10000000.0, side.x, side.y, side.z);
+		glRotatef((double)((osmlong_t)ref.x - (osmlong_t)pos.x) / 10000000.0, polenormal.x, polenormal.y, polenormal.z);
 	}
+
+	/* @todo make it return bool and check return value,
+	 * tile may be half-ready here */
+	node->tile->Render();
+
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	return 1;
 }
 
 /*
