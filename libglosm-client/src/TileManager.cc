@@ -60,7 +60,7 @@ TileManager::TileManager(const Projection projection): projection_(projection), 
 
 	level_ = 12;
 	range_ = 1000.0f;
-	flags_ = GeometryDatasource::EVERYTHING;
+	flags_ = 0;
 	height_effect_ = false;
 
 	total_size_ = 0;
