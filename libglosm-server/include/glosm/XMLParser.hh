@@ -33,6 +33,16 @@ class ParsingException : public Exception {
  */
 class XMLParser {
 protected:
+	enum Flags {
+		HANDLE_ELEMENTS = 0x01,
+		HANDLE_CHARDATA = 0x02,
+
+		HANDLE_ALL = 0xFF,
+	};
+
+	int flags_;
+
+protected:
 	/**
 	 * Static wrapper for StartElement
 	 */
@@ -44,20 +54,30 @@ protected:
 	static void EndElementWrapper(void* userData, const char* name);
 
 	/**
-	 * Processes start XML element
+	 * Static wrapper for CharacterData
 	 */
-	virtual void StartElement(const char* name, const char** atts) = 0;
+	static void CharacterDataWrapper(void* userData, const char* data, int len);
 
 	/**
-	 * Processes end XML element
+	 * Processes start of XML element
 	 */
-	virtual void EndElement(const char* name) = 0;
+	virtual void StartElement(const char* name, const char** atts);
+
+	/**
+	 * Processes end of XML element
+	 */
+	virtual void EndElement(const char* name);
+
+	/**
+	 * Processes character data
+	 */
+	virtual void CharacterData(const char* data, int len);
 
 protected:
 	/**
 	 * Constructs empty datasource
 	 */
-	XMLParser();
+	XMLParser(int flags = HANDLE_ALL);
 
 	/**
 	 * Destructor

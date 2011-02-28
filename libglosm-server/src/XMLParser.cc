@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <expat.h>
 
-XMLParser::XMLParser() {
+XMLParser::XMLParser(int flags) : flags_(flags) {
 }
 
 XMLParser::~XMLParser() {
@@ -34,6 +34,19 @@ void XMLParser::StartElementWrapper(void* userData, const char* name, const char
 
 void XMLParser::EndElementWrapper(void* userData, const char* name) {
 	static_cast<XMLParser*>(userData)->EndElement(name);
+}
+
+void XMLParser::CharacterDataWrapper(void* userData, const char* data, int len) {
+	static_cast<XMLParser*>(userData)->CharacterData(data, len);
+}
+
+void XMLParser::StartElement(const char* /*unused*/, const char** /*unused*/) {
+}
+
+void XMLParser::EndElement(const char* /*unused*/) {
+}
+
+void XMLParser::CharacterData(const char* /*unused*/, int /*unused*/) {
 }
 
 void XMLParser::Load(const char* filename) {
@@ -50,7 +63,11 @@ void XMLParser::Load(const char* filename) {
 		throw Exception() << "cannot create XML parser";
 	}
 
-	XML_SetElementHandler(parser, StartElementWrapper, EndElementWrapper);
+	if (flags_ & HANDLE_ELEMENTS)
+		XML_SetElementHandler(parser, StartElementWrapper, EndElementWrapper);
+	if (flags_ & HANDLE_CHARDATA)
+		XML_SetCharacterDataHandler(parser, CharacterDataWrapper);
+
 	XML_SetUserData(parser, this);
 
 	/* Parse file */
