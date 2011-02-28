@@ -479,13 +479,20 @@ static inline T catenary(T x, T a) {
 
 static void CreateWire(Geometry& geom, const Vector3i& one, const Vector3i& two) {
 	/* @todo take wire diameter from tags; for now 8cm is used which is common for 35kV */
-
 	float length = ToLocalMetric(two, one).Length();
-	float a = 10.0; /* catenary argument */
-	float dh = catenary(1.0f, a);
+
+	/* catenary argument autotuning:
+	 * since droop(a) = (cat(0, a) - cat(1, a)) = a - a*cosh(1/a) -> -1/(2a)
+	 * we calculate a for desired droop ratio which will be accurate for long
+	 * wires, and we set a lower cap on it so short wires look good as well */
+	float a = length / (2.0 * 2.0 * 5.0); /* 5 is desired droop in meters */
+	if (a < 4.0) a = 4.0;
+	float dh = catenary(1.0f, a); /* catenary fix so delta equals to 0 in -1 and 1 */
 
 	int sections = 8;
 	float prevh = 0.0;
+
+	/* render catenary */
 	for (int node = 1; node <= sections; ++node) {
 		float h = (catenary((float)node/(float)sections * 2.0f - 1.0f, a) - dh) * length / 2.0f;
 		CreatePhysicalLine(geom,
