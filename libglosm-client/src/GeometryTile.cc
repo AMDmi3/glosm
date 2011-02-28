@@ -23,7 +23,6 @@
 
 #include <glosm/Projection.hh>
 #include <glosm/Geometry.hh>
-#include <glosm/GeometryDatasource.hh>
 #include <glosm/SimpleVertexBuffer.hh>
 
 GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
