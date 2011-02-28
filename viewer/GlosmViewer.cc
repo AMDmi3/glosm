@@ -53,12 +53,13 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 
 	ground_shown_ = true;
 	detail_shown_ = true;
+	gpx_shown_ = true;
 
 	no_glew_check_ = false;
 }
 
 void GlosmViewer::Usage(const char* progname) {
-	fprintf(stderr, "Usage: %s [-sf] file.osm\n", progname);
+	fprintf(stderr, "Usage: %s [-sf] file.osm [file.gpx ...]\n", progname);
 	exit(1);
 }
 
@@ -78,19 +79,37 @@ void GlosmViewer::Init(int argc, char** argv) {
 	argc -= optind;
 	argv += optind;
 
-	if (argc != 1)
+	/* load data */
+	for (int narg = 0; narg < argc; ++narg) {
+		std::string file = argv[narg];
+
+		if (file.substr(file.length()-4) == ".osm") {
+			fprintf(stderr, "Loading %s as OSM...\n", argv[narg]);
+			if (osm_datasource_.get() == NULL) {
+				Timer t;
+				osm_datasource_.reset(new PreloadedXmlDatasource);
+				osm_datasource_->Load(argv[narg]);
+				fprintf(stderr, "Loaded in %.3f seconds\n", t.Count());
+			} else {
+				fprintf(stderr, "Only single OSM file may be loaded at once, skipped\n");
+			}
+		} else if (file.substr(file.length()-4) == ".gpx") {
+			fprintf(stderr, "Loading %s as GPX...\n", argv[narg]);
+			if (gpx_datasource_.get() == NULL)
+				gpx_datasource_.reset(new PreloadedGPXDatasource);
+
+			Timer t;
+			gpx_datasource_->Load(argv[narg]);
+			fprintf(stderr, "Loaded in %.3f seconds\n", t.Count());
+		} else {
+			fprintf(stderr, "Not loading %s - unknown file type\n", argv[narg]);
+		}
+	}
+
+	if (osm_datasource_.get() == NULL)
 		Usage(progname);
 
-	/* load data */
-	fprintf(stderr, "Loading...\n");
-	gettimeofday(&prevtime_, NULL);
-
-	osm_datasource_.reset(new PreloadedXmlDatasource);
-
-	osm_datasource_->Load(argv[0]);
 	gettimeofday(&curtime_, NULL);
-
-	fprintf(stderr, "Loaded XML in %.3f seconds\n", (float)(curtime_.tv_sec - prevtime_.tv_sec) + (float)(curtime_.tv_usec - prevtime_.tv_usec)/1000000.0f);
 	prevtime_ = curtime_;
 	fpstime_ = curtime_;
 }
@@ -130,6 +149,14 @@ void GlosmViewer::InitGL() {
 	detail_layer_->SetHeightEffect(true);
 	detail_layer_->SetSizeLimit(32*1024*1024);
 
+	if (gpx_datasource_.get()) {
+		gpx_layer_.reset(new GPXLayer(projection_, *gpx_datasource_));
+		gpx_layer_->SetLevel(10);
+		gpx_layer_->SetRange(10000.0);
+		gpx_layer_->SetHeightEffect(true);
+		gpx_layer_->SetSizeLimit(32*1024*1024);
+	}
+
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
 #if defined(WITH_TOUCHPAD)
@@ -157,6 +184,12 @@ void GlosmViewer::Render() {
 		detail_layer_->GarbageCollect();
 		detail_layer_->LoadLocality(*viewer_);
 		detail_layer_->Render(*viewer_);
+	}
+
+	if (gpx_shown_ && gpx_layer_.get()) {
+		gpx_layer_->GarbageCollect();
+		gpx_layer_->LoadLocality(*viewer_);
+		gpx_layer_->Render(*viewer_);
 	}
 
 	glFlush();
@@ -268,6 +301,9 @@ void GlosmViewer::KeyDown(int key) {
 		break;
 	case '2':
 		detail_shown_ = !detail_shown_;
+		break;
+	case '3':
+		gpx_shown_ = !gpx_shown_;
 		break;
 	case KEY_SHIFT:
 		fast_ = true;
