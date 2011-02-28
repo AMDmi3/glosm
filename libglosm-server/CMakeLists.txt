@@ -38,19 +38,11 @@ SET(SOURCES
 	src/Exception.cc
 	src/Geometry.cc
 	src/GeometryOperations.cc
+	src/ParsingHelpers.cc
 	src/PreloadedGPXDatasource.cc
 	src/PreloadedXmlDatasource.cc
 	src/Timer.cc
 	src/XMLParser.cc
-)
-
-# No idea how to fix warning about unused functions from ParserHelpers.hh,
-# so I just disable it here
-SET_SOURCE_FILES_PROPERTIES(
-	src/PreloadedGPXDatasource.cc
-	src/PreloadedXmlDatasource.cc
-	PROPERTIES
-	COMPILE_FLAGS "-Wno-unused-function"
 )
 
 SET(HEADERS

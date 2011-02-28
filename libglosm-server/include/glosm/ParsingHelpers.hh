@@ -62,10 +62,7 @@ inline bool StrEq(const char* one, const char* two) {
 #endif
 
 /**
- * Parses langitude/latitude into fixed-point number
- *
- * Processes geo coordinates in [-]NNN.NNNNNNN format and returns
- * fixed-point representation with 7 numbers after decimal dot
+ * Parses decimal floating point number into fixed-point value
  */
 template<int I>
 static int ParseInt(const char* str) {
@@ -101,13 +98,15 @@ static int ParseInt(const char* str) {
 	return neg ? -value : value;
 }
 
-static int ParseCoord(const char* str) {
-	return ParseInt<7>(str);
-}
+/**
+ * Parses langitude/latitude into fixed-point number
+ */
+int ParseCoord(const char* str);
 
-static int ParseEle(const char* str) {
-	return ParseInt<2>(str);
-}
+/**
+ * Parses elevation into fixed-point number
+ */
+int ParseEle(const char* str);
 
 /**
  * Parses attributes of <bounds> tag
@@ -118,27 +117,7 @@ static int ParseEle(const char* str) {
  * @param atts tag attrubutes from XML parser
  * @return resulting bbox
  */
-static BBoxi ParseBounds(const char** atts) {
-	BBoxi bbox(BBoxi::Empty());
-
-	for (const char** att = atts; *att; ++att) {
-		if (StrEq<-1>(*att, "minlat"))
-			bbox.bottom = ParseCoord(*(++att));
-		else if (StrEq<-1>(*att, "maxlat"))
-			bbox.top = ParseCoord(*(++att));
-		else if (StrEq<-1>(*att, "minlon"))
-			bbox.left = ParseCoord(*(++att));
-		else if (StrEq<-1>(*att, "maxlon"))
-			bbox.right = ParseCoord(*(++att));
-		else
-			++att;
-	}
-
-	if (bbox.IsEmpty())
-		throw ParsingException() << "incorrect bounding box";
-
-	return bbox;
-}
+BBoxi ParseBounds(const char** atts);
 
 /**
  * Parses attributes of <bound> tag
@@ -148,31 +127,6 @@ static BBoxi ParseBounds(const char** atts) {
  * @param atts tag attrubutes from XML parser
  * @return resulting bbox
  */
-static BBoxi ParseBound(const char** atts) {
-	BBoxi bbox(BBoxi::Empty());
-
-	for (const char** att = atts; *att; ++att) {
-		if (StrEq<-1>(*att, "box")) {
-			std::string s(*(++att));
-			/* comma positions */
-			size_t cpos1, cpos2, cpos3;
-			if ((cpos1 = s.find(',')) == std::string::npos)
-				throw ParsingException() << "bad bbox format";
-			if ((cpos2 = s.find(',', cpos1+1)) == std::string::npos)
-				throw ParsingException() << "bad bbox format";
-			if ((cpos3 = s.find(',', cpos2+1)) == std::string::npos)
-				throw ParsingException() << "bad bbox format";
-
-			bbox.bottom = ParseCoord(s.substr(0, cpos1).c_str());
-			bbox.left = ParseCoord(s.substr(cpos1+1, cpos2-cpos1-1).c_str());
-			bbox.top = ParseCoord(s.substr(cpos2+1, cpos3-cpos2-1).c_str());
-			bbox.right = ParseCoord(s.substr(cpos3+1).c_str());
-		} else {
-			++att;
-		}
-	}
-
-	return bbox;
-}
+BBoxi ParseBound(const char** atts);
 
 #endif
