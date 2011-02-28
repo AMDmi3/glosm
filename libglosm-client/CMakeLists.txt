@@ -21,6 +21,8 @@ SET(SOURCES
 	src/FirstPersonViewer.cc
 	src/GeometryLayer.cc
 	src/GeometryTile.cc
+	src/GPXLayer.cc
+	src/GPXTile.cc
 	src/MercatorProjection.cc
 	src/OrthoViewer.cc
 	src/Projection.cc
