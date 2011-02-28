@@ -20,7 +20,7 @@
 #include <glosm/PreloadedGPXDatasource.hh>
 #include <glosm/ParsingHelpers.hh>
 
-PreloadedGPXDatasource::PreloadedGPXDatasource() : XMLParser(XMLParser::HANDLE_ALL) {
+PreloadedGPXDatasource::PreloadedGPXDatasource() : XMLParser(XMLParser::HANDLE_ELEMENTS | XMLParser::HANDLE_CHARDATA) {
 }
 
 PreloadedGPXDatasource::~PreloadedGPXDatasource() {
