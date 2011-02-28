@@ -45,6 +45,8 @@
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/ParsingHelpers.hh>
 
+#include <cstdlib>
+
 PreloadedXmlDatasource::PreloadedXmlDatasource() : XMLParser(XMLParser::HANDLE_ELEMENTS), bbox_(BBoxi::Empty()) {
 }
 
