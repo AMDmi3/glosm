@@ -41,6 +41,7 @@ protected:
 
 public:
 	enum Type {
+		POINTS,
 		LINES,
 		TRIANGLES,
 		QUADS,

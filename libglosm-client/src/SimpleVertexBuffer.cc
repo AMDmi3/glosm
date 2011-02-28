@@ -49,6 +49,7 @@ SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count)
 	}
 
 	switch (type) {
+	case POINTS: mode_ = GL_POINTS; break;
 	case LINES: mode_ = GL_LINES; break;
 	case TRIANGLES: mode_ = GL_TRIANGLES; break;
 #if !defined(WITH_GLES) && !defined(WITH_GLES2)
