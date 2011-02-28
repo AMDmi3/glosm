@@ -67,7 +67,7 @@ static void ParseTag(OsmDatasource::TagsMap& map, const char** atts) {
 }
 
 void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
-	if (tag_level_ == 1 && InsideWhich == NONE) {
+	if (tag_level_ == 1 && current_tag_ == OSM) {
 		int id = 0;
 		int lat = 0;
 		int lon = 0;
@@ -83,16 +83,16 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		}
 
 		if (StrEq<1>(name, "node")) {
-			InsideWhich = NODE;
+			current_tag_ = NODE;
 			std::pair<NodesMap::iterator, bool> p = nodes_.insert(std::make_pair(id, Node(lon, lat)));
 			last_node_ = p.first;
 			//last_node_tags_ = node_tags_.end();
 		} else if (StrEq<1>(name, "way")) {
-			InsideWhich = WAY;
+			current_tag_ = WAY;
 			std::pair<WaysMap::iterator, bool> p = ways_.insert(std::make_pair(id, Way()));
 			last_way_ = p.first;
 		} else if (StrEq<1>(name, "relation")) {
-			InsideWhich = RELATION;
+			current_tag_ = RELATION;
 			std::pair<RelationsMap::iterator, bool> p = relations_.insert(std::make_pair(id, Relation()));
 			last_relation_ = p.first;
 		} else if (StrEq<-1>(name, "bounds")) {
@@ -100,7 +100,7 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		} else if (StrEq<-1>(name, "bound")) {
 			bbox_ = ParseBound(atts);
 		}
-	} else if (tag_level_ == 2 && InsideWhich == NODE) {
+	} else if (tag_level_ == 2 && current_tag_ == NODE) {
 		if (StrEq<0>(name, "tag")) {
 //			if (last_node_tags_ == node_tags_.end()) {
 //				std::pair<NodeTagsMap::iterator, bool> p = node_tags_.insert(std::make_pair(last_node_->first, TagsMap()));
@@ -110,7 +110,7 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		} else {
 			throw ParsingException() << "unexpected tag in node";
 		}
-	} else if (tag_level_ == 2 && InsideWhich == WAY) {
+	} else if (tag_level_ == 2 && current_tag_ == WAY) {
 		if (StrEq<1>(name, "tag")) {
 			ParseTag(last_way_->second.Tags, atts);
 		} else if (StrEq<1>(name, "nd")) {
@@ -125,7 +125,7 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		} else {
 			throw ParsingException() << "unexpected tag in way";
 		}
-	} else if (tag_level_ == 2 && InsideWhich == RELATION) {
+	} else if (tag_level_ == 2 && current_tag_ == RELATION) {
 		if (StrEq<1>(name, "tag")) {
 //			ParseTag(last_relation_->second.Tags, atts);
 		} else if (StrEq<1>(name, "member")) {
@@ -157,8 +157,9 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		} else {
 			throw ParsingException() << "unexpected tag in relation";
 		}
-	} else if (tag_level_ >= 2) {
-		throw ParsingException() << "unexpected tag";
+	} else if (tag_level_ == 0 && !StrEq<-1>(name, "osm")) {
+		throw ParsingException() << "unexpected root element (" << name << " instead of osm)";
+		current_tag_ = OSM;
 	}
 
 	++tag_level_;
@@ -166,7 +167,7 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 
 void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 	if (tag_level_ == 2) {
-		switch (InsideWhich) {
+		switch (current_tag_) {
 		case WAY:
 			/* check if a way is closed */
 			if (last_way_->second.Nodes.front() == last_way_->second.Nodes.back()) {
@@ -194,11 +195,16 @@ void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 					last_way_->second.BBox.Include(cur->second.Pos);
 				}
 			}
+			/* fallthrough */
+		case NODE:
+		case RELATION:
+			current_tag_ = OSM;
 			break;
 		default:
 			break;
 		}
-		InsideWhich = NONE;
+	} else if (tag_level_ == 1 && current_tag_ == OSM) {
+		current_tag_ = NONE;
 	}
 
 	--tag_level_;
@@ -214,7 +220,7 @@ BBoxi PreloadedXmlDatasource::GetBBox() const {
 
 void PreloadedXmlDatasource::Load(const char* filename) {
 	bbox_ = BBoxi::Empty();
-	InsideWhich = NONE;
+	current_tag_ = OSM;
 	tag_level_ = 0;
 
 	XMLParser::Load(filename);

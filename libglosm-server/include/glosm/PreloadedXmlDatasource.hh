@@ -41,6 +41,15 @@ class DataException : public Exception {
  */
 class PreloadedXmlDatasource : public XMLParser, public OsmDatasource, private NonCopyable {
 protected:
+	enum CurrentTag {
+		NONE,
+		OSM, /* root */
+		NODE,
+		WAY,
+		RELATION,
+	};
+
+protected:
 	typedef id_map<osmid_t, Node> NodesMap;
 	//typedef id_map<osmid_t, TagsMap> NodeTagsMap;
 	typedef id_map<osmid_t, Way> WaysMap;
@@ -54,13 +63,7 @@ protected:
 	RelationsMap relations_;
 
 	/* parser state */
-	enum {
-		NONE,
-		NODE,
-		WAY,
-		RELATION,
-	} InsideWhich;
-
+	CurrentTag current_tag_;
 	int tag_level_;
 
 	NodesMap::iterator last_node_;
