@@ -38,7 +38,11 @@ SET(SOURCES
 # compare with NULL) or normal functions (for which warning will
 # be generated, while comparison still gives correct result).
 # We have to ignore the warning because there can be mix of both
-SET_SOURCE_FILES_PROPERTIES(src/CheckGL.cc PROPERTIES COMPILE_FLAGS "-Wno-address")
+SET_SOURCE_FILES_PROPERTIES(
+	src/CheckGL.cc
+	PROPERTIES
+	COMPILE_FLAGS "-Wno-address"
+)
 
 SET(HEADERS
 )

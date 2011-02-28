@@ -44,6 +44,15 @@ SET(SOURCES
 	src/XMLParser.cc
 )
 
+# No idea how to fix warning about unused functions from ParserHelpers.hh,
+# so I just disable it here
+SET_SOURCE_FILES_PROPERTIES(
+	src/PreloadedGPXDatasource.cc
+	src/PreloadedXmlDatasource.cc
+	PROPERTIES
+	COMPILE_FLAGS "-Wno-unused-function"
+)
+
 SET(HEADERS
 )
 
