@@ -17,6 +17,9 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef PARSINGHELPERS_HH
+#define PARSINGHELPERS_HH
+
 #include <glosm/XMLParser.hh>
 #include <glosm/BBox.hh>
 
@@ -64,7 +67,8 @@ inline bool StrEq(const char* one, const char* two) {
  * Processes geo coordinates in [-]NNN.NNNNNNN format and returns
  * fixed-point representation with 7 numbers after decimal dot
  */
-static int ParseCoord(const char* str) {
+template<int I>
+static int ParseInt(const char* str) {
 	int value = 0;
 	int fracdig = 0;
 	int haddot = 0;
@@ -79,9 +83,7 @@ static int ParseCoord(const char* str) {
 	for (; *cur != '\0'; ++cur) {
 		if (*cur >= '0' && *cur <= '9') {
 			value = value * 10 + *cur - '0';
-			if (!haddot && value > 180)
-				throw ParsingException() << "bad coordinate format (value too large)";
-			if (haddot && ++fracdig == 7)
+			if (haddot && ++fracdig == I)
 				break;
 		} else if (*cur == '.') {
 			haddot++;
@@ -93,10 +95,18 @@ static int ParseCoord(const char* str) {
 	if (haddot > 1)
 		throw ParsingException() << "bad coordinate format (multiple dots)";
 
-	for (; fracdig < 7; ++fracdig)
+	for (; fracdig < I; ++fracdig)
 		value *= 10;
 
 	return neg ? -value : value;
+}
+
+static int ParseCoord(const char* str) {
+	return ParseInt<7>(str);
+}
+
+static int ParseEle(const char* str) {
+	return ParseInt<2>(str);
 }
 
 /**
@@ -164,3 +174,5 @@ static BBoxi ParseBound(const char** atts) {
 
 	return bbox;
 }
+
+#endif
