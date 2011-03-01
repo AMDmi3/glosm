@@ -48,7 +48,7 @@ public:
 	/**
 	 * Constructs empty bounding box
 	 */
-	BBox(): BBox(BBox<T>::Empty()) {
+	BBox(): left(std::numeric_limits<T>::max()), bottom(std::numeric_limits<T>::max()), right(std::numeric_limits<T>::min()), top(std::numeric_limits<T>::min()) {
 	}
 
 	/**
