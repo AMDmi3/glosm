@@ -304,12 +304,6 @@ int TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
 			(Vector3d)projection_.Project(Vector3i(ref.x, ref.y, 0), pos)
 		).Normalized();
 
-	/* normal at reference point projected to equator */
-	Vector3d refeqnormal = (
-			(Vector3d)projection_.Project(Vector3i(ref.x, 0, std::numeric_limits<osmint_t>::max()), pos) -
-			(Vector3d)projection_.Project(Vector3i(ref.x, 0, 0), pos)
-		).Normalized();
-
 	/* normal at north pole */
 	Vector3d polenormal = (
 			(Vector3d)projection_.Project(Vector3i(ref.x, 900000000, std::numeric_limits<osmint_t>::max()), pos) -
