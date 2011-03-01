@@ -509,7 +509,7 @@ static void CreatePowerLine(Geometry& geom, const VertexVector& vertices, const 
 		return;
 
 	Vector3d prev_side, to_prev, to_next, side;
-	for (int i = 0; i < vertices.size(); ++i) {
+	for (unsigned int i = 0; i < vertices.size(); ++i) {
 		if (i != vertices.size() - 1)
 			to_next = ToLocalMetric(vertices[i+1], vertices[i]).Normalized();
 		to_prev = i == 0 ? -to_next : ToLocalMetric(vertices[i-1], vertices[i]).Normalized();

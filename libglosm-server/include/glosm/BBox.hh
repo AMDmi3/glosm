@@ -48,7 +48,7 @@ public:
 	/**
 	 * Constructs empty bounding box
 	 */
-	BBox(): BBox<T>::Empty() {
+	BBox(): BBox(BBox<T>::Empty()) {
 	}
 
 	/**
