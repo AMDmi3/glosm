@@ -98,9 +98,9 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 			std::pair<RelationsMap::iterator, bool> p = relations_.insert(std::make_pair(id, Relation()));
 			last_relation_ = p.first;
 		} else if (StrEq<-1>(name, "bounds")) {
-			bbox_ = ParseBounds(atts);
+			bbox_.Include(ParseBounds(atts));
 		} else if (StrEq<-1>(name, "bound")) {
-			bbox_ = ParseBound(atts);
+			bbox_.Include(ParseBound(atts));
 		}
 	} else if (tag_level_ == 2 && current_tag_ == NODE) {
 		if (StrEq<0>(name, "tag")) {
