@@ -94,8 +94,8 @@ void GlosmViewer::Init(int argc, char** argv) {
 	for (int narg = 0; narg < argc; ++narg) {
 		std::string file = argv[narg];
 
-		if (file.substr(file.length()-4) == ".osm") {
-			fprintf(stderr, "Loading %s as OSM...\n", argv[narg]);
+		if (file == "-" || file.rfind(".osm") == file.length() - 4) {
+			fprintf(stderr, "Loading %s as OSM...\n", file == "-" ? "stdin" : argv[narg]);
 			if (osm_datasource_.get() == NULL) {
 				Timer t;
 				osm_datasource_.reset(new PreloadedXmlDatasource);
@@ -104,7 +104,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 			} else {
 				fprintf(stderr, "Only single OSM file may be loaded at once, skipped\n");
 			}
-		} else if (file.substr(file.length()-4) == ".gpx") {
+		} else if (file.rfind(".gpx") == file.length() - 4) {
 			fprintf(stderr, "Loading %s as GPX...\n", argv[narg]);
 			if (gpx_datasource_.get() == NULL)
 				gpx_datasource_.reset(new PreloadedGPXDatasource);
