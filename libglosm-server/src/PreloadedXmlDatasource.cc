@@ -159,9 +159,10 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		} else {
 			throw ParsingException() << "unexpected tag in relation";
 		}
-	} else if (tag_level_ == 0 && !StrEq<-1>(name, "osm")) {
-		throw ParsingException() << "unexpected root element (" << name << " instead of osm)";
+	} else if (tag_level_ == 0 && current_tag_ == NONE && StrEq<-1>(name, "osm")) {
 		current_tag_ = OSM;
+	} else if (tag_level_ == 0) {
+		throw ParsingException() << "unexpected root element (" << name << " instead of osm)";
 	}
 
 	++tag_level_;
@@ -222,7 +223,7 @@ BBoxi PreloadedXmlDatasource::GetBBox() const {
 
 void PreloadedXmlDatasource::Load(const char* filename) {
 	bbox_ = BBoxi::Empty();
-	current_tag_ = OSM;
+	current_tag_ = NONE;
 	tag_level_ = 0;
 
 	XMLParser::Load(filename);
