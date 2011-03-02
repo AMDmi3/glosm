@@ -58,21 +58,32 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	no_glew_check_ = false;
 }
 
-void GlosmViewer::Usage(const char* progname) {
-	fprintf(stderr, "Usage: %s [-sf] file.osm [file.gpx ...]\n", progname);
-	exit(1);
+void GlosmViewer::Usage(int status, bool detailed, const char* progname) {
+	fprintf(stderr, "Usage: %s [-sfh] <file.osm|-> [file.gpx ...]\n", progname);
+	if (detailed) {
+		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "  -h   - show this help\n");
+		fprintf(stderr, "  -s   - use spherical projection instead of mercator\n");
+#if defined(WITH_GLEW)
+		fprintf(stderr, "  -f   - ignore glew errors\n");
+#endif
+	}
+	exit(status);
 }
 
 void GlosmViewer::Init(int argc, char** argv) {
 	/* argument parsing */
 	int c;
 	const char* progname = argv[0];
-	while ((c = getopt(argc, argv, "sf")) != -1) {
+	while ((c = getopt(argc, argv, "sfh")) != -1) {
 		switch (c) {
 		case 's': projection_ = SphericalProjection(); break;
+#if defined(WITH_GLEW)
 		case 'f': no_glew_check_ = true; break;
+#endif
+		case 'h': Usage(0, true, progname); break;
 		default:
-			Usage(progname);
+			Usage(1, false, progname);
 		}
 	}
 
@@ -107,7 +118,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 	}
 
 	if (osm_datasource_.get() == NULL)
-		Usage(progname);
+		throw Exception() << "no osm dump specified";
 
 	gettimeofday(&curtime_, NULL);
 	prevtime_ = curtime_;

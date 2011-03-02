@@ -94,7 +94,7 @@ protected:
 public:
 	GlosmViewer();
 
-	virtual void Usage(const char* progname);
+	virtual void Usage(int status, bool detailed, const char* progname);
 	virtual void Init(int argc, char** argv);
 	virtual void InitGL();
 	virtual void Render();
