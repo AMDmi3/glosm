@@ -143,6 +143,44 @@ public:
 	 */
 	static BBox<T> ForGeoTile(int zoom, int x, int y);
 
+	/* OPERATORS */
+
+	/**
+	 * Returns bbox shifted in direction specified by vector
+	 */
+	BBox<T> operator+ (const Vector2<T>& shift) const {
+		return BBox<T>(left + shift.x, bottom + shift.y, right + shift.x, top + shift.y);
+	}
+
+	/**
+	 * Returns bbox shifted in direction opposide to one specified by vector
+	 */
+	BBox<T> operator- (const Vector2<T>& shift) const {
+		return BBox<T>(left - shift.x, bottom - shift.y, right - shift.x, top - shift.y);
+	}
+
+	/**
+	 * Shifts bbox in direction specified by vector
+	 */
+	BBox<T> operator+= (const Vector2<T>& shift) {
+		left += shift.x;
+		right += shift.x;
+		bottom += shift.y;
+		top += shift.y;
+		return *this;
+	}
+
+	/**
+	 * Shifts bbox in direction opposide to one specified by vector
+	 */
+	BBox<T> operator-= (const Vector2<T>& shift) {
+		left -= shift.x;
+		right -= shift.x;
+		bottom -= shift.y;
+		top -= shift.y;
+		return *this;
+	}
+
 	/* MUTATORS */
 
 	/**
