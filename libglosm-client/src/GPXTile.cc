@@ -25,9 +25,9 @@
 #include <glosm/SimpleVertexBuffer.hh>
 
 GPXTile::GPXTile(const Projection& projection, const std::vector<Vector3i>& points, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
-	size_ = points.size() * sizeof(float);
+	size_ = points.size() * 3 * sizeof(float);
 
-	if (points.size() != 0) {
+	if (!points.empty()) {
 		projected_points_.reset(new ProjectedVertices);
 		projection.ProjectPoints(points, ref, *projected_points_);
 	}

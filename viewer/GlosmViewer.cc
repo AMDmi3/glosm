@@ -166,7 +166,7 @@ void GlosmViewer::InitGL() {
 	detail_layer_->SetRange(10000.0);
 	detail_layer_->SetFlags(GeometryDatasource::DETAIL);
 	detail_layer_->SetHeightEffect(true);
-	detail_layer_->SetSizeLimit(32*1024*1024);
+	detail_layer_->SetSizeLimit(96*1024*1024);
 
 	if (gpx_datasource_.get()) {
 		gpx_layer_.reset(new GPXLayer(projection_, *gpx_datasource_));

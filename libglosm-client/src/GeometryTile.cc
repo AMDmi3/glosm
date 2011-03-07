@@ -26,21 +26,21 @@
 #include <glosm/SimpleVertexBuffer.hh>
 
 GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
-	size_ = geometry.GetLines().size() * sizeof(float) +
-			geometry.GetTriangles().size() * sizeof(float) * 2 + /* takes normals into account */
-			geometry.GetQuads().size() * sizeof(float) * 2;
+	size_ = geometry.GetLines().size() * 3 * sizeof(float) +
+			geometry.GetTriangles().size() * 3 * sizeof(float) * 2 + /* takes normals into account */
+			geometry.GetQuads().size() * 3 * sizeof(float) * 2;
 
-	if (geometry.GetLines().size() != 0) {
+	if (!geometry.GetLines().empty()) {
 		projected_lines_.reset(new ProjectedVertices);
 		projection.ProjectPoints(geometry.GetLines(), ref, *projected_lines_);
 	}
 
-	if (geometry.GetTriangles().size() != 0) {
+	if (!geometry.GetTriangles().empty()) {
 		projected_triangles_.reset(new ProjectedVertices);
 		projection.ProjectPoints(geometry.GetTriangles(), ref, *projected_triangles_);
 	}
 
-	if (geometry.GetQuads().size() != 0) {
+	if (!geometry.GetQuads().empty()) {
 		projected_quads_.reset(new ProjectedVertices);
 		projection.ProjectPoints(geometry.GetQuads(), ref, *projected_quads_);
 	}
