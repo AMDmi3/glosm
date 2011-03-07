@@ -27,12 +27,8 @@ PreloadedGPXDatasource::~PreloadedGPXDatasource() {
 }
 
 void PreloadedGPXDatasource::StartElement(const char* name, const char** atts) {
-	if (tag_level_ == 0 && current_tag_ == NONE && StrEq<-1>(name, "gpx")) {
-		current_tag_ = GPX;
-	} else if (tag_level_ == 1 && current_tag_ == GPX && StrEq<-1>(name, "trk")) {
-		current_tag_ = TRK;
-	} else if (tag_level_ == 2 && current_tag_ == TRK && StrEq<-1>(name, "trkseg")) {
-		current_tag_ = TRKSEG;
+	if (tag_level_ == 4 && current_tag_ == TRKPT && StrEq<-1>(name, "ele")) {
+		current_tag_ = ELE;
 	} else if (tag_level_ == 3 && current_tag_ == TRKSEG && StrEq<-1>(name, "trkpt")) {
 		current_tag_ = TRKPT;
 
@@ -48,8 +44,14 @@ void PreloadedGPXDatasource::StartElement(const char* name, const char** atts) {
 		}
 
 		points_.push_back(Vector3i(lon, lat, 0));
-	} else if (tag_level_ == 4 && current_tag_ == TRKPT && StrEq<-1>(name, "ele")) {
-		current_tag_ = ELE;
+	} else if (tag_level_ == 2 && current_tag_ == TRK && StrEq<-1>(name, "trkseg")) {
+		current_tag_ = TRKSEG;
+	} else if (tag_level_ == 1 && current_tag_ == GPX && StrEq<-1>(name, "trk")) {
+		current_tag_ = TRK;
+	} else if (tag_level_ == 0 && current_tag_ == NONE && StrEq<-1>(name, "gpx")) {
+		current_tag_ = GPX;
+	} else if (tag_level_ == 0) {
+		throw ParsingException() << "unexpected root element (" << name << " instead of gpx)";
 	}
 
 	++tag_level_;

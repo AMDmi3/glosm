@@ -54,25 +54,41 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	ground_shown_ = true;
 	detail_shown_ = true;
 	gpx_shown_ = true;
+	terrain_shown_ = true;
 
 	no_glew_check_ = false;
 }
 
-void GlosmViewer::Usage(const char* progname) {
-	fprintf(stderr, "Usage: %s [-sf] file.osm [file.gpx ...]\n", progname);
-	exit(1);
+void GlosmViewer::Usage(int status, bool detailed, const char* progname) {
+	fprintf(stderr, "Usage: %s [-sfh] [-t <path>] <file.osm|-> [file.gpx ...]\n", progname);
+	if (detailed) {
+		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "  -h       - show this help\n");
+		fprintf(stderr, "  -s       - use spherical projection instead of mercator\n");
+		fprintf(stderr, "  -t path  - add terrain layer, argument specifies path to\n");
+		fprintf(stderr, "             directory with SRTM data (*.hgt files)\n");
+#if defined(WITH_GLEW)
+		fprintf(stderr, "  -f       - ignore glew errors\n");
+#endif
+	}
+	exit(status);
 }
 
 void GlosmViewer::Init(int argc, char** argv) {
 	/* argument parsing */
 	int c;
 	const char* progname = argv[0];
-	while ((c = getopt(argc, argv, "sf")) != -1) {
+	const char* srtmpath = NULL;
+	while ((c = getopt(argc, argv, "sfht:")) != -1) {
 		switch (c) {
 		case 's': projection_ = SphericalProjection(); break;
+		case 't': srtmpath = optarg; break;
+#if defined(WITH_GLEW)
 		case 'f': no_glew_check_ = true; break;
+#endif
+		case 'h': Usage(0, true, progname); break;
 		default:
-			Usage(progname);
+			Usage(1, false, progname);
 		}
 	}
 
@@ -83,8 +99,8 @@ void GlosmViewer::Init(int argc, char** argv) {
 	for (int narg = 0; narg < argc; ++narg) {
 		std::string file = argv[narg];
 
-		if (file.substr(file.length()-4) == ".osm") {
-			fprintf(stderr, "Loading %s as OSM...\n", argv[narg]);
+		if (file == "-" || file.rfind(".osm") == file.length() - 4) {
+			fprintf(stderr, "Loading %s as OSM...\n", file == "-" ? "stdin" : argv[narg]);
 			if (osm_datasource_.get() == NULL) {
 				Timer t;
 				osm_datasource_.reset(new PreloadedXmlDatasource);
@@ -93,7 +109,7 @@ void GlosmViewer::Init(int argc, char** argv) {
 			} else {
 				fprintf(stderr, "Only single OSM file may be loaded at once, skipped\n");
 			}
-		} else if (file.substr(file.length()-4) == ".gpx") {
+		} else if (file.rfind(".gpx") == file.length() - 4) {
 			fprintf(stderr, "Loading %s as GPX...\n", argv[narg]);
 			if (gpx_datasource_.get() == NULL)
 				gpx_datasource_.reset(new PreloadedGPXDatasource);
@@ -106,8 +122,11 @@ void GlosmViewer::Init(int argc, char** argv) {
 		}
 	}
 
+	if (srtmpath)
+		srtm_datasource_.reset(new SRTMDatasource(srtmpath));
+
 	if (osm_datasource_.get() == NULL)
-		Usage(progname);
+		throw Exception() << "no osm dump specified";
 
 	gettimeofday(&curtime_, NULL);
 	prevtime_ = curtime_;
@@ -157,6 +176,14 @@ void GlosmViewer::InitGL() {
 		gpx_layer_->SetSizeLimit(32*1024*1024);
 	}
 
+	if (srtm_datasource_.get()) {
+		terrain_layer_.reset(new TerrainLayer(projection_, *srtm_datasource_));
+		terrain_layer_->SetLevel(12);
+		terrain_layer_->SetRange(20000.0);
+		terrain_layer_->SetHeightEffect(false);
+		terrain_layer_->SetSizeLimit(32*1024*1024);
+	}
+
 	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
 	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
 #if defined(WITH_TOUCHPAD)
@@ -190,6 +217,12 @@ void GlosmViewer::Render() {
 		gpx_layer_->GarbageCollect();
 		gpx_layer_->LoadLocality(*viewer_);
 		gpx_layer_->Render(*viewer_);
+	}
+
+	if (terrain_shown_ && terrain_layer_.get()) {
+		terrain_layer_->GarbageCollect();
+		terrain_layer_->LoadLocality(*viewer_);
+		terrain_layer_->Render(*viewer_);
 	}
 
 	glFlush();
@@ -304,6 +337,9 @@ void GlosmViewer::KeyDown(int key) {
 		break;
 	case '3':
 		gpx_shown_ = !gpx_shown_;
+		break;
+	case '4':
+		terrain_shown_ = !terrain_shown_;
 		break;
 	case KEY_SHIFT:
 		fast_ = true;

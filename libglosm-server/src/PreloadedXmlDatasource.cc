@@ -98,9 +98,9 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 			std::pair<RelationsMap::iterator, bool> p = relations_.insert(std::make_pair(id, Relation()));
 			last_relation_ = p.first;
 		} else if (StrEq<-1>(name, "bounds")) {
-			bbox_ = ParseBounds(atts);
+			bbox_.Include(ParseBounds(atts));
 		} else if (StrEq<-1>(name, "bound")) {
-			bbox_ = ParseBound(atts);
+			bbox_.Include(ParseBound(atts));
 		}
 	} else if (tag_level_ == 2 && current_tag_ == NODE) {
 		if (StrEq<0>(name, "tag")) {
@@ -159,9 +159,10 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		} else {
 			throw ParsingException() << "unexpected tag in relation";
 		}
-	} else if (tag_level_ == 0 && !StrEq<-1>(name, "osm")) {
-		throw ParsingException() << "unexpected root element (" << name << " instead of osm)";
+	} else if (tag_level_ == 0 && current_tag_ == NONE && StrEq<-1>(name, "osm")) {
 		current_tag_ = OSM;
+	} else if (tag_level_ == 0) {
+		throw ParsingException() << "unexpected root element (" << name << " instead of osm)";
 	}
 
 	++tag_level_;
@@ -222,7 +223,7 @@ BBoxi PreloadedXmlDatasource::GetBBox() const {
 
 void PreloadedXmlDatasource::Load(const char* filename) {
 	bbox_ = BBoxi::Empty();
-	current_tag_ = OSM;
+	current_tag_ = NONE;
 	tag_level_ = 0;
 
 	XMLParser::Load(filename);

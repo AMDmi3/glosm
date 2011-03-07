@@ -48,8 +48,7 @@ public:
 	/**
 	 * Constructs empty bounding box
 	 */
-	BBox(): BBox(BBox<T>::Empty()) {
-	}
+	BBox(): left(std::numeric_limits<T>::max()), bottom(std::numeric_limits<T>::max()), right(std::numeric_limits<T>::min()), top(std::numeric_limits<T>::min()) {
 
 	/**
 	 * Constructs bbox by two corners
@@ -142,6 +141,44 @@ public:
 	 * @note only specialized for <osmint_t>, see BBox.cc
 	 */
 	static BBox<T> ForGeoTile(int zoom, int x, int y);
+
+	/* OPERATORS */
+
+	/**
+	 * Returns bbox shifted in direction specified by vector
+	 */
+	BBox<T> operator+ (const Vector2<T>& shift) const {
+		return BBox<T>(left + shift.x, bottom + shift.y, right + shift.x, top + shift.y);
+	}
+
+	/**
+	 * Returns bbox shifted in direction opposide to one specified by vector
+	 */
+	BBox<T> operator- (const Vector2<T>& shift) const {
+		return BBox<T>(left - shift.x, bottom - shift.y, right - shift.x, top - shift.y);
+	}
+
+	/**
+	 * Shifts bbox in direction specified by vector
+	 */
+	BBox<T> operator+= (const Vector2<T>& shift) {
+		left += shift.x;
+		right += shift.x;
+		bottom += shift.y;
+		top += shift.y;
+		return *this;
+	}
+
+	/**
+	 * Shifts bbox in direction opposide to one specified by vector
+	 */
+	BBox<T> operator-= (const Vector2<T>& shift) {
+		left -= shift.x;
+		right -= shift.x;
+		bottom -= shift.y;
+		top -= shift.y;
+		return *this;
+	}
 
 	/* MUTATORS */
 

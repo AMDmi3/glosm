@@ -41,6 +41,7 @@ SET(SOURCES
 	src/ParsingHelpers.cc
 	src/PreloadedGPXDatasource.cc
 	src/PreloadedXmlDatasource.cc
+	src/SRTMDatasource.cc
 	src/Timer.cc
 	src/XMLParser.cc
 )
