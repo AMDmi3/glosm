@@ -23,6 +23,7 @@
 #include <glosm/Tile.hh>
 #include <glosm/NonCopyable.hh>
 #include <glosm/BBox.hh>
+#include <glosm/VBO.hh>
 
 #include <memory>
 #include <vector>
@@ -39,11 +40,17 @@ class Projection;
  */
 class TerrainTile : public Tile, private NonCopyable {
 protected:
-	typedef std::vector<Vector3f> ProjectedVertices;
+	typedef std::vector<Vector3f> VertexVector;
+	typedef std::vector<GLushort> IndexVector;
 
 protected:
-	std::auto_ptr<ProjectedVertices> projected_triangles_;
-	std::auto_ptr<SimpleVertexBuffer> triangles_;
+	std::auto_ptr<VertexVector> vertices_;
+	std::auto_ptr<VertexVector> normals_;
+	std::auto_ptr<IndexVector> indices_;
+
+	std::auto_ptr<VBO> vertices_vbo_;
+	std::auto_ptr<VBO> normals_vbo_;
+	std::auto_ptr<IBO> ibo_;
 
 	size_t size_;
 
