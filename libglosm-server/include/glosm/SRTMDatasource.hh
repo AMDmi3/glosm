@@ -22,12 +22,51 @@
 
 #include <glosm/HeightmapDatasource.hh>
 
+#include <stdint.h>
+
+#include <vector>
+#include <map>
+
 class SRTMDatasource : public HeightmapDatasource {
+protected:
+	typedef int16_t srtmval_t;
+
+protected:
+	struct ChunkId {
+		short lon;
+		short lat;
+
+		ChunkId(short lo, short la): lon(lo), lat(la) {
+		}
+
+		bool operator< (const ChunkId& other) const {
+			return lon < other.lon || (lon == other.lon && lat < other.lat);
+		}
+	};
+
+	struct Chunk {
+		int generation;
+		std::vector<srtmval_t> data;
+	};
+
+protected:
+	typedef std::map<ChunkId, Chunk> ChunksMap;
+
+protected:
+	const char* storage_path_;
+	int generation_;
+
+	mutable ChunksMap chunks_;
+
+protected:
+	Chunk& RequireChunk(int lon, int lat);
+
 public:
 	SRTMDatasource(const char* storage_path);
 	virtual ~SRTMDatasource();
 
-	virtual void GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vector2i& res, const BBoxi& bbox);
+	virtual void GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vector2<int>& res, const BBoxi& bbox);
+	virtual void GetHeightBounds(const BBoxi& bbox, osmint_t& low, osmint_t& high);
 };
 
 #endif

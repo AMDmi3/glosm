@@ -19,15 +19,17 @@ ENDIF(HAVE_SINCOS)
 SET(SOURCES
 	src/CheckGL.cc
 	src/FirstPersonViewer.cc
-	src/GeometryLayer.cc
-	src/GeometryTile.cc
 	src/GPXLayer.cc
 	src/GPXTile.cc
+	src/GeometryLayer.cc
+	src/GeometryTile.cc
 	src/MercatorProjection.cc
 	src/OrthoViewer.cc
 	src/Projection.cc
 	src/SimpleVertexBuffer.cc
 	src/SphericalProjection.cc
+	src/TerrainLayer.cc
+	src/TerrainTile.cc
 	src/TileManager.cc
 	src/VBO.cc
 	src/mglu.cc

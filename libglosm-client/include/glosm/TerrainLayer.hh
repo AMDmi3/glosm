@@ -17,23 +17,31 @@
  * along with glosm.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HEIGHTMAPDATASOURCE_HH
-#define HEIGHTMAPDATASOURCE_HH
+#ifndef TERRAINLAYER_HH
+#define TERRAINLAYER_HH
 
-#include <glosm/Math.hh>
-#include <glosm/BBox.hh>
+#include <glosm/Layer.hh>
+#include <glosm/Projection.hh>
+#include <glosm/NonCopyable.hh>
+#include <glosm/TileManager.hh>
 
-#include <vector>
+class Viewer;
+class HeightmapDatasource;
 
 /**
- * Abstract base class for sources of heightmap data.
+ * Layer with 3D terrain data.
  */
-class HeightmapDatasource {
-public:
-	virtual void GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vector2<int>& res, const BBoxi& bbox) = 0;
+class TerrainLayer : public Layer, public TileManager, private NonCopyable {
+protected:
+	const Projection projection_;
+	HeightmapDatasource& datasource_;
 
-	//virtual void GetHeight(const Vector3i& point, osmint_t& output) = 0;
-	virtual void GetHeightBounds(const BBoxi& bbox, osmint_t& low, osmint_t& high) = 0;
+public:
+	TerrainLayer(const Projection projection, HeightmapDatasource& datasource);
+	virtual ~TerrainLayer();
+
+	void Render(const Viewer& viewer);
+	virtual Tile* SpawnTile(const BBoxi& bbox, int flags) const;
 };
 
 #endif

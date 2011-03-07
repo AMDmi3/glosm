@@ -24,8 +24,10 @@
 #include <glosm/GeometryGenerator.hh>
 #include <glosm/GeometryLayer.hh>
 #include <glosm/GPXLayer.hh>
+#include <glosm/TerrainLayer.hh>
 #include <glosm/PreloadedXmlDatasource.hh>
 #include <glosm/PreloadedGPXDatasource.hh>
+#include <glosm/SRTMDatasource.hh>
 #include <glosm/Projection.hh>
 
 #include <memory>
@@ -58,14 +60,17 @@ protected:
 	std::auto_ptr<FirstPersonViewer> viewer_;
 	std::auto_ptr<PreloadedXmlDatasource> osm_datasource_;
 	std::auto_ptr<PreloadedGPXDatasource> gpx_datasource_;
+	std::auto_ptr<SRTMDatasource> srtm_datasource_;
 	std::auto_ptr<GeometryGenerator> geometry_generator_;
 	std::auto_ptr<GeometryLayer> ground_layer_;
 	std::auto_ptr<GeometryLayer> detail_layer_;
 	std::auto_ptr<GPXLayer> gpx_layer_;
+	std::auto_ptr<TerrainLayer> terrain_layer_;
 
 	bool ground_shown_;
 	bool detail_shown_;
 	bool gpx_shown_;
+	bool terrain_shown_;
 
 	int screenw_;
 	int screenh_;
