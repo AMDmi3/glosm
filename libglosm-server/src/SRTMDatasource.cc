@@ -36,8 +36,8 @@ enum {
 	FILE_HEIGHT = 1201,
 	FILE_WIDTH = 1201,
 
-	DATA_HEIGHT = 1201,
-	DATA_WIDTH = 1201,
+	DATA_HEIGHT = 1200,
+	DATA_WIDTH = 1200,
 };
 
 SRTMDatasource::SRTMDatasource(const char* storage_path) : storage_path_(storage_path) {
@@ -90,6 +90,7 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
 					throw SystemError() << "read error on SRTM file " << filename.str();
 
 #if BYTE_ORDER != BIG_ENDIAN
+				/* SRTM data is in big-endian format */
 				for (uint16_t* val = (uint16_t*)current; val < (uint16_t*)current + DATA_WIDTH; ++val)
 					*val = (*val >> 8) | (*val << 8);
 #endif
