@@ -29,9 +29,6 @@
 
 class SRTMDatasource : public HeightmapDatasource {
 protected:
-	typedef int16_t srtmval_t;
-
-protected:
 	struct ChunkId {
 		short lon;
 		short lat;
@@ -46,7 +43,7 @@ protected:
 
 	struct Chunk {
 		int generation;
-		std::vector<srtmval_t> data;
+		std::vector<int16_t> data;
 	};
 
 protected:

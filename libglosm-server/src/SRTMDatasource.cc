@@ -22,14 +22,15 @@
 
 #include <glosm/geomath.h>
 
+#include <sys/param.h>
+#include <unistd.h>
 #include <fcntl.h>
-#include <sys/endian.h>
 
 #include <cassert>
 #include <sstream>
 #include <iomanip>
 #include <cmath>
-#include <cmath>
+#include <cstdlib>
 
 enum {
 	FILE_HEIGHT = 1201,
@@ -82,16 +83,18 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
 
 		try {
 			chunk->second.data.resize(DATA_HEIGHT * DATA_WIDTH);
-			srtmval_t* current = chunk->second.data.data();
+			int16_t* current = chunk->second.data.data();
 
 			for (int line = 0; line < DATA_HEIGHT; line++) {
-				if (read(f, current, sizeof(srtmval_t) * DATA_WIDTH) != sizeof(srtmval_t) * DATA_WIDTH)
+				if (read(f, current, 2 * DATA_WIDTH) != 2 * DATA_WIDTH)
 					throw SystemError() << "read error on SRTM file " << filename.str();
 
-				for (srtmval_t* val = current; val < current + DATA_WIDTH; ++val)
-					*val = be16toh(*val);
+#if BYTE_ORDER != BIG_ENDIAN
+				for (uint16_t* val = (uint16_t*)current; val < (uint16_t*)current + DATA_WIDTH; ++val)
+					*val = (*val >> 8) | (*val << 8);
+#endif
 
-				if (lseek(f, sizeof(srtmval_t) * (FILE_WIDTH - DATA_WIDTH), SEEK_CUR) == -1)
+				if (lseek(f, 2 * (FILE_WIDTH - DATA_WIDTH), SEEK_CUR) == -1)
 					throw SystemError() << "cannot seek on SRTM file " << filename.str();
 
 				current += DATA_WIDTH;
