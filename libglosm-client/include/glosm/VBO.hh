@@ -43,4 +43,31 @@ public:
 	size_t GetSize() const;
 };
 
+class IBO : private NonCopyable {
+protected:
+	GLuint buffer_;
+	size_t size_;
+
+public:
+	IBO(const GLushort* data, int count);
+	~IBO();
+
+	void Bind() const;
+	void UnBind() const;
+	size_t GetSize() const;
+};
+
+/*class GenVBO : private NonCopyable {
+protected:
+	GLuint buffer_;
+	size_t size_;
+
+public:
+	GenVBO(const void* data, size_t size);
+	~GenVBO();
+
+	void Bind() const;
+	size_t GetSize() const;
+};*/
+
 #endif

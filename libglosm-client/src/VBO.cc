@@ -25,6 +25,7 @@ VBO::VBO(const Vector3f* data, int count) : size_(count) {
 	glGenBuffers(1, &buffer_);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer_);
 	glBufferData(GL_ARRAY_BUFFER, count*sizeof(Vector3f), data, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 VBO::~VBO() {
@@ -36,5 +37,28 @@ void VBO::Bind() const {
 }
 
 size_t VBO::GetSize() const {
+	return size_;
+}
+
+IBO::IBO(const GLushort* data, int count) : size_(count) {
+	glGenBuffers(1, &buffer_);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*sizeof(GLushort), data, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+IBO::~IBO() {
+	glDeleteBuffers(1, &buffer_);
+}
+
+void IBO::Bind() const {
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_);
+}
+
+void IBO::UnBind() const {
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+size_t IBO::GetSize() const {
 	return size_;
 }
