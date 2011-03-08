@@ -70,43 +70,56 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
 			gensorted.erase(gensorted.begin());
 	}
 
-	if (chunk->second.data.empty()) {
-		int f;
-
-		std::stringstream filename;
-		filename << storage_path_ << "/" << std::setfill('0')
-			<< (lat < 0 ? 'E' : 'N') << std::setw(2) << abs(lat)
-			<< (lon < 0 ? 'W' : 'E') << std::setw(3) << abs(lon) << ".hgt";
-
-		if ((f = open(filename.str().c_str(), O_RDONLY)) == -1)
-			throw SystemError() << "cannot open SRTM file " << filename.str();
-
-		try {
+	try {
+		if (chunk->second.data.empty()) {
 			chunk->second.data.resize(DATA_HEIGHT * DATA_WIDTH);
-			int16_t* current = chunk->second.data.data();
 
-			for (int line = 0; line < DATA_HEIGHT; line++) {
-				if (read(f, current, 2 * DATA_WIDTH) != 2 * DATA_WIDTH)
-					throw SystemError() << "read error on SRTM file " << filename.str();
+			std::stringstream filename;
+			filename << storage_path_ << "/" << std::setfill('0')
+				<< (lat < 0 ? 'E' : 'N') << std::setw(2) << abs(lat)
+				<< (lon < 0 ? 'W' : 'E') << std::setw(3) << abs(lon) << ".hgt";
+
+			int f;
+			if ((f = open(filename.str().c_str(), O_RDONLY)) == -1)
+				throw SystemError() << "cannot open SRTM file " << filename.str();
+
+			try {
+				int16_t* current = chunk->second.data.data();
+
+				for (int line = 0; line < DATA_HEIGHT; line++) {
+					int nread;
+					if ((nread = read(f, current, 2 * DATA_WIDTH)) == -1)
+						throw SystemError() << "read error on SRTM file " << filename.str();
+
+					if (nread != 2 * DATA_WIDTH)
+						throw Exception() << "short read on SRTM file " << filename.str();
 
 #if BYTE_ORDER != BIG_ENDIAN
-				/* SRTM data is in big-endian format */
-				for (uint16_t* val = (uint16_t*)current; val < (uint16_t*)current + DATA_WIDTH; ++val)
-					*val = (*val >> 8) | (*val << 8);
+					/* SRTM data is in big-endian format */
+					for (uint16_t* val = (uint16_t*)current; val < (uint16_t*)current + DATA_WIDTH; ++val)
+						*val = (*val >> 8) | (*val << 8);
 #endif
 
-				if (lseek(f, 2 * (FILE_WIDTH - DATA_WIDTH), SEEK_CUR) == -1)
-					throw SystemError() << "cannot seek on SRTM file " << filename.str();
+					if (lseek(f, 2 * (FILE_WIDTH - DATA_WIDTH), SEEK_CUR) == -1)
+						throw SystemError() << "cannot seek SRTM file " << filename.str();
 
-				current += DATA_WIDTH;
+					current += DATA_WIDTH;
+				}
+			} catch (...) {
+				close(f);
+				throw;
 			}
-		} catch (...) {
-			close(f);
-			chunks_.erase(chunk);
-			throw;
-		}
 
-		close(f);
+			close(f);
+		}
+	} catch (Exception& e) {
+		/* if the problem is in our code, just display warning.
+		 * returned chunk will be legal, but it will have zeroed
+		 * or partial data, which is better than just dying */
+		fprintf(stderr, "warning: %s\n", e.what());
+	} catch (...) {
+		chunks_.erase(chunk);
+		throw;
 	}
 
 	return chunk->second;
