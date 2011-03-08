@@ -35,7 +35,7 @@ class HeightmapDatasource;
 class Projection;
 
 template<class T>
-class VBO;
+class VertexBuffer;
 
 /**
  * A terrain tile
@@ -50,15 +50,8 @@ protected:
 	};
 
 protected:
-	typedef std::vector<TerrainVertex> VertexVector;
-	typedef std::vector<GLushort> IndexVector;
-
-protected:
-	std::auto_ptr<VertexVector> vertices_;
-	std::auto_ptr<IndexVector> indices_;
-
-	std::auto_ptr<VBO<TerrainVertex> > vbo_;
-	std::auto_ptr<VBO<GLushort> > ibo_;
+	std::auto_ptr<VertexBuffer<TerrainVertex> > vbo_;
+	std::auto_ptr<VertexBuffer<GLushort> > ibo_;
 
 	size_t size_;
 
@@ -69,17 +62,6 @@ public:
 	 * Destructor
 	 */
 	virtual ~TerrainTile();
-
-	/**
-	 * Moves projected geometry into OpenGL vertex buffers
-	 *
-	 * This can't be done in constructor as it may be called
-	 * from another thread, so this is done in Render()
-	 *
-	 * @todo doing tihs many times in a single frame may produce
-	 * noticeable lag so maybe it should be limited somehow
-	 */
-	void BindBuffers();
 
 	/**
 	 * Render this tile

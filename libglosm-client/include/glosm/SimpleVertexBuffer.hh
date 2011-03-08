@@ -29,15 +29,15 @@
 #include <memory>
 
 template <class T>
-class VBO;
+class VertexBuffer;
 
 /**
  * Static renderable geometry stored in VBOs
  */
 class SimpleVertexBuffer : public Renderable, private NonCopyable {
 protected:
-	std::auto_ptr<VBO<Vector3f> > vertices_;
-	std::auto_ptr<VBO<Vector3f> > normals_;
+	std::auto_ptr<VertexBuffer<Vector3f> > vertices_;
+	std::auto_ptr<VertexBuffer<Vector3f> > normals_;
 	GLenum mode_;
 	int size_;
 
