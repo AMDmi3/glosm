@@ -28,8 +28,9 @@
 #include <vector>
 
 SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count): vertices_(new VBO<Vector3f>(vertices, count)), size_(count) {
-	/* count normals; not sure if that logically belongs
+	/* calculate normals; not sure if that logically belongs
 	 * here, but for now it's useful */
+	/* @todo use single VBO for both positions and normals */
 	if (type == TRIANGLES || type == QUADS) {
 		int nvert = type == TRIANGLES ? 3 : 4;
 
