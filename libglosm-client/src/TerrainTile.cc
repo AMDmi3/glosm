@@ -39,38 +39,34 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 	 * vertex in the grid; we also store index array which
 	 * arranges vertices into a single triangle strip */
 
-	/* prepare vertices */
 	vertices_.reset(new VertexVector);
-	vertices_->reserve(resolution.x * resolution.y);
+	vertices_->resize(resolution.x * resolution.y);
 
+	/* prepare vertices */
+	int n = 0;
 	for (int y = 0; y < resolution.y; ++y) {
 		for (int x = 0; x < resolution.x; ++x) {
-			vertices_->push_back(projection.Project(
-						Vector3i(
-							(osmint_t)((double)real_bbox.left) + ((double)real_bbox.right - (double)real_bbox.left) * ((double)x / (double)(resolution.x - 1)),
-							(osmint_t)((double)real_bbox.bottom) + ((double)real_bbox.top - (double)real_bbox.bottom) * ((double)y / (double)(resolution.y - 1)),
-							terrain[y * resolution.x + x]
-						), ref));
+			(*vertices_)[n++].pos = projection.Project(Vector3i(
+								(osmint_t)((double)real_bbox.left) + ((double)real_bbox.right - (double)real_bbox.left) * ((double)x / (double)(resolution.x - 1)),
+								(osmint_t)((double)real_bbox.bottom) + ((double)real_bbox.top - (double)real_bbox.bottom) * ((double)y / (double)(resolution.y - 1)),
+								terrain[y * resolution.x + x]
+							), ref);
 		}
 	}
 
 	/* prepare normals */
-	normals_.reset(new VertexVector);
-	normals_->reserve(resolution.x * resolution.y);
-
+	n = 0;
 	for (int y = 0; y < resolution.y; ++y) {
 		for (int x = 0; x < resolution.x; ++x) {
 			if (x > 0 && x < resolution.x - 1 && y > 0 && y < resolution.y - 1) {
-				Vector3f v1 = (*vertices_)[y * resolution.x + x + 1] - (*vertices_)[y * resolution.x + x - 1];
-				Vector3f v2 = (*vertices_)[(y + 1) * resolution.x + x] - (*vertices_)[(y - 1) * resolution.x + x];
-				normals_->push_back(v1.CrossProduct(v2).Normalized());
+				Vector3f v1 = (*vertices_)[y * resolution.x + x + 1].pos - (*vertices_)[y * resolution.x + x - 1].pos;
+				Vector3f v2 = (*vertices_)[(y + 1) * resolution.x + x].pos - (*vertices_)[(y - 1) * resolution.x + x].pos;
+				(*vertices_)[n++].norm = v1.CrossProduct(v2).Normalized();
 			} else {
-				normals_->push_back(Vector3f(0.0f, 0.0f, 1.0f));
+				(*vertices_)[n++].norm = Vector3f(0.0f, 0.0f, 1.0f);
 			}
 		}
 	}
-
-	assert(vertices_->size() == normals_->size());
 
 	if (vertices_->size() > 65536)
 		throw std::logic_error("error constructing TerrainTile: more than 65536 vertices were stored in a VBO which is indexed with SHORTs");
@@ -92,7 +88,7 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 			indices_->push_back(y * resolution.x + resolution.x - 1);
 	}
 
-	size_ = vertices_->size() * 3 * sizeof(float) + normals_->size() * 3 * sizeof(float) + indices_->size() * sizeof(GLushort);
+	size_ = vertices_->size() * sizeof(TerrainVertex) + indices_->size() * sizeof(GLushort);
 }
 
 TerrainTile::~TerrainTile() {
@@ -100,35 +96,32 @@ TerrainTile::~TerrainTile() {
 
 void TerrainTile::BindBuffers() {
 	if (vertices_.get()) {
-		vertices_vbo_.reset(new VBO(vertices_->data(), vertices_->size()));
+		vbo_.reset(new VBO<TerrainVertex>(vertices_->data(), vertices_->size()));
 		vertices_.reset(NULL);
 	}
 
-	if (normals_.get()) {
-		normals_vbo_.reset(new VBO(normals_->data(), normals_->size()));
-		normals_.reset(NULL);
-	}
-
-	if (indices_.get() && !ibo_.get()) {
+	if (indices_.get()) {
 		ibo_.reset(new IBO(indices_->data(), indices_->size()));
 		indices_.reset(NULL);
 	}
 }
 
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 void TerrainTile::Render() {
 	BindBuffers();
 
+	vbo_->Bind();
+
 	glEnableClientState(GL_VERTEX_ARRAY);
-	vertices_vbo_->Bind();
-	glVertexPointer(3, GL_FLOAT, 0, 0);
+	glVertexPointer(3, GL_FLOAT, sizeof(TerrainVertex), BUFFER_OFFSET(0));
 
 	glEnableClientState(GL_NORMAL_ARRAY);
-	normals_vbo_->Bind();
-	glNormalPointer(GL_FLOAT, 0, 0);
+	glNormalPointer(GL_FLOAT, sizeof(TerrainVertex), BUFFER_OFFSET(12));
 
 	ibo_->Bind();
 
-	glDrawElements(GL_TRIANGLE_STRIP, ibo_->GetSize(), GL_UNSIGNED_SHORT, 0);
+	glDrawElements(GL_TRIANGLE_STRIP, ibo_->GetSize(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
 
 	ibo_->UnBind();
 

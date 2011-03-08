@@ -21,25 +21,6 @@
 
 #include <glosm/util/gl.h>
 
-VBO::VBO(const Vector3f* data, int count) : size_(count) {
-	glGenBuffers(1, &buffer_);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer_);
-	glBufferData(GL_ARRAY_BUFFER, count*sizeof(Vector3f), data, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-VBO::~VBO() {
-	glDeleteBuffers(1, &buffer_);
-}
-
-void VBO::Bind() const {
-	glBindBuffer(GL_ARRAY_BUFFER, buffer_);
-}
-
-size_t VBO::GetSize() const {
-	return size_;
-}
-
 IBO::IBO(const GLushort* data, int count) : size_(count) {
 	glGenBuffers(1, &buffer_);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_);

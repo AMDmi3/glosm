@@ -27,7 +27,7 @@
 #include <cassert>
 #include <vector>
 
-SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count): vertices_(new VBO(vertices, count)), size_(count) {
+SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count): vertices_(new VBO<Vector3f>(vertices, count)), size_(count) {
 	/* count normals; not sure if that logically belongs
 	 * here, but for now it's useful */
 	if (type == TRIANGLES || type == QUADS) {
@@ -43,7 +43,7 @@ SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count)
 
 		}
 
-		normals_.reset(new VBO(normals.data(), normals.size()));
+		normals_.reset(new VBO<Vector3f>(normals.data(), normals.size()));
 
 		assert(vertices_->GetSize() == normals_->GetSize());
 	}

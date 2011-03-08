@@ -30,17 +30,31 @@
 /**
  * Wrapper around OpenGL vertex buffer object
  */
+template<class T>
 class VBO : private NonCopyable {
 protected:
 	GLuint buffer_;
 	size_t size_;
 
 public:
-	VBO(const Vector3f* data, int count);
-	~VBO();
+	VBO(const T* data, int count): size_(count) {
+		glGenBuffers(1, &buffer_);
+		glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+		glBufferData(GL_ARRAY_BUFFER, count*sizeof(T), data, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 
-	void Bind() const;
-	size_t GetSize() const;
+	~VBO() {
+		glDeleteBuffers(1, &buffer_);
+	}
+
+	void Bind() const {
+		glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+	}
+
+	size_t GetSize() const {
+		return size_;
+	}
 };
 
 class IBO : private NonCopyable {
@@ -56,18 +70,5 @@ public:
 	void UnBind() const;
 	size_t GetSize() const;
 };
-
-/*class GenVBO : private NonCopyable {
-protected:
-	GLuint buffer_;
-	size_t size_;
-
-public:
-	GenVBO(const void* data, size_t size);
-	~GenVBO();
-
-	void Bind() const;
-	size_t GetSize() const;
-};*/
 
 #endif
