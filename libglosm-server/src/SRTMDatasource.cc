@@ -31,6 +31,7 @@
 #include <iomanip>
 #include <cmath>
 #include <cstdlib>
+#include <cstdio>
 
 enum {
 	FILE_HEIGHT = 1201,
