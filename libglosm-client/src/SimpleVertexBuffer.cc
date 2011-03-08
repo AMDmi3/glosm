@@ -27,7 +27,7 @@
 #include <cassert>
 #include <vector>
 
-SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count): vertices_(new VBO<Vector3f>(vertices, count)), size_(count) {
+SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count): vertices_(new VBO<Vector3f>(GL_ARRAY_BUFFER, vertices, count)), size_(count) {
 	/* calculate normals; not sure if that logically belongs
 	 * here, but for now it's useful */
 	/* @todo use single VBO for both positions and normals */
@@ -44,7 +44,7 @@ SimpleVertexBuffer::SimpleVertexBuffer(Type type, Vector3f* vertices, int count)
 
 		}
 
-		normals_.reset(new VBO<Vector3f>(normals.data(), normals.size()));
+		normals_.reset(new VBO<Vector3f>(GL_ARRAY_BUFFER, normals.data(), normals.size()));
 
 		assert(vertices_->GetSize() == normals_->GetSize());
 	}

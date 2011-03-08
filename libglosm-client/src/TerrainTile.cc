@@ -96,12 +96,12 @@ TerrainTile::~TerrainTile() {
 
 void TerrainTile::BindBuffers() {
 	if (vertices_.get()) {
-		vbo_.reset(new VBO<TerrainVertex>(vertices_->data(), vertices_->size()));
+		vbo_.reset(new VBO<TerrainVertex>(GL_ARRAY_BUFFER, vertices_->data(), vertices_->size()));
 		vertices_.reset(NULL);
 	}
 
 	if (indices_.get()) {
-		ibo_.reset(new IBO(indices_->data(), indices_->size()));
+		ibo_.reset(new VBO<GLushort>(GL_ELEMENT_ARRAY_BUFFER, indices_->data(), indices_->size()));
 		indices_.reset(NULL);
 	}
 }

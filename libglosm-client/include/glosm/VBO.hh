@@ -35,13 +35,14 @@ class VBO : private NonCopyable {
 protected:
 	GLuint buffer_;
 	size_t size_;
+	GLenum type_;
 
 public:
-	VBO(const T* data, int count): size_(count) {
+	VBO(GLenum type, const T* data, int count): type_(type), size_(count) {
 		glGenBuffers(1, &buffer_);
-		glBindBuffer(GL_ARRAY_BUFFER, buffer_);
-		glBufferData(GL_ARRAY_BUFFER, count*sizeof(T), data, GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(type, buffer_);
+		glBufferData(type, count*sizeof(T), data, GL_STATIC_DRAW);
+		glBindBuffer(type, 0);
 	}
 
 	~VBO() {
@@ -49,26 +50,16 @@ public:
 	}
 
 	void Bind() const {
-		glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+		glBindBuffer(type_, buffer_);
+	}
+
+	void UnBind() const {
+		glBindBuffer(type_, 0);
 	}
 
 	size_t GetSize() const {
 		return size_;
 	}
-};
-
-class IBO : private NonCopyable {
-protected:
-	GLuint buffer_;
-	size_t size_;
-
-public:
-	IBO(const GLushort* data, int count);
-	~IBO();
-
-	void Bind() const;
-	void UnBind() const;
-	size_t GetSize() const;
 };
 
 #endif

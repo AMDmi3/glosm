@@ -31,7 +31,6 @@ SET(SOURCES
 	src/TerrainLayer.cc
 	src/TerrainTile.cc
 	src/TileManager.cc
-	src/VBO.cc
 	src/mglu.cc
 )
 

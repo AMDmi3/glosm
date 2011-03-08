@@ -37,8 +37,6 @@ class Projection;
 template<class T>
 class VBO;
 
-class IBO;
-
 /**
  * A terrain tile
  *
@@ -60,7 +58,7 @@ protected:
 	std::auto_ptr<IndexVector> indices_;
 
 	std::auto_ptr<VBO<TerrainVertex> > vbo_;
-	std::auto_ptr<IBO> ibo_;
+	std::auto_ptr<VBO<GLushort> > ibo_;
 
 	size_t size_;
 

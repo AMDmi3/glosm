@@ -40,4 +40,18 @@
 #	include <GL/glext.h>
 #endif
 
+/*class OpenGLError : public Exception() {
+	static void Check() {
+		GLenum e;
+		if ((e = glGetError()) == GL_NO_ERROR)
+			return;
+
+		OpenGLError e;
+
+		while (glGetError) {
+
+		}
+	}
+};*/
+
 #endif
