@@ -61,8 +61,8 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 	for (int y = 0; y < resolution.y; ++y) {
 		for (int x = 0; x < resolution.x; ++x) {
 			if (x > 0 && x < resolution.x - 1 && y > 0 && y < resolution.y - 1) {
-				Vector3f v1 = ((*vertices_)[y * resolution.x + x + 1] - (*vertices_)[y * resolution.x + x - 1]).Normalized();
-				Vector3f v2 = ((*vertices_)[(y + 1) * resolution.x + x] - (*vertices_)[(y - 1) * resolution.x + x]).Normalized();
+				Vector3f v1 = (*vertices_)[y * resolution.x + x + 1] - (*vertices_)[y * resolution.x + x - 1];
+				Vector3f v2 = (*vertices_)[(y + 1) * resolution.x + x] - (*vertices_)[(y - 1) * resolution.x + x];
 				normals_->push_back(v1.CrossProduct(v2).Normalized());
 			} else {
 				normals_->push_back(Vector3f(0.0f, 0.0f, 1.0f));
