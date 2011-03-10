@@ -140,7 +140,7 @@ static void CreateArea(Geometry& geom, const VertexVector& vertices, bool revord
 
 		if (--iters == 0) {
 			/* FIXME: add way ID here, lacks interface to datasource */
-			fprintf(stderr, "warning: triangulation failed: giving up on %d/%d points\n", vert.size(), vertices.size());
+			fprintf(stderr, "warning: triangulation failed: giving up on %u/%u points\n", (unsigned int)vert.size(), (unsigned int)vertices.size());
 			return;
 		}
 	}

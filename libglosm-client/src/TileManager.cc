@@ -79,9 +79,8 @@ TileManager::~TileManager() {
 	pthread_mutex_destroy(&queue_mutex_);
 	pthread_mutex_destroy(&tiles_mutex_);
 
-	fprintf(stderr, "Tile statistics before cleanup: %d tiles, %d bytes\n", tile_count_, total_size_);
+	fprintf(stderr, "Tile statistics before cleanup: %u tiles, %u bytes\n", (unsigned int)tile_count_, (unsigned int)total_size_);
 	RecDestroyTiles(&root_);
-	fprintf(stderr, "Tile statistics after cleanup: %d tiles, %d bytes\n", tile_count_, total_size_);
 }
 
 /*
