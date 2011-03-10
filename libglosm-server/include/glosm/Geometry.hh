@@ -67,7 +67,7 @@ public:
 	void AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, const Vector3i& d);
 	void AddConvex(const std::vector<Vector3i>& v);
 
-	void StartConvex(const Vector3i& v);
+	void StartConvex();
 	void AppendConvex(const Vector3i& v);
 
 	const std::vector<Vector3i>& GetLines() const;

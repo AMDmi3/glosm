@@ -57,6 +57,15 @@ void Geometry::AddConvex(const std::vector<Vector3i>& v) {
 	convex_lengths_.push_back(v.size());
 }
 
+void Geometry::StartConvex() {
+	convex_lengths_.push_back(0);
+}
+
+void Geometry::AppendConvex(const Vector3i& v) {
+	convex_vertices_.push_back(v);
+	convex_lengths_.back()++;
+}
+
 const std::vector<Vector3i>& Geometry::GetLines() const {
 	return lines_;
 }
