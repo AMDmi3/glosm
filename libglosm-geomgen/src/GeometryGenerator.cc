@@ -33,8 +33,9 @@ typedef std::list<Vector2i> VertexList;
 typedef std::vector<Vector2i> VertexVector;
 
 static void CreateLines(Geometry& geom, const VertexVector& vertices, int z, const OsmDatasource::Way& /*unused*/) {
-	for (unsigned int i = 1; i < vertices.size(); ++i)
-		geom.AddLine(Vector3i(vertices[i-1], z), Vector3i(vertices[i], z));
+	geom.StartLine();
+	for (unsigned int i = 0; i < vertices.size(); ++i)
+		geom.AppendLine(Vector3i(vertices[i], z));//, Vector3i(vertices[i], z));
 }
 
 static void CreateVerticalLines(Geometry& geom, const VertexVector& vertices, int minz, int maxz, const OsmDatasource::Way& way) {
