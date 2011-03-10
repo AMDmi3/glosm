@@ -100,23 +100,22 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 	}
 }
 
-void Geometry::AddCroppedConvex(const Vector3i* v, int size, const BBoxi& bbox) {
+void Geometry::AddCroppedConvex(const Vector3i* v, unsigned int size, const BBoxi& bbox) {
 	struct VList {
 		Vector3i vertex;
 		VList* prev;
 		VList* next;
-		bool last;
 
 		VList() {}
-		VList(const Vector3i& v, VList* p, VList* n): vertex(v), prev(p), next(n), last(false) {}
+		VList(const Vector3i& v, VList* p, VList* n): vertex(v), prev(p), next(n) {}
 	};
 
 	/* construct circular linked list of vertices */
-	VList vertices[size + 4];
-	for (int i = 0; i < size; ++i)
+	VList* vertices = new VList[size + 4];
+	for (unsigned int i = 0; i < size; ++i)
 		vertices[i] = VList(v[i], &vertices[i-1], &vertices[i+1]);
 
-	int nvertices = size;
+	unsigned int nvertices = size;
 	vertices[0].prev = &vertices[nvertices - 1];
 	vertices[nvertices - 1].next = &vertices[0];
 
@@ -138,7 +137,7 @@ void Geometry::AddCroppedConvex(const Vector3i* v, int size, const BBoxi& bbox) 
 						p->prev->next = &vertices[nvertices];
 						p->prev = &vertices[nvertices];
 						nvertices++;
-						assert(nvertices < sizeof(vertices)/sizeof(vertices[0]));
+						assert(nvertices < size + 4);
 						if (!first)
 							first = p->prev;
 					} else {
@@ -173,6 +172,8 @@ void Geometry::AddCroppedConvex(const Vector3i* v, int size, const BBoxi& bbox) 
 	for (first = p, p = p->next; p != first; p = p->next, ++n)
 		convex_vertices_.push_back(p->vertex);
 	convex_lengths_.push_back(n);
+
+	delete vertices;
 }
 
 void Geometry::Serialize() const {

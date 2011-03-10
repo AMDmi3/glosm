@@ -80,7 +80,7 @@ public:
 	void Append(const Geometry& other);
 	void AppendCropped(const Geometry& other, const BBoxi& bbox);
 
-	void AddCroppedConvex(const Vector3i* v, int size, const BBoxi& bbox);
+	void AddCroppedConvex(const Vector3i* v, unsigned int size, const BBoxi& bbox);
 
 	void Serialize() const;
 	void DeSerialize();
