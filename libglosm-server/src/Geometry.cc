@@ -28,13 +28,9 @@ Geometry::Geometry() {
 }
 
 void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
-#if defined(WITH_GLES)
-	/* @todo this really belongs to libglosm-client */
-	if (lines_.size() > 65536-2)
-		return;
-#endif
-	lines_.push_back(a);
-	lines_.push_back(b);
+	lines_vertices_.push_back(a);
+	lines_vertices_.push_back(b);
+	lines_lengths_.push_back(2);
 }
 
 void Geometry::AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c) {
@@ -52,9 +48,23 @@ void Geometry::AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, 
 	convex_lengths_.push_back(4);
 }
 
+void Geometry::AddLine(const std::vector<Vector3i>& v) {
+	lines_vertices_.insert(convex_vertices_.end(), v.begin(), v.end());
+	lines_lengths_.push_back(v.size());
+}
+
 void Geometry::AddConvex(const std::vector<Vector3i>& v) {
 	convex_vertices_.insert(convex_vertices_.end(), v.begin(), v.end());
 	convex_lengths_.push_back(v.size());
+}
+
+void Geometry::StartLine() {
+	lines_lengths_.push_back(0);
+}
+
+void Geometry::AppendLine(const Vector3i& v) {
+	lines_vertices_.push_back(v);
+	lines_lengths_.back()++;
 }
 
 void Geometry::StartConvex() {
@@ -66,8 +76,12 @@ void Geometry::AppendConvex(const Vector3i& v) {
 	convex_lengths_.back()++;
 }
 
-const std::vector<Vector3i>& Geometry::GetLines() const {
-	return lines_;
+const Geometry::VertexVector& Geometry::GetLinesVertices() const {
+	return lines_vertices_;
+}
+
+const Geometry::LengthVector& Geometry::GetLinesLengths() const {
+	return lines_lengths_;
 }
 
 const Geometry::VertexVector& Geometry::GetConvexVertices() const {
@@ -79,31 +93,26 @@ const Geometry::LengthVector& Geometry::GetConvexLengths() const {
 }
 
 void Geometry::Append(const Geometry& other) {
-	lines_.reserve(lines_.size() + other.lines_.size());
 	convex_vertices_.reserve(convex_vertices_.size() + other.convex_vertices_.size());
-	convex_lengths_.reserve(convex_lengths_.size() + other.convex_lengths_.size());
-
-	lines_.insert(lines_.end(), other.lines_.begin(), other.lines_.end());
 	convex_vertices_.insert(convex_vertices_.end(), other.convex_vertices_.begin(), other.convex_vertices_.end());
+
+	convex_lengths_.reserve(convex_lengths_.size() + other.convex_lengths_.size());
 	convex_lengths_.insert(convex_lengths_.end(), other.convex_lengths_.begin(), other.convex_lengths_.end());
+
+	lines_vertices_.reserve(lines_vertices_.size() + other.lines_vertices_.size());
+	lines_vertices_.insert(lines_vertices_.end(), other.lines_vertices_.begin(), other.lines_vertices_.end());
+
+	lines_lengths_.reserve(lines_lengths_.size() + other.lines_lengths_.size());
+	lines_lengths_.insert(lines_lengths_.end(), other.lines_lengths_.begin(), other.lines_lengths_.end());
 }
 
 void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
-	lines_.reserve(lines_.size() + other.lines_.size());
-	triangles_.reserve(triangles_.size() + other.triangles_.size());
-	quads_.reserve(quads_.size() + other.quads_.size());
-
-	Vector3i a, b, c;
-	for (size_t i = 0; i < other.lines_.size(); i += 2) {
-		if (bbox.Contains(other.lines_[i]) && bbox.Contains(other.lines_[i+1]))
-			AddLine(other.lines_[i], other.lines_[i+1]);
-		else if (CropSegmentByBBox(other.lines_[i], other.lines_[i+1], bbox, a, b))
-			AddLine(a, b);
+	for (unsigned int i = 0, curpos = 0; i < other.lines_lengths_.size(); ++i) {
+		AddCroppedLine(&other.lines_vertices_[curpos], other.lines_lengths_[i], bbox);
+		curpos += other.lines_lengths_[i];
 	}
 
-	int curpos = 0;
-	for (size_t i = 0; i < other.convex_lengths_.size(); ++i) {
-		/* @todo check bbox first */
+	for (unsigned int i = 0, curpos = 0; i < other.convex_lengths_.size(); ++i) {
 		AddCroppedConvex(&other.convex_vertices_[curpos], other.convex_lengths_[i], bbox);
 		curpos += other.convex_lengths_[i];
 	}
@@ -120,9 +129,27 @@ void Geometry::AddCroppedConvex(const Vector3i* v, unsigned int size, const BBox
 	};
 
 	/* construct circular linked list of vertices */
-	VList* vertices = new VList[size + 4];
-	for (unsigned int i = 0; i < size; ++i)
+	bool all_vertices_in_bbox = true;
+
+	/* ugly way of allocating a simple array; don't want to use
+	 * new here to not care of freeing, and automatic array of
+	 * VList is not allowed since VList is not POD */
+	char buffer[sizeof(VList) * (size + 4)];
+	VList* vertices = reinterpret_cast<VList*>(buffer);
+	for (unsigned int i = 0; i < size; ++i) {
 		vertices[i] = VList(v[i], &vertices[i-1], &vertices[i+1]);
+		if (!bbox.Contains(v[i]))
+			all_vertices_in_bbox = false;
+	}
+
+	/* don't run expensive algorithm if cropping is not required */
+	if (all_vertices_in_bbox) {
+		convex_vertices_.reserve(convex_vertices_.size() + size);
+		for (int i = 0; i < size; ++i)
+			convex_vertices_.push_back(v[i]);
+		convex_lengths_.push_back(size);
+		return;
+	}
 
 	unsigned int nvertices = size;
 	vertices[0].prev = &vertices[nvertices - 1];
@@ -181,8 +208,41 @@ void Geometry::AddCroppedConvex(const Vector3i* v, unsigned int size, const BBox
 	for (first = p, p = p->next; p != first; p = p->next, ++n)
 		convex_vertices_.push_back(p->vertex);
 	convex_lengths_.push_back(n);
+}
 
-	delete vertices;
+void Geometry::AddCroppedLine(const Vector3i* v, unsigned int size, const BBoxi& bbox) {
+	bool contained_prev = false;
+	for (int i = 0; i < size; ++i) {
+		if (bbox.Contains(v[i])) {
+			if (i == 0) {
+				lines_lengths_.push_back(1);
+			} else if (contained_prev) {
+				lines_lengths_.back()++;
+			} else {
+				Vector3i intersection;
+				IntersectSegmentWithBBox(v[i-1], v[i], bbox, intersection);
+				lines_lengths_.push_back(2);
+				lines_vertices_.push_back(intersection);
+			}
+			lines_vertices_.push_back(v[i]);
+			contained_prev = true;
+		} else {
+			if (contained_prev) {
+				Vector3i intersection;
+				IntersectSegmentWithBBox(v[i-1], v[i], bbox, intersection);
+				lines_vertices_.push_back(intersection);
+				lines_lengths_.back()++;
+			} else if (i != 0) {
+				Vector3i intersection1, intersection2;
+				if (CropSegmentByBBox(v[i-1], v[i], bbox, intersection1, intersection2)) {
+					lines_vertices_.push_back(intersection1);
+					lines_vertices_.push_back(intersection2);
+					lines_lengths_.push_back(2);
+				}
+			}
+			contained_prev = false;
+		}
+	}
 }
 
 void Geometry::Serialize() const {

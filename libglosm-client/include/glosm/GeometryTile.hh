@@ -51,7 +51,8 @@ protected:
 	};
 
 protected:
-	std::auto_ptr<VertexBuffer<Vector3f> > lines_;
+	std::auto_ptr<VertexBuffer<Vector3f> > lines_vertices_;
+	std::auto_ptr<VertexBuffer<GLuint> > lines_indices_;
 
 	std::auto_ptr<VertexBuffer<Vertex> > convex_vertices_;
 	std::auto_ptr<VertexBuffer<GLuint> > convex_indices_;

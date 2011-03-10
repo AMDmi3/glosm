@@ -51,11 +51,9 @@ public:
 	typedef std::vector<int> LengthVector;
 
 protected:
-	VertexVector lines_;
-	VertexVector triangles_;
-	VertexVector quads_;
+	VertexVector lines_vertices_;
+	LengthVector lines_lengths_;
 
-protected:
 	VertexVector convex_vertices_;
 	LengthVector convex_lengths_;
 
@@ -66,13 +64,16 @@ public:
 	void AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c);
 	void AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, const Vector3i& d);
 	void AddConvex(const std::vector<Vector3i>& v);
+	void AddLine(const std::vector<Vector3i>& v);
+
+	void StartLine();
+	void AppendLine(const Vector3i& v);
 
 	void StartConvex();
 	void AppendConvex(const Vector3i& v);
 
-	const std::vector<Vector3i>& GetLines() const;
-	const std::vector<Vector3i>& GetTriangles() const;
-	const std::vector<Vector3i>& GetQuads() const;
+	const VertexVector& GetLinesVertices() const;
+	const LengthVector& GetLinesLengths() const;
 
 	const VertexVector& GetConvexVertices() const;
 	const LengthVector& GetConvexLengths() const;
@@ -81,6 +82,7 @@ public:
 	void AppendCropped(const Geometry& other, const BBoxi& bbox);
 
 	void AddCroppedConvex(const Vector3i* v, unsigned int size, const BBoxi& bbox);
+	void AddCroppedLine(const Vector3i* v, unsigned int size, const BBoxi& bbox);
 
 	void Serialize() const;
 	void DeSerialize();

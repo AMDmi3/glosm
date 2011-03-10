@@ -25,14 +25,37 @@
 #include <glosm/Geometry.hh>
 #include <glosm/VertexBuffer.hh>
 
-GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
-	size_ = 0;
+GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref), size_(0) {
+	if (!geometry.GetConvexLengths().empty()) {
+		lines_vertices_.reset(new VertexBuffer<Vector3f>(GL_ARRAY_BUFFER));
+		lines_indices_.reset(new VertexBuffer<GLuint>(GL_ELEMENT_ARRAY_BUFFER));
 
-	if (!geometry.GetLines().empty()) {
-		lines_.reset(new VertexBuffer<Vector3f>(GL_ARRAY_BUFFER));
-		projection.ProjectPoints(geometry.GetLines(), ref, lines_->Data());
+		const Geometry::VertexVector& vertices = geometry.GetLinesVertices();
+		const Geometry::LengthVector& lengths = geometry.GetLinesLengths();
 
-		size_ += geometry.GetLines().size() * 3 * sizeof(float);
+		lines_vertices_->Data().reserve(vertices.size());
+
+		for (unsigned int i = 0, curpos = 0; i < lengths.size(); ++i) {
+#if defined(WITH_GLES)
+			/* GL ES doesn't support VBOs larger than 65536 elements */
+			/* @todo split into multiple VBOs */
+			if (curpos + lengths[i] > 65536)
+				break;
+#endif
+
+			for (int j = 0; j < lengths[i]; ++j) {
+				lines_vertices_->Data().push_back(projection.Project(vertices[curpos + j], ref));
+			}
+
+			for (int j = 1; j < lengths[i]; ++j) {
+				lines_indices_->Data().push_back(curpos + j - 1);
+				lines_indices_->Data().push_back(curpos + j);
+			}
+
+			curpos += lengths[i];
+		}
+
+		size_ += lines_vertices_->GetFootprint() + lines_indices_->GetFootprint();
 	}
 
 	if (!geometry.GetConvexLengths().empty()) {
@@ -44,8 +67,7 @@ GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometr
 
 		convex_vertices_->Data().reserve(vertices.size());
 
-		unsigned int curpos = 0;
-		for (unsigned int i = 0; i < lengths.size(); ++i) {
+		for (unsigned int i = 0, curpos = 0; i < lengths.size(); ++i) {
 #if defined(WITH_GLES)
 			/* GL ES doesn't support VBOs larger than 65536 elements */
 			/* @todo split into multiple VBOs */
@@ -114,7 +136,7 @@ void GeometryTile::CalcFanNormal(Vertex* vertices, int count) {
 }
 
 void GeometryTile::Render() {
-	if (lines_.get()) {
+	if (lines_vertices_.get()) {
 		glDepthFunc(GL_LESS);
 
 		glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
@@ -124,12 +146,15 @@ void GeometryTile::Render() {
 		glDisable(GL_LINE_STIPPLE);
 		*/
 
-		lines_->Bind();
+		lines_vertices_->Bind();
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f), BUFFER_OFFSET(0));
 
-		glDrawArrays(GL_LINES, 0, lines_->GetSize());
+//		convex_indices_->Bind();
+//		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_LINES, lines_indices_->GetSize(), GL_UNSIGNED_INT, lines_indices_->Data().data());
+//		convex_indices_->UnBind();
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
@@ -150,21 +175,21 @@ void GeometryTile::Render() {
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 
-        convex_vertices_->Bind();
+		convex_vertices_->Bind();
 
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(0));
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(0));
 
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glNormalPointer(GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(12));
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glNormalPointer(GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(12));
 
 //		convex_indices_->Bind();
 //		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, 0);
 		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, convex_indices_->Data().data());
 //		convex_indices_->UnBind();
 
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
 
 		glDisable(GL_LIGHT0);
 		glDisable(GL_LIGHTING);
