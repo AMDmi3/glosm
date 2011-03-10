@@ -12,6 +12,8 @@ Features
    * Basic geometry generator (renders buildings, barriers and roads
      in 3D, other polygons as lines at ground level)
    * Mercator and spherical projections
+   * Support for tracks in GPX format
+   * SRTM elevation data support
    * First-person real-time 3D map viewer
    * Command-line ortho tile renderer
    * Extensible framework for building (other) 3D geodata
@@ -64,13 +66,14 @@ Installation
     mkdir build && cd build && cmake .. && make
 
   On FreeBSD, glosm is also available from ports collection
-  (graphics/glosm).
+  (graphics/glosm, [1]).
 
   Native build on Windows has not been tested yet, but
-  cross-compilation works (see [1]) and native compilation should work
+  cross-compilation works (see [2]) and native compilation should work
   similarily.
 
-  [1] https://github.com/AMDmi3/glosm/wiki/CrossCompilation
+  [1] http://www.freshports.org/graphics/glosm
+  [2] https://github.com/AMDmi3/glosm/wiki/CrossCompilation
 
 Usage
 =====
@@ -81,7 +84,7 @@ Usage
   glosm-viewer
   ------------
 
-    glosm-viewer [-sf] <file.osm|->
+    glosm-viewer [-sfh] [-t <path>] <file.osm|-> [<file.gpx> ...]
 
   runs interactive 3D map viewer for a specified map dump. Dumps can
   be obtained from OpenStreetMap editing applications (jOSM,
@@ -99,6 +102,9 @@ Usage
 
     -s      - enable spherical Earth view (instead of mercator)
     -f      - disable GLEW OpenGL version check (for testing purposes)
+    -h      - show help
+    -t      - specify path to directory with SRTM (*.hgt) files and
+              enable 3D terrain layer
 
   Controls:
 
@@ -116,6 +122,8 @@ Usage
     Ctrl        - decrease movement speed by 5x when pressed (SDL only)
     1           - toggle lowres (ground) layer
     2           - toggle hires (buildings) layer
+    3           - toggle GPX layer
+    4           - toggle terrain layer
     Q or Escape - close application
 
     Right mouse button toggles mouse grab. When grab is off, view
@@ -223,8 +231,7 @@ API stability
 
     * OsmDatasource interface
     * GeometryGenerator (due to above)
-    * Geometry (material support, optimizations like triangle
-      strip/fan support, serialization)
+    * Geometry (material support, serialization)
 
 Tests
 =====
