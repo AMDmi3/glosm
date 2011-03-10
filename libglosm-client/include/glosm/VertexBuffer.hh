@@ -51,13 +51,14 @@ protected:
 	GLuint buffer_id_;
 	size_t size_;
 	GLenum type_;
+	GLenum mode_;
 	std::auto_ptr<DataVector> ram_data_;
 
 protected:
 	void CreateBufferObject(const T* data, int count) {
 		glGenBuffers(1, &buffer_id_);
 		glBindBuffer(type_, buffer_id_);
-		glBufferData(type_, count * sizeof(T), data, GL_STATIC_DRAW);
+		glBufferData(type_, count * sizeof(T), data, mode_);
 		glBindBuffer(type_, 0);
 		size_ = count;
 	}
@@ -73,7 +74,7 @@ public:
 	 *
 	 * @param type buffer type (GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER)
 	 */
-	VertexBuffer(GLenum type): buffer_id_(0), size_(0), type_(type), ram_data_(new DataVector) {
+	VertexBuffer(GLenum type = GL_ARRAY_BUFFER, GLenum mode = GL_STATIC_DRAW): buffer_id_(0), size_(0), type_(type), mode_(mode), ram_data_(new DataVector) {
 	}
 
 	/**
