@@ -38,52 +38,45 @@ void Geometry::AddLine(const Vector3i& a, const Vector3i& b) {
 }
 
 void Geometry::AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c) {
-#if defined(WITH_GLES)
-	/* GL ES only supports 65536 vertices in a buffer, so
-	 * drop extra data instead of producing artifacts */
-	/* @todo this really belongs to libglosm-client */
-	if (triangles_.size() > 65536-3)
-		return;
-#endif
-
-	triangles_.push_back(a);
-	triangles_.push_back(b);
-	triangles_.push_back(c);
+	convex_vertices_.push_back(a);
+	convex_vertices_.push_back(b);
+	convex_vertices_.push_back(c);
+	convex_lengths_.push_back(3);
 }
 
 void Geometry::AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, const Vector3i& d) {
-#if !defined(WITH_GLES)
-	quads_.push_back(a);
-	quads_.push_back(b);
-	quads_.push_back(c);
-	quads_.push_back(d);
-#else
-	/* GL ES doesn't support quads */
-	AddTriangle(a, b, c);
-	AddTriangle(c, d, a);
-#endif
+	convex_vertices_.push_back(a);
+	convex_vertices_.push_back(b);
+	convex_vertices_.push_back(c);
+	convex_vertices_.push_back(d);
+	convex_lengths_.push_back(4);
+}
+
+void Geometry::AddConvex(const std::vector<Vector3i>& v) {
+	convex_vertices_.insert(convex_vertices_.end(), v.begin(), v.end());
+	convex_lengths_.push_back(v.size());
 }
 
 const std::vector<Vector3i>& Geometry::GetLines() const {
 	return lines_;
 }
 
-const std::vector<Vector3i>& Geometry::GetTriangles() const {
-	return triangles_;
+const Geometry::VertexVector& Geometry::GetConvexVertices() const {
+	return convex_vertices_;
 }
 
-const std::vector<Vector3i>& Geometry::GetQuads() const {
-	return quads_;
+const Geometry::LengthVector& Geometry::GetConvexLengths() const {
+	return convex_lengths_;
 }
 
 void Geometry::Append(const Geometry& other) {
 	lines_.reserve(lines_.size() + other.lines_.size());
-	triangles_.reserve(triangles_.size() + other.triangles_.size());
-	quads_.reserve(quads_.size() + other.quads_.size());
+	convex_vertices_.reserve(convex_vertices_.size() + other.convex_vertices_.size());
+	convex_lengths_.reserve(convex_lengths_.size() + other.convex_lengths_.size());
 
 	lines_.insert(lines_.end(), other.lines_.begin(), other.lines_.end());
-	triangles_.insert(triangles_.end(), other.triangles_.begin(), other.triangles_.end());
-	quads_.insert(quads_.end(), other.quads_.begin(), other.quads_.end());
+	convex_vertices_.insert(convex_vertices_.end(), other.convex_vertices_.begin(), other.convex_vertices_.end());
+	convex_lengths_.insert(convex_lengths_.end(), other.convex_lengths_.begin(), other.convex_lengths_.end());
 }
 
 void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
@@ -99,20 +92,15 @@ void Geometry::AppendCropped(const Geometry& other, const BBoxi& bbox) {
 			AddLine(a, b);
 	}
 
-	for (size_t i = 0; i < other.triangles_.size(); i += 3)
-		AddCroppedTriangle(other.triangles_[i], other.triangles_[i+1], other.triangles_[i+2], bbox);
-
-	for (size_t i = 0; i < other.quads_.size(); i += 4) {
-		if (bbox.Contains(other.quads_[i]) && bbox.Contains(other.quads_[i+1]) && bbox.Contains(other.quads_[i+2]) && bbox.Contains(other.quads_[i+3])) {
-			AddQuad(other.quads_[i], other.quads_[i+1], other.quads_[i+2], other.quads_[i+3]);
-		} else {
-			AddCroppedTriangle(other.quads_[i], other.quads_[i+1], other.quads_[i+2], bbox);
-			AddCroppedTriangle(other.quads_[i+2], other.quads_[i+3], other.quads_[i], bbox);
-		}
+	int curpos = 0;
+	for (size_t i = 0; i < other.convex_lengths_.size(); ++i) {
+		/* @todo check bbox first */
+		AddCroppedConvex(&other.convex_vertices_[curpos], other.convex_lengths_[i], bbox);
+		curpos += other.convex_lengths_[i];
 	}
 }
 
-void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox) {
+void Geometry::AddCroppedConvex(const Vector3i* v, int size, const BBoxi& bbox) {
 	struct VList {
 		Vector3i vertex;
 		VList* prev;
@@ -123,13 +111,16 @@ void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Ve
 		VList(const Vector3i& v, VList* p, VList* n): vertex(v), prev(p), next(n), last(false) {}
 	};
 
-	VList vertices[6];
-	vertices[0] = VList(a, &vertices[2], &vertices[1]);
-	vertices[1] = VList(b, &vertices[0], &vertices[2]);
-	vertices[2] = VList(c, &vertices[1], &vertices[0]);
-	int nvertices = 3;
+	/* construct circular linked list of vertices */
+	VList vertices[size + 4];
+	for (int i = 0; i < size; ++i)
+		vertices[i] = VList(v[i], &vertices[i-1], &vertices[i+1]);
 
-	/* crop left */
+	int nvertices = size;
+	vertices[0].prev = &vertices[nvertices - 1];
+	vertices[nvertices - 1].next = &vertices[0];
+
+	/* crop by each side of bbox */
 	Vector3i prevint, nextint;
 	VList* p = &vertices[0];
 	VList* first;
@@ -147,6 +138,7 @@ void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Ve
 						p->prev->next = &vertices[nvertices];
 						p->prev = &vertices[nvertices];
 						nvertices++;
+						assert(nvertices < sizeof(vertices)/sizeof(vertices[0]));
 						if (!first)
 							first = p->prev;
 					} else {
@@ -176,12 +168,11 @@ void Geometry::AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Ve
 		} while ((p = p->next) != first);
 	}
 
-	first = p;
-	p = p->next->next;
-	do {
-		AddTriangle(first->vertex, p->prev->vertex, p->vertex);
-		p = p->next;
-	} while (p != first);
+	int n = 1;
+	convex_vertices_.push_back(p->vertex);
+	for (first = p, p = p->next; p != first; p = p->next, ++n)
+		convex_vertices_.push_back(p->vertex);
+	convex_lengths_.push_back(n);
 }
 
 void Geometry::Serialize() const {

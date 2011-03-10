@@ -23,26 +23,52 @@
 
 #include <glosm/Projection.hh>
 #include <glosm/Geometry.hh>
-#include <glosm/SimpleVertexBuffer.hh>
+#include <glosm/VertexBuffer.hh>
 
 GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
-	size_ = geometry.GetLines().size() * 3 * sizeof(float) +
-			geometry.GetTriangles().size() * 3 * sizeof(float) * 2 + /* takes normals into account */
-			geometry.GetQuads().size() * 3 * sizeof(float) * 2;
+	size_ = 0;
 
 	if (!geometry.GetLines().empty()) {
-		projected_lines_.reset(new ProjectedVertices);
-		projection.ProjectPoints(geometry.GetLines(), ref, *projected_lines_);
+		lines_.reset(new VertexBuffer<Vector3f>(GL_ARRAY_BUFFER));
+		projection.ProjectPoints(geometry.GetLines(), ref, lines_->Data());
+
+		size_ += geometry.GetLines().size() * 3 * sizeof(float);
 	}
 
-	if (!geometry.GetTriangles().empty()) {
-		projected_triangles_.reset(new ProjectedVertices);
-		projection.ProjectPoints(geometry.GetTriangles(), ref, *projected_triangles_);
-	}
+	if (!geometry.GetConvexLengths().empty()) {
+		convex_vertices_.reset(new VertexBuffer<Vertex>(GL_ARRAY_BUFFER));
+		convex_indices_.reset(new VertexBuffer<GLuint>(GL_ELEMENT_ARRAY_BUFFER));
 
-	if (!geometry.GetQuads().empty()) {
-		projected_quads_.reset(new ProjectedVertices);
-		projection.ProjectPoints(geometry.GetQuads(), ref, *projected_quads_);
+		const Geometry::VertexVector& vertices = geometry.GetConvexVertices();
+		const Geometry::LengthVector& lengths = geometry.GetConvexLengths();
+
+		convex_vertices_->Data().reserve(vertices.size());
+
+		unsigned int curpos = 0;
+		for (unsigned int i = 0; i < lengths.size(); ++i) {
+#if defined(WITH_GLES)
+			/* GL ES doesn't support VBOs larger than 65536 elements */
+			/* @todo split into multiple VBOs */
+			if (curpos + lengths[i] > 65536)
+				break;
+#endif
+
+			for (int j = 0; j < lengths[i]; ++j) {
+				convex_vertices_->Data().push_back(Vertex(projection.Project(vertices[curpos + j], ref)));
+			}
+
+			for (int j = 2; j < lengths[i]; ++j) {
+				convex_indices_->Data().push_back(curpos);
+				convex_indices_->Data().push_back(curpos + j - 1);
+				convex_indices_->Data().push_back(curpos + j);
+			}
+
+			CalcFanNormal(&convex_vertices_->Data()[curpos], lengths[i]);
+
+			curpos += lengths[i];
+		}
+
+		size_ += convex_vertices_->GetFootprint() + convex_indices_->GetFootprint();
 	}
 
 #if defined(TILE_DEBUG) && !defined(WITH_GLES) && !defined(WITH_GLES2)
@@ -72,26 +98,22 @@ GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometr
 GeometryTile::~GeometryTile() {
 }
 
-void GeometryTile::BindBuffers() {
-	if (projected_lines_.get()) {
-		lines_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::LINES, projected_lines_->data(), projected_lines_->size()));
-		projected_lines_.reset(NULL);
-	}
+void GeometryTile::CalcFanNormal(Vertex* vertices, int count) {
+	Vector3f first = vertices[1].pos - vertices[0].pos;
+	Vector3f normal;
+	for (int i = 1; i < count; ++i) {
+		Vector3f v = vertices[i].pos - vertices[0].pos;
 
-	if (projected_triangles_.get()) {
-		triangles_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::TRIANGLES, projected_triangles_->data(), projected_triangles_->size()));
-		projected_triangles_.reset(NULL);
+		if ((normal = first.CrossProduct(v)).LengthSquare() > 0)
+			break;
 	}
+	normal.Normalize();
 
-	if (projected_quads_.get()) {
-		quads_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::QUADS, projected_quads_->data(), projected_quads_->size()));
-		projected_quads_.reset(NULL);
-	}
+	for (int i = 0; i < count; ++i)
+		vertices[i].norm = normal;
 }
 
 void GeometryTile::Render() {
-	BindBuffers();
-
 	if (lines_.get()) {
 		glDepthFunc(GL_LESS);
 
@@ -102,10 +124,17 @@ void GeometryTile::Render() {
 		glDisable(GL_LINE_STIPPLE);
 		*/
 
-		lines_->Render();
+		lines_->Bind();
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f), BUFFER_OFFSET(0));
+
+		glDrawArrays(GL_LINES, 0, lines_->GetSize());
+
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 
-	if (triangles_.get() || quads_.get()) {
+	if (convex_vertices_.get()) {
 		/* polygons */
 		glPolygonOffset(1.0, 1.0);
 		glEnable(GL_POLYGON_OFFSET_FILL);
@@ -121,10 +150,21 @@ void GeometryTile::Render() {
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 
-		if (triangles_.get())
-			triangles_->Render();
-		if (quads_.get())
-			quads_->Render();
+        convex_vertices_->Bind();
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(0));
+
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glNormalPointer(GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(12));
+
+//		convex_indices_->Bind();
+//		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, convex_indices_->Data().data());
+//		convex_indices_->UnBind();
+
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
 
 		glDisable(GL_LIGHT0);
 		glDisable(GL_LIGHTING);

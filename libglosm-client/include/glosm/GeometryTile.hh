@@ -21,13 +21,16 @@
 #define GEOMETRYTILE_HH
 
 #include <glosm/Tile.hh>
-#include <glosm/NonCopyable.hh>
 #include <glosm/BBox.hh>
+#include <glosm/NonCopyable.hh>
+
+#include <glosm/util/gl.h>
 
 #include <memory>
 #include <vector>
 
-class SimpleVertexBuffer;
+template<class T>
+class VertexBuffer;
 
 class Projection;
 class Geometry;
@@ -39,16 +42,19 @@ class Geometry;
  */
 class GeometryTile : public Tile, private NonCopyable {
 protected:
-	typedef std::vector<Vector3f> ProjectedVertices;
+	struct Vertex {
+		Vector3f pos;
+		Vector3f norm;
+
+		Vertex(const Vector3f& p): pos(p) {
+		}
+	};
 
 protected:
-	std::auto_ptr<ProjectedVertices> projected_lines_;
-	std::auto_ptr<ProjectedVertices> projected_triangles_;
-	std::auto_ptr<ProjectedVertices> projected_quads_;
+	std::auto_ptr<VertexBuffer<Vector3f> > lines_;
 
-	std::auto_ptr<SimpleVertexBuffer> lines_;
-	std::auto_ptr<SimpleVertexBuffer> triangles_;
-	std::auto_ptr<SimpleVertexBuffer> quads_;
+	std::auto_ptr<VertexBuffer<Vertex> > convex_vertices_;
+	std::auto_ptr<VertexBuffer<GLuint> > convex_indices_;
 
 	size_t size_;
 
@@ -56,6 +62,9 @@ protected:
 	Vector3f bound_1[4];
 	Vector3f bound_2[40];
 #endif
+
+protected:
+	void CalcFanNormal(Vertex* vertices, int count);
 
 public:
 	/**
@@ -72,17 +81,6 @@ public:
 	 * Destructor
 	 */
 	virtual ~GeometryTile();
-
-	/**
-	 * Moves projected geometry into OpenGL vertex buffers
-	 *
-	 * This can't be done in constructor as it may be called
-	 * from another thread, so this is done in Render()
-	 *
-	 * @todo doing tihs many times in a single frame may produce
-	 * noticeable lag so maybe it should be limited somehow
-	 */
-	void BindBuffers();
 
 	/**
 	 * Render this tile

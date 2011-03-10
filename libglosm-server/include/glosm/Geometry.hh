@@ -46,13 +46,18 @@
  * less fps and more memory, so for now they're quite useful.
  */
 class Geometry {
-protected:
+public:
 	typedef std::vector<Vector3i> VertexVector;
+	typedef std::vector<int> LengthVector;
 
 protected:
 	VertexVector lines_;
 	VertexVector triangles_;
 	VertexVector quads_;
+
+protected:
+	VertexVector convex_vertices_;
+	LengthVector convex_lengths_;
 
 public:
 	Geometry();
@@ -60,15 +65,22 @@ public:
 	void AddLine(const Vector3i& a, const Vector3i& b);
 	void AddTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c);
 	void AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, const Vector3i& d);
+	void AddConvex(const std::vector<Vector3i>& v);
+
+	void StartConvex(const Vector3i& v);
+	void AppendConvex(const Vector3i& v);
 
 	const std::vector<Vector3i>& GetLines() const;
 	const std::vector<Vector3i>& GetTriangles() const;
 	const std::vector<Vector3i>& GetQuads() const;
 
+	const VertexVector& GetConvexVertices() const;
+	const LengthVector& GetConvexLengths() const;
+
 	void Append(const Geometry& other);
 	void AppendCropped(const Geometry& other, const BBoxi& bbox);
 
-	void AddCroppedTriangle(const Vector3i& a, const Vector3i& b, const Vector3i& c, const BBoxi& bbox);
+	void AddCroppedConvex(const Vector3i* v, int size, const BBoxi& bbox);
 
 	void Serialize() const;
 	void DeSerialize();
