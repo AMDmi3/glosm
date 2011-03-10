@@ -145,7 +145,7 @@ void Geometry::AddCroppedConvex(const Vector3i* v, unsigned int size, const BBox
 	/* don't run expensive algorithm if cropping is not required */
 	if (all_vertices_in_bbox) {
 		convex_vertices_.reserve(convex_vertices_.size() + size);
-		for (int i = 0; i < size; ++i)
+		for (unsigned int i = 0; i < size; ++i)
 			convex_vertices_.push_back(v[i]);
 		convex_lengths_.push_back(size);
 		return;
@@ -212,7 +212,7 @@ void Geometry::AddCroppedConvex(const Vector3i* v, unsigned int size, const BBox
 
 void Geometry::AddCroppedLine(const Vector3i* v, unsigned int size, const BBoxi& bbox) {
 	bool contained_prev = false;
-	for (int i = 0; i < size; ++i) {
+	for (unsigned int i = 0; i < size; ++i) {
 		if (bbox.Contains(v[i])) {
 			if (i == 0) {
 				lines_lengths_.push_back(1);
