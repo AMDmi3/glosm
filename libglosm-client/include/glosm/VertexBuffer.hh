@@ -32,6 +32,8 @@
 #include <stdexcept>
 #include <cassert>
 
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 /**
  * Vertex Buffer Object
  *

@@ -94,8 +94,6 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 TerrainTile::~TerrainTile() {
 }
 
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
-
 void TerrainTile::Render() {
 	vbo_->Bind();
 
