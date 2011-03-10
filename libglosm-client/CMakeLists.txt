@@ -26,7 +26,6 @@ SET(SOURCES
 	src/MercatorProjection.cc
 	src/OrthoViewer.cc
 	src/Projection.cc
-	src/SimpleVertexBuffer.cc
 	src/SphericalProjection.cc
 	src/TerrainLayer.cc
 	src/TerrainTile.cc
