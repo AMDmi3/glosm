@@ -22,36 +22,35 @@
 #include <glosm/GPXTile.hh>
 
 #include <glosm/Projection.hh>
-#include <glosm/SimpleVertexBuffer.hh>
+#include <glosm/VertexBuffer.hh>
 
-GPXTile::GPXTile(const Projection& projection, const std::vector<Vector3i>& points, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
-	size_ = points.size() * 3 * sizeof(float);
-
+GPXTile::GPXTile(const Projection& projection, const std::vector<Vector3i>& points, const Vector2i& ref, const BBoxi& bbox) : Tile(ref), size_(0) {
 	if (!points.empty()) {
-		projected_points_.reset(new ProjectedVertices);
-		projection.ProjectPoints(points, ref, *projected_points_);
+		points_.reset(new VertexBuffer<Vector3f>(GL_ARRAY_BUFFER));
+		projection.ProjectPoints(points, ref, points_->Data());
+
+		size_ += points_->GetFootprint();
 	}
 }
 
 GPXTile::~GPXTile() {
 }
 
-void GPXTile::BindBuffers() {
-	if (projected_points_.get()) {
-		points_.reset(new SimpleVertexBuffer(SimpleVertexBuffer::POINTS, projected_points_->data(), projected_points_->size()));
-		projected_points_.reset(NULL);
-	}
-}
-
 void GPXTile::Render() {
-	BindBuffers();
-
 	if (points_.get()) {
 		glDepthFunc(GL_LEQUAL);
 
 		glColor4f(1.0f, 0.0f, 1.0f, 0.5f);
 		glPointSize(3.0);
-		points_->Render();
+
+		points_->Bind();
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f), BUFFER_OFFSET(0));
+
+		glDrawArrays(GL_POINTS, 0, points_->GetSize());
+
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }
 

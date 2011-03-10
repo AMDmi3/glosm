@@ -27,7 +27,8 @@
 #include <memory>
 #include <vector>
 
-class SimpleVertexBuffer;
+template <class T>
+class VertexBuffer;
 
 class Projection;
 
@@ -38,12 +39,7 @@ class Projection;
  */
 class GPXTile : public Tile, private NonCopyable {
 protected:
-	typedef std::vector<Vector3f> ProjectedVertices;
-
-protected:
-	std::auto_ptr<ProjectedVertices> projected_points_;
-
-	std::auto_ptr<SimpleVertexBuffer> points_;
+	std::auto_ptr<VertexBuffer<Vector3f> > points_;
 
 	size_t size_;
 
@@ -62,17 +58,6 @@ public:
 	 * Destructor
 	 */
 	virtual ~GPXTile();
-
-	/**
-	 * Moves projected geometry into OpenGL vertex buffers
-	 *
-	 * This can't be done in constructor as it may be called
-	 * from another thread, so this is done in Render()
-	 *
-	 * @todo doing tihs many times in a single frame may produce
-	 * noticeable lag so maybe it should be limited somehow
-	 */
-	void BindBuffers();
 
 	/**
 	 * Render this tile
