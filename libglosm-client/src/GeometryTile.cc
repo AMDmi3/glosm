@@ -26,7 +26,7 @@
 #include <glosm/VertexBuffer.hh>
 
 GeometryTile::GeometryTile(const Projection& projection, const Geometry& geometry, const Vector2i& ref, const BBoxi& bbox) : Tile(ref), size_(0) {
-	if (!geometry.GetConvexLengths().empty()) {
+	if (!geometry.GetLinesLengths().empty()) {
 		lines_vertices_.reset(new VertexBuffer<Vector3f>(GL_ARRAY_BUFFER));
 		lines_indices_.reset(new VertexBuffer<GLuint>(GL_ELEMENT_ARRAY_BUFFER));
 
