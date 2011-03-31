@@ -58,13 +58,14 @@ protected:
 
 protected:
 	Chunk& RequireChunk(int lon, int lat);
+	osmint_t GetPointHeight(int x, int y);
 
 public:
 	SRTMDatasource(const char* storage_path);
 	virtual ~SRTMDatasource();
 
-	virtual void GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vector2<int>& res, const BBoxi& bbox);
-	virtual void GetHeightBounds(const BBoxi& bbox, osmint_t& low, osmint_t& high);
+	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out);
+	virtual osmint_t GetHeight(const Vector2i& where);
 };
 
 #endif

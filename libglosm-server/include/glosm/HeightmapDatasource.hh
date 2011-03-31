@@ -31,10 +31,21 @@
  */
 class HeightmapDatasource {
 public:
-	virtual void GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vector2<int>& res, const BBoxi& bbox) = 0;
+	struct Heightmap {
+		typedef std::vector<osmint_t> HeightmapPoints;
 
-	//virtual void GetHeight(const Vector3i& point, osmint_t& output) = 0;
-	virtual void GetHeightBounds(const BBoxi& bbox, osmint_t& low, osmint_t& high) = 0;
+		HeightmapPoints points;
+		int             width;
+		int             height;
+
+		BBoxi           bbox;
+	};
+
+public:
+	virtual ~HeightmapDatasource() {}
+
+	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) = 0;
+	virtual osmint_t GetHeight(const Vector2i& where) = 0;
 };
 
 #endif

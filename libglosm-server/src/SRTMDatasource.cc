@@ -127,29 +127,41 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
 	return chunk->second;
 }
 
-void SRTMDatasource::GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vector2<int>& res, const BBoxi& bbox) {
+osmint_t SRTMDatasource::GetPointHeight(int x, int y) {
+	int xchunk = x / DATA_WIDTH;
+	int ychunk = y / DATA_HEIGHT;
+
+	int pos = x - xchunk * DATA_WIDTH;
+	int line = y - ychunk * DATA_HEIGHT;
+
+	Chunk& chunk = RequireChunk(xchunk, ychunk);
+
+	return chunk.data[(DATA_HEIGHT - 1 - line) * DATA_WIDTH + pos] * GEOM_UNITSINMETER;
+}
+
+void SRTMDatasource::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) {
 	BBox<int> srtm_bbox; /* bbox in srtm point numbers, zero-based at bottom left corner */
 	BBox<int> srtm_chunks; /* bbox in srtm chunk numbers, zero-based at bottom left corner */
 
-	srtm_bbox.left = (int)floor(((double)bbox.left / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH);
-	srtm_bbox.bottom = (int)floor(((double)bbox.bottom / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT);
-	srtm_bbox.right = (int)ceil(((double)bbox.right / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH);
-	srtm_bbox.top = (int)ceil(((double)bbox.top / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT);
+	srtm_bbox.left = (int)floor(((double)bbox.left / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH) - extramargin;
+	srtm_bbox.bottom = (int)floor(((double)bbox.bottom / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT) - extramargin;
+	srtm_bbox.right = (int)ceil(((double)bbox.right / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH) + extramargin;
+	srtm_bbox.top = (int)ceil(((double)bbox.top / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT) + extramargin;
 
 	srtm_chunks.left = srtm_bbox.left / DATA_WIDTH;
 	srtm_chunks.bottom = srtm_bbox.bottom / DATA_HEIGHT;
 	srtm_chunks.right = srtm_bbox.right / DATA_WIDTH;
 	srtm_chunks.top = srtm_bbox.top / DATA_HEIGHT;
 
-	outbbox.left = (osmint_t)round(((double)srtm_bbox.left / (double)DATA_WIDTH - 180.0) * (double)GEOM_UNITSINDEGREE);
-	outbbox.bottom = (osmint_t)round(((double)srtm_bbox.bottom / (double)DATA_HEIGHT - 90.0) * (double)GEOM_UNITSINDEGREE);
-	outbbox.right = (osmint_t)round(((double)srtm_bbox.right / (double)DATA_WIDTH - 180.0) * (double)GEOM_UNITSINDEGREE);
-	outbbox.top = (osmint_t)round(((double)srtm_bbox.top / (double)DATA_HEIGHT - 90.0) * (double)GEOM_UNITSINDEGREE);
+	out.bbox.left = (osmint_t)round(((double)srtm_bbox.left / (double)DATA_WIDTH - 180.0) * (double)GEOM_UNITSINDEGREE);
+	out.bbox.bottom = (osmint_t)round(((double)srtm_bbox.bottom / (double)DATA_HEIGHT - 90.0) * (double)GEOM_UNITSINDEGREE);
+	out.bbox.right = (osmint_t)round(((double)srtm_bbox.right / (double)DATA_WIDTH - 180.0) * (double)GEOM_UNITSINDEGREE);
+	out.bbox.top = (osmint_t)round(((double)srtm_bbox.top / (double)DATA_HEIGHT - 90.0) * (double)GEOM_UNITSINDEGREE);
 
-	res.x = srtm_bbox.right - srtm_bbox.left + 1;
-	res.y = srtm_bbox.top - srtm_bbox.bottom + 1;
+	int& width = out.width = srtm_bbox.right - srtm_bbox.left + 1;
+	int& height = out.height = srtm_bbox.top - srtm_bbox.bottom + 1;
 
-	out.resize(res.x * res.y);
+	out.points.resize(width * height);
 
 	BBox<int> chunk_bbox;
 	for (int ychunk = srtm_chunks.bottom; ychunk <= srtm_chunks.top; ++ychunk) {
@@ -165,54 +177,51 @@ void SRTMDatasource::GetHeights(std::vector<osmint_t>& out, BBoxi& outbbox, Vect
 			for (int line = chunk_bbox.bottom; line <= chunk_bbox.top; ++line) {
 				for (int pos = chunk_bbox.left; pos <= chunk_bbox.right; ++pos) {
 					osmint_t current = chunk.data[(DATA_HEIGHT - 1 - line) * DATA_WIDTH + pos] * GEOM_UNITSINMETER;
-					out[(ychunk * DATA_HEIGHT - srtm_bbox.bottom + line) * res.x + (xchunk * DATA_WIDTH - srtm_bbox.left + pos)] = current;
+					out.points[(ychunk * DATA_HEIGHT - srtm_bbox.bottom + line) * width + (xchunk * DATA_WIDTH - srtm_bbox.left + pos)] = current;
 				}
 			}
 		}
 	}
 }
 
-void SRTMDatasource::GetHeightBounds(const BBoxi& bbox, osmint_t& low, osmint_t& high) {
+osmint_t SRTMDatasource::GetHeight(const Vector2i& where) {
 	BBox<int> srtm_bbox; /* bbox in srtm point numbers, zero-based at bottom left corner */
 	BBox<int> srtm_chunks; /* bbox in srtm chunk numbers, zero-based at bottom left corner */
+	BBoxi real_bbox;
 
-	srtm_bbox.left = (int)floor(((double)bbox.left / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH);
-	srtm_bbox.bottom = (int)floor(((double)bbox.bottom / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT);
-	srtm_bbox.right = (int)ceil(((double)bbox.right / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH);
-	srtm_bbox.top = (int)ceil(((double)bbox.top / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT);
+	srtm_bbox.left = (int)floor(((double)where.x / (double)GEOM_UNITSINDEGREE + 180.0) * (double)DATA_WIDTH);
+	srtm_bbox.bottom = (int)floor(((double)where.y / (double)GEOM_UNITSINDEGREE + 90.0) * (double)DATA_HEIGHT);
+	srtm_bbox.right = srtm_bbox.left + 1;
+	srtm_bbox.top = srtm_bbox.bottom + 1;
 
-	srtm_chunks.left = srtm_bbox.left / DATA_WIDTH;
-	srtm_chunks.bottom = srtm_bbox.bottom / DATA_HEIGHT;
-	srtm_chunks.right = srtm_bbox.right / DATA_WIDTH;
-	srtm_chunks.top = srtm_bbox.top / DATA_HEIGHT;
+	real_bbox.left = (osmint_t)round(((double)srtm_bbox.left / (double)DATA_WIDTH - 180.0) * (double)GEOM_UNITSINDEGREE);
+	real_bbox.bottom = (osmint_t)round(((double)srtm_bbox.bottom / (double)DATA_HEIGHT - 90.0) * (double)GEOM_UNITSINDEGREE);
+	real_bbox.right = (osmint_t)round(((double)srtm_bbox.right / (double)DATA_WIDTH - 180.0) * (double)GEOM_UNITSINDEGREE);
+	real_bbox.top = (osmint_t)round(((double)srtm_bbox.top / (double)DATA_HEIGHT - 90.0) * (double)GEOM_UNITSINDEGREE);
 
-	BBox<int> chunk_bbox;
-	bool first = true;
-	for (int ychunk = srtm_chunks.bottom; ychunk <= srtm_chunks.top; ++ychunk) {
-		for (int xchunk = srtm_chunks.left; xchunk <= srtm_chunks.right; ++xchunk) {
-			chunk_bbox.left = std::max(xchunk * DATA_WIDTH, srtm_bbox.left);
-			chunk_bbox.bottom = std::max(ychunk * DATA_HEIGHT, srtm_bbox.bottom);
-			chunk_bbox.right = std::min((xchunk + 1) * DATA_WIDTH - 1, srtm_bbox.right);
-			chunk_bbox.top = std::min((ychunk + 1) * DATA_HEIGHT - 1, srtm_bbox.top);
+	double kx = (double)(where.x - real_bbox.left)/(double)(real_bbox.right - real_bbox.left);
+	double ky = (double)(where.y - real_bbox.bottom)/(double)(real_bbox.top - real_bbox.bottom);
 
-			chunk_bbox -= Vector2<int>(xchunk * DATA_WIDTH, ychunk * DATA_HEIGHT);
+	/*
+	 * here we take into account that our heightmap is split
+	 * into triangles like this:
+	 * +-----+
+	 * |   / |
+	 * | /   |
+	 * +-----+
+	 * but "true" height would be 4-point interpolation
+	 */
 
-			Chunk& chunk = RequireChunk(xchunk, ychunk);
-			for (int line = chunk_bbox.bottom; line <= chunk_bbox.top; ++line) {
-				for (int pos = chunk_bbox.left; pos <= chunk_bbox.right; ++pos) {
-					osmint_t current = chunk.data[(DATA_HEIGHT - 1 - line) * DATA_WIDTH + pos] * GEOM_UNITSINMETER;
-
-					if (first) {
-						low = high = current;
-						first = false;
-					} else {
-						if (current < low)
-							low = current;
-						if (current > high)
-							high = current;
-					}
-				}
-			}
-		}
+	double height;
+	if (kx < ky) {
+		height = (double)GetPointHeight(srtm_bbox.left, srtm_bbox.bottom) * (1 - ky) +
+		         (double)GetPointHeight(srtm_bbox.right, srtm_bbox.top) * (kx) +
+		         (double)GetPointHeight(srtm_bbox.left, srtm_bbox.top) * (ky - kx);
+	} else {
+		height = (double)GetPointHeight(srtm_bbox.left, srtm_bbox.bottom) * (1 - kx) +
+		         (double)GetPointHeight(srtm_bbox.right, srtm_bbox.top) * (ky) +
+		         (double)GetPointHeight(srtm_bbox.right, srtm_bbox.bottom) * (kx - ky);
 	}
+
+	return (osmint_t)round(height);
 }
