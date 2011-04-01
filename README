@@ -84,7 +84,8 @@ Usage
   glosm-viewer
   ------------
 
-    glosm-viewer [-sfh] [-t <path>] <file.osm|-> [<file.gpx> ...]
+    glosm-viewer [-sfh] [-t <path>] [-l location] <file.osm|->
+                                                     [<file.gpx> ...]
 
   runs interactive 3D map viewer for a specified map dump. Dumps can
   be obtained from OpenStreetMap editing applications (jOSM,
@@ -105,6 +106,17 @@ Usage
     -h      - show help
     -t      - specify path to directory with SRTM (*.hgt) files and
               enable 3D terrain layer
+    -l      - specify initial position and direction of viewer.
+              Argument is comma-separated list of floating-point values:
+              longitude, latitude, elevation, yaw and pitch. Each value
+              may be empty and extra values in the end may be omitted, in
+              which case program defaults are used. Values are specified
+              in decimal angles and meters.
+              example: -l 57.33,34.11,100
+                             (55.33E, 34.11N, height = 100 meters)
+              example: -l ,,100,180,0
+                             (default location, height = 100 meters,
+                              look straight to south)
 
   Controls:
 
