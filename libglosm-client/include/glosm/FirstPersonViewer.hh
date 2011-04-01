@@ -52,6 +52,7 @@ public:
 protected:
 	Vector3f GetDirection() const;
 	void FixRotation();
+	void FixPosition();
 
 public:
 	FirstPersonViewer();

@@ -85,6 +85,8 @@ Vector3f FirstPersonViewer::GetDirection() const {
 
 void FirstPersonViewer::SetPos(Vector3i pos) {
 	pos_ = pos;
+
+	FixPosition();
 }
 
 void FirstPersonViewer::Move(int flags, float speed, float time) {
@@ -117,6 +119,10 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 	if (flags & LOWER)
 		pos_ -= dirbasis * worldup * speed * time;
 
+	FixPosition();
+}
+
+void FirstPersonViewer::FixPosition() {
 	/* Wrap around */
 	if (pos_.x > GEOM_MAXLON)
 		pos_.x -= GEOM_LONSPAN;

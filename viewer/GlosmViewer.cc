@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include <cmath>
 #include <cstdio>
 
 GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new FirstPersonViewer) {
@@ -58,16 +59,24 @@ GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new Firs
 	terrain_shown_ = true;
 
 	no_glew_check_ = false;
+
+	start_lon_ = start_lat_ = start_ele_ = start_yaw_ = start_pitch_ = nan("");
 }
 
 void GlosmViewer::Usage(int status, bool detailed, const char* progname) {
-	fprintf(stderr, "Usage: %s [-sfh] [-t <path>] <file.osm|-> [file.gpx ...]\n", progname);
+	fprintf(stderr, "Usage: %s [-sfh] [-t <path>] [-l lon,lat,ele,yaw,pitch] <file.osm|-> [file.gpx ...]\n", progname);
 	if (detailed) {
 		fprintf(stderr, "Options:\n");
+		//               [==================================72==================================]
 		fprintf(stderr, "  -h       - show this help\n");
 		fprintf(stderr, "  -s       - use spherical projection instead of mercator\n");
-		fprintf(stderr, "  -t path  - add terrain layer, argument specifies path to\n");
-		fprintf(stderr, "             directory with SRTM data (*.hgt files)\n");
+		fprintf(stderr, "  -t path  - add terrain layer, argument specifies path to directory\n");
+		fprintf(stderr, "             with SRTM data (*.hgt files)\n");
+		fprintf(stderr, "  -l ...   - set initial viewer's location and direction\n");
+		fprintf(stderr, "             argument is comma-separated list of longitude, latitude,\n");
+		fprintf(stderr, "             elevation, pitch and yaw, each of those may be empty for\n");
+		fprintf(stderr, "             program default (e.g. -l ,,100.0,, or -l ,,100.0). Units\n");
+		fprintf(stderr, "             are degrees and meters\n");
 #if defined(WITH_GLEW)
 		fprintf(stderr, "  -f       - ignore glew errors\n");
 #endif
@@ -80,10 +89,35 @@ void GlosmViewer::Init(int argc, char** argv) {
 	int c;
 	const char* progname = argv[0];
 	const char* srtmpath = NULL;
-	while ((c = getopt(argc, argv, "sfht:")) != -1) {
+	while ((c = getopt(argc, argv, "sfht:l:")) != -1) {
 		switch (c) {
 		case 's': projection_ = SphericalProjection(); break;
 		case 't': srtmpath = optarg; break;
+		case 'l': {
+					  int n = 0;
+					  char* start = optarg;
+					  char* end;
+					  char* endptr;
+					  do {
+						  if ((end = strchr(start, ',')) != NULL)
+							  *end = '\0';
+
+						  double val = strtod(start, &endptr);
+
+						  if (endptr != start) {
+							  switch (n) {
+							  case 0: start_lon_ = val; break;
+							  case 1: start_lat_ = val; break;
+							  case 2: start_ele_ = val; break;
+							  case 3: start_yaw_ = val; break;
+							  case 4: start_pitch_ = val; break;
+							  }
+						  }
+
+						  n++;
+						  start = end + 1;
+					  } while(end != NULL);
+				  } break;
 #if defined(WITH_GLEW)
 		case 'f': no_glew_check_ = true; break;
 #endif
@@ -185,12 +219,27 @@ void GlosmViewer::InitGL() {
 		terrain_layer_->SetSizeLimit(32*1024*1024);
 	}
 
-	int height = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
-	viewer_->SetPos(Vector3i(geometry_generator_->GetCenter(), height));
+	Vector3i startpos = geometry_generator_->GetCenter();
+	osmint_t startheight = fabs((float)geometry_generator_->GetBBox().top - (float)geometry_generator_->GetBBox().bottom) / GEOM_LONSPAN * WGS84_EARTH_EQ_LENGTH * GEOM_UNITSINMETER / 10.0;
+	float startyaw = 0;
+	float startpitch = -M_PI_4;
+
+	if (!isnan(start_lon_))
+		startpos.x = start_lon_ * GEOM_UNITSINDEGREE;
+	if (!isnan(start_lat_))
+		startpos.y = start_lat_ * GEOM_UNITSINDEGREE;
+	if (!isnan(start_ele_))
+		startheight = start_ele_ * GEOM_UNITSINMETER;
+	if (!isnan(start_yaw_))
+		startyaw = start_yaw_;
+	if (!isnan(start_pitch_))
+		startpitch = start_pitch_;
+
+	viewer_->SetPos(Vector3i(startpos, startheight));
+	viewer_->SetRotation(startyaw, startpitch);
 #if defined(WITH_TOUCHPAD)
-	lockheight_ = height;
+	lockheight_ = startheight;
 #endif
-	viewer_->SetRotation(0, -M_PI_4);
 }
 
 void GlosmViewer::Render() {

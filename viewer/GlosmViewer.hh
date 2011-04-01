@@ -57,6 +57,12 @@ protected:
 	Projection projection_;
 	bool no_glew_check_;
 
+	double start_lon_;
+	double start_lat_;
+	double start_ele_;
+	double start_yaw_;
+	double start_pitch_;
+
 	/* glosm objects */
 	std::auto_ptr<FirstPersonViewer> viewer_;
 	std::auto_ptr<PreloadedXmlDatasource> osm_datasource_;
