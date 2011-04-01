@@ -158,7 +158,11 @@ void GlosmViewer::Init(int argc, char** argv) {
 	}
 
 	if (srtmpath)
-		srtm_datasource_.reset(new SRTMDatasource(srtmpath));
+		heightmap_datasource_.reset(new SRTMDatasource(srtmpath));
+	/* TODO: this will become mandatory, but for now its useless
+	else
+		heightmap_datasource_.reset(new DummyHeightmap());
+	*/
 
 	if (osm_datasource_.get() == NULL)
 		throw Exception() << "no osm dump specified";
@@ -211,8 +215,8 @@ void GlosmViewer::InitGL() {
 		gpx_layer_->SetSizeLimit(32*1024*1024);
 	}
 
-	if (srtm_datasource_.get()) {
-		terrain_layer_.reset(new TerrainLayer(projection_, *srtm_datasource_));
+	if (heightmap_datasource_.get()) {
+		terrain_layer_.reset(new TerrainLayer(projection_, *heightmap_datasource_));
 		terrain_layer_->SetLevel(12);
 		terrain_layer_->SetRange(20000.0);
 		terrain_layer_->SetHeightEffect(false);

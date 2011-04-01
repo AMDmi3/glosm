@@ -35,6 +35,7 @@ ENDIF(WITH_GLES)
 # Targets
 SET(SOURCES
 	src/BBox.cc
+	src/DummyHeightmap.cc
 	src/Exception.cc
 	src/Geometry.cc
 	src/GeometryOperations.cc
