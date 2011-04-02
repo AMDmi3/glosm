@@ -36,6 +36,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 GlosmViewer::GlosmViewer() : projection_(MercatorProjection()), viewer_(new FirstPersonViewer) {
 	screenw_ = screenh_ = 1;
