@@ -1,5 +1,6 @@
 # Depends
 FIND_PACKAGE(EXPAT REQUIRED)
+FIND_PACKAGE(Threads REQUIRED)
 
 # Type size checks
 INCLUDE(CheckTypeSize)
@@ -39,6 +40,7 @@ SET(SOURCES
 	src/Exception.cc
 	src/Geometry.cc
 	src/GeometryOperations.cc
+	src/Guard.cc
 	src/ParsingHelpers.cc
 	src/PreloadedGPXDatasource.cc
 	src/PreloadedXmlDatasource.cc
@@ -53,7 +55,7 @@ SET(HEADERS
 INCLUDE_DIRECTORIES(include ${EXPAT_INCLUDE_DIR})
 
 ADD_LIBRARY(glosm-server SHARED ${SOURCES})
-TARGET_LINK_LIBRARIES(glosm-server ${EXPAT_LIBRARY})
+TARGET_LINK_LIBRARIES(glosm-server ${EXPAT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 # Installation
 # We don't have even a sight of stable API, so don't use soversion
