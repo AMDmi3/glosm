@@ -31,6 +31,7 @@
 #include <glosm/FirstPersonViewer.hh>
 #include <glosm/GeometryLayer.hh>
 #include <glosm/GeometryGenerator.hh>
+#include <glosm/DummyHeightmap.hh>
 #include <glosm/geomath.h>
 
 #if defined(WITH_GLEW)
@@ -80,16 +81,19 @@ int main(int argc, char** argv) {
 	PreloadedXmlDatasource osm_datasource;
 	osm_datasource.Load(TESTDATA);
 
-	/* 2) Create facility to translate OSM data to geometry */
-	GeometryGenerator geometry_generator(osm_datasource);
+	/* 2) Create heightmap datasource */
+	DummyHeightmap heightmap;
 
-	/* 3) Create layer which will render that geometry */
+	/* 3) Create facility to translate OSM data to geometry */
+	GeometryGenerator geometry_generator(osm_datasource, heightmap);
+
+	/* 4) Create layer which will render that geometry */
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
 
-	/* 4) Request all data to be loaded synchronously */
+	/* 5) Request all data to be loaded synchronously */
 	layer.LoadArea(geometry_generator.GetBBox(), TileManager::SYNC);
 
-	/* 5) Create viewer to control eye position and direction */
+	/* 6) Create viewer to control eye position and direction */
 	FirstPersonViewer viewer;
 	viewer.SetPos(Vector3i(geometry_generator.GetCenter(), 100 * GEOM_UNITSINMETER /* 100 meters */));
 	viewer.SetAspect(800.0/600.0);

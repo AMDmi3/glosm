@@ -190,7 +190,7 @@ void GlosmViewer::InitGL() {
 #endif
 	CheckGL();
 
-	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_));
+	geometry_generator_.reset(new GeometryGenerator(*osm_datasource_, *heightmap_datasource_));
 	ground_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
 	detail_layer_.reset(new GeometryLayer(projection_, *geometry_generator_));
 

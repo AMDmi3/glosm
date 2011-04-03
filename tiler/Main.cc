@@ -23,6 +23,7 @@
 #include <glosm/GeometryGenerator.hh>
 #include <glosm/GeometryLayer.hh>
 #include <glosm/OrthoViewer.hh>
+#include <glosm/DummyHeightmap.hh>
 #include <glosm/geomath.h>
 
 #include "PBuffer.hh"
@@ -186,7 +187,8 @@ int real_main(int argc, char** argv) {
 	osm_datasource.Load(argv[0]);
 
 	fprintf(stderr, "Creating geometry...\n");
-	GeometryGenerator geometry_generator(osm_datasource);
+	DummyHeightmap heightmap;
+	GeometryGenerator geometry_generator(osm_datasource, heightmap);
 
 	GeometryLayer layer(MercatorProjection(), geometry_generator);
 	layer.SetSizeLimit(128*1024*1024);

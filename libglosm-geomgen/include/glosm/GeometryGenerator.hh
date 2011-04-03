@@ -26,14 +26,16 @@
 #include <glosm/BBox.hh>
 
 class OsmDatasource;
+class HeightmapDatasource;
 class Geometry;
 
 class GeometryGenerator : public GeometryDatasource {
 protected:
 	const OsmDatasource& datasource_;
+	HeightmapDatasource& heightmap_ds_;
 
 public:
-	GeometryGenerator(const OsmDatasource& datasource);
+	GeometryGenerator(const OsmDatasource& datasource, HeightmapDatasource& heightmapds);
 	void GetGeometry(Geometry& geometry, const BBoxi& bbox, int flags = 0) const;
 
 	virtual Vector2i GetCenter() const;

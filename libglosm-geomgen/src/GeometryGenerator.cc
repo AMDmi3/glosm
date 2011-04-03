@@ -21,6 +21,7 @@
 #include <glosm/GeometryGenerator.hh>
 
 #include <glosm/OsmDatasource.hh>
+#include <glosm/HeightmapDatasource.hh>
 #include <glosm/Geometry.hh>
 #include <glosm/GeometryOperations.hh>
 #include <glosm/MetricBasis.hh>
@@ -311,6 +312,31 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 
 	/* fallback - flat roof */
 	return CreateArea(geom, vertices, false, z, way);
+}
+
+static void CreateBuilding(Geometry& geom, HeightmapDatasource& hmds, const VertexVector& vertices, int minz, int maxz, const OsmDatasource::Way& way) {
+	int minele = std::numeric_limits<int>::max();
+	int maxele = 0;
+	for (VertexVector::const_iterator i = vertices.begin(); i != vertices.end(); ++i) {
+		int h = hmds.GetHeight(*i);
+		if (h < minele)
+			minele = h;
+		if (h > maxele)
+			maxele = h;
+	}
+
+	minz += maxele;
+	maxz += maxele;
+
+	CreateWalls(geom, vertices, minele, maxz, way);
+	CreateRoof(geom, vertices, maxz, way);
+
+	CreateLines(geom, vertices, minz, way);
+	CreateLines(geom, vertices, maxz, way);
+	CreateSmartVerticalLines(geom, vertices, minele, maxz, 5.0, way);
+
+	if (minz > 1)
+		CreateArea(geom, vertices, true, minz, way);
 }
 
 static void CreateRoad(Geometry& geom, const VertexVector& vertices, float width, const OsmDatasource::Way& /*unused*/) {
@@ -626,7 +652,7 @@ static float GetHighwayWidth(const std::string& highway, const OsmDatasource::Wa
 	}
 }
 
-static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, int flags, const OsmDatasource::Way& way) {
+static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, HeightmapDatasource& hmds, int flags, const OsmDatasource::Way& way) {
 	osmint_t minz = GetMinHeight(way) * GEOM_UNITSINMETER;
 	osmint_t maxz = GetMaxHeight(way) * GEOM_UNITSINMETER;
 
@@ -651,19 +677,8 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, int f
 
 	/* dispatch */
 	if ((way.Tags.find("building") != way.Tags.end() || way.Tags.find("building:part") != way.Tags.end()) && minz != maxz) {
-		if (flags & GeometryDatasource::DETAIL) {
-			CreateWalls(geom, vertices, minz, maxz, way);
-			CreateRoof(geom, vertices, maxz, way);
-
-			CreateLines(geom, vertices, minz, way);
-			CreateLines(geom, vertices, maxz, way);
-			CreateSmartVerticalLines(geom, vertices, minz, maxz, 5.0, way);
-
-			if (minz > 1) {
-				CreateArea(geom, vertices, true, minz, way);
-				CreateLines(geom, vertices, minz, way);
-			}
-		}
+		if (flags & GeometryDatasource::DETAIL)
+			CreateBuilding(geom, hmds, vertices, minz, maxz, way);
 	} else if ((t = way.Tags.find("man_made")) != way.Tags.end() && (t->second == "tower" || t->second == "chimney") && minz != maxz) {
 		if (flags & GeometryDatasource::DETAIL) {
 			CreateWalls(geom, vertices, minz, maxz, way);
@@ -729,7 +744,7 @@ static void WayDispatcher(Geometry& geom, const OsmDatasource& datasource, int f
 	}
 }
 
-GeometryGenerator::GeometryGenerator(const OsmDatasource& datasource) : datasource_(datasource) {
+GeometryGenerator::GeometryGenerator(const OsmDatasource& datasource, HeightmapDatasource& heightmapds) : datasource_(datasource), heightmap_ds_(heightmapds) {
 }
 
 void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox, int flags) const {
@@ -747,7 +762,7 @@ void GeometryGenerator::GetGeometry(Geometry& geom, const BBoxi& bbox, int flags
 	Geometry temp;
 
 	for (std::vector<OsmDatasource::Way>::const_iterator w = ways.begin(); w != ways.end(); ++w)
-		WayDispatcher(temp, datasource_, flags, *w);
+		WayDispatcher(temp, datasource_, heightmap_ds_, flags, *w);
 
 	geom.AppendCropped(temp, bbox);
 }
