@@ -27,7 +27,8 @@ OPTION(WITH_GLES "Use OpenGL ES 1.1" OFF)
 # TODO: this requires rewriting some legacy OpenGL code
 #OPTION(WITH_GLES2 "Use OpenGL ES 2.0" OFF)
 OPTION(WITH_TOUCHPAD "Tune control for touchpad instead of mouse" OFF)
-OPTION(WITH_TILEDEBUG "Tiling debug" OFF)
+OPTION(DEBUG_TILING "Render tile bounds for debugging" OFF)
+OPTION(DEBUG_FPS "Don't limit FPS for profiling" OFF)
 
 # Global variables (still overridable via cmake -D ..)
 SET(BINDIR "bin" CACHE STRING "Install subdirectory for binaries")
@@ -65,9 +66,12 @@ ENDIF(WITH_GLEW)
 
 # Global definitions
 ADD_DEFINITIONS(-Wall -Wextra -Wno-unused-parameter)
-IF(WITH_TILEDEBUG)
-	ADD_DEFINITIONS(-DTILE_DEBUG)
-ENDIF(WITH_TILEDEBUG)
+IF(DEBUG_TILING)
+	ADD_DEFINITIONS(-DDEBUG_TILING)
+ENDIF(DEBUG_TILING)
+IF(DEBUG_FPS)
+	ADD_DEFINITIONS(-DDEBUG_FPS)
+ENDIF(DEBUG_FPS)
 
 # Info
 MESSAGE(STATUS "  Building SDL viewer: ${BUILD_VIEWER_SDL}")

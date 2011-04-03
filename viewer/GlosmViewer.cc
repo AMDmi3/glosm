@@ -314,8 +314,10 @@ void GlosmViewer::Render() {
 	prevtime_ = curtime_;
 	nframes_++;
 
+#if !defined(DEBUG_FPS)
 	/* frame limiter */
 	usleep(10000);
+#endif
 }
 
 void GlosmViewer::Resize(int w, int h) {

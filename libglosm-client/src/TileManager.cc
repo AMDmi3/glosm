@@ -325,7 +325,7 @@ int TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
 	 * tile may be half-ready here */
 	node->tile->Render();
 
-#if defined(TILE_DEBUG) && !defined(WITH_GLES) && !defined(WITH_GLES2)
+#if defined(DEBUG_TILING) && !defined(WITH_GLES) && !defined(WITH_GLES2)
 	Vector3f bound_1[4];
 	Vector3f bound_2[40];
 
@@ -349,7 +349,6 @@ int TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
     bound_2[30] = projection_.Project(node->bbox.GetBottomLeft(), ref);
     for (int i = 1; i < 10; i++)
         bound_2[i+30] = projection_.Project((Vector3d)node->bbox.GetBottomLeft() * (double)(10 - i)*0.1 + (Vector3d)node->bbox.GetTopLeft() * (double)(i)*0.1, ref);
-
 
     glColor3f(1.0, 0.0, 0.0);
     glBegin(GL_LINE_LOOP);
