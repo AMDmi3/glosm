@@ -227,15 +227,15 @@ void GlosmViewer::InitGL() {
 	float startyaw = 0;
 	float startpitch = -M_PI_4;
 
-	if (!isnan(start_lon_))
+	if (!std::isnan(start_lon_))
 		startpos.x = start_lon_ * GEOM_UNITSINDEGREE;
-	if (!isnan(start_lat_))
+	if (!std::isnan(start_lat_))
 		startpos.y = start_lat_ * GEOM_UNITSINDEGREE;
-	if (!isnan(start_ele_))
+	if (!std::isnan(start_ele_))
 		startheight = start_ele_ * GEOM_UNITSINMETER;
-	if (!isnan(start_yaw_))
+	if (!std::isnan(start_yaw_))
 		startyaw = start_yaw_;
-	if (!isnan(start_pitch_))
+	if (!std::isnan(start_pitch_))
 		startpitch = start_pitch_;
 
 	viewer_->SetPos(Vector3i(startpos, startheight));
