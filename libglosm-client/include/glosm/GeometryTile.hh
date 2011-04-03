@@ -60,11 +60,6 @@ protected:
 
 	size_t size_;
 
-#ifdef TILE_DEBUG
-	Vector3f bound_1[4];
-	Vector3f bound_2[40];
-#endif
-
 protected:
 	void CalcFanNormal(Vertex* vertices, int count);
 

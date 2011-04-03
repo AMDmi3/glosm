@@ -325,6 +325,54 @@ int TileManager::RecRenderTiles(QuadNode* node, const Viewer& viewer) {
 	 * tile may be half-ready here */
 	node->tile->Render();
 
+#if defined(TILE_DEBUG) && !defined(WITH_GLES) && !defined(WITH_GLES2)
+	Vector3f bound_1[4];
+	Vector3f bound_2[40];
+
+    bound_1[0] = projection_.Project(node->bbox.GetTopLeft(), ref);
+    bound_1[1] = projection_.Project(node->bbox.GetTopRight(), ref);
+    bound_1[2] = projection_.Project(node->bbox.GetBottomRight(), ref);
+    bound_1[3] = projection_.Project(node->bbox.GetBottomLeft(), ref);
+
+    bound_2[0] = projection_.Project(node->bbox.GetTopLeft(), ref);
+    for (int i = 1; i < 10; i++)
+        bound_2[i] = projection_.Project((Vector3d)node->bbox.GetTopLeft() * (double)(10 - i)*0.1 + (Vector3d)node->bbox.GetTopRight() * (double)(i)*0.1, ref);
+
+    bound_2[10] = projection_.Project(node->bbox.GetTopRight(), ref);
+    for (int i = 1; i < 10; i++)
+        bound_2[i+10] = projection_.Project((Vector3d)node->bbox.GetTopRight() * (double)(10 - i)*0.1 + (Vector3d)node->bbox.GetBottomRight() * (double)(i)*0.1, ref);
+
+    bound_2[20] = projection_.Project(node->bbox.GetBottomRight(), ref);
+    for (int i = 1; i < 10; i++)
+        bound_2[i+20] = projection_.Project((Vector3d)node->bbox.GetBottomRight() * (double)(10 - i)*0.1 + (Vector3d)node->bbox.GetBottomLeft() * (double)(i)*0.1, ref);
+
+    bound_2[30] = projection_.Project(node->bbox.GetBottomLeft(), ref);
+    for (int i = 1; i < 10; i++)
+        bound_2[i+30] = projection_.Project((Vector3d)node->bbox.GetBottomLeft() * (double)(10 - i)*0.1 + (Vector3d)node->bbox.GetTopLeft() * (double)(i)*0.1, ref);
+
+
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 4; i++)
+        glVertex3f(bound_1[i].x, bound_1[i].y, bound_1[i].z);
+    glEnd();
+
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 40; i++)
+        glVertex3f(bound_2[i].x, bound_2[i].y, bound_2[i].z);
+    glEnd();
+
+    glColor3f(0.5, 0.0, 0.0);
+    glBegin(GL_LINES);
+    for (int i = 0; i < 4; i++) {
+        Vector3f nearref = bound_1[i] * 0.1;
+        glVertex3f(nearref.x, nearref.y, nearref.z);
+        glVertex3f(0.0f, 0.0f, 0.0f);
+    }
+    glEnd();
+#endif
+
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 
