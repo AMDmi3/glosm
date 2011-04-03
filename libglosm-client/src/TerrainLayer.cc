@@ -50,7 +50,8 @@ void TerrainLayer::Render(const Viewer& viewer) {
 	GLfloat light_position[] = {-0.2, -0.777, 0.63, 0.0};
 	GLfloat light_diffuse[] = {0.45, 0.45, 0.45, 1.0};
 	GLfloat light_ambient[] = {0.33, 0.33, 0.33, 1.0};
-	GLfloat material_diffuse[] = {0.82, 0.82, 0.82, 1.0};
+	float l = 0.85;
+	GLfloat material_diffuse[] = {l, l, l, 1.0};
 
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
 
@@ -65,7 +66,14 @@ void TerrainLayer::Render(const Viewer& viewer) {
 	glEnable(GL_LIGHT0);
 
 	/* Render tile(s) */
+
+	/* XXX: we use 2 here as 1 is used for geometry */
+	glPolygonOffset(2.0, 2.0);
+	glEnable(GL_POLYGON_OFFSET_FILL);
+
 	TileManager::Render(viewer);
+
+	glDisable(GL_POLYGON_OFFSET_FILL);
 
 	glDisable(GL_LIGHT0);
 	glDisable(GL_LIGHTING);

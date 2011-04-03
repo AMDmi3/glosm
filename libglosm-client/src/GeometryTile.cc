@@ -115,33 +115,22 @@ void GeometryTile::CalcFanNormal(Vertex* vertices, int count) {
 
 void GeometryTile::Render() {
 	if (lines_vertices_.get()) {
-		glDepthFunc(GL_LESS);
-
 		glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-
-		/*glEnable(GL_LINE_STIPPLE);
-		glLineStipple(1.0, 0xCCCC);
-		glDisable(GL_LINE_STIPPLE);
-		*/
 
 		lines_vertices_->Bind();
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f), BUFFER_OFFSET(0));
 
-//		convex_indices_->Bind();
-//		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, 0);
+//		lines_indices_->Bind();
+//		glDrawElements(GL_LINES, lines_indices_->GetSize(), GL_UNSIGNED_INT, 0);
 		glDrawElements(GL_LINES, lines_indices_->GetSize(), GL_UNSIGNED_INT, lines_indices_->Data().data());
-//		convex_indices_->UnBind();
+//		lines_indices_->UnBind();
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 
 	if (convex_vertices_.get()) {
-		/* polygons */
-		glPolygonOffset(1.0, 1.0);
-		glEnable(GL_POLYGON_OFFSET_FILL);
-
 		/* zpass */
 		/*glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
 		triangles_->Render();
@@ -161,18 +150,22 @@ void GeometryTile::Render() {
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glNormalPointer(GL_FLOAT, sizeof(Vertex), BUFFER_OFFSET(12));
 
+		/* XXX: since we can't do PolygonOffset for lines, we offset all polygons instead */
+		glPolygonOffset(1.0, 1.0);
+		glEnable(GL_POLYGON_OFFSET_FILL);
+
 //		convex_indices_->Bind();
 //		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, 0);
 		glDrawElements(GL_TRIANGLES, convex_indices_->GetSize(), GL_UNSIGNED_INT, convex_indices_->Data().data());
 //		convex_indices_->UnBind();
+
+		glDisable(GL_POLYGON_OFFSET_FILL);
 
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
 
 		glDisable(GL_LIGHT0);
 		glDisable(GL_LIGHTING);
-
-		glDisable(GL_POLYGON_OFFSET_FILL);
 	}
 }
 

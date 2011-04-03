@@ -145,9 +145,7 @@ void TerrainTile::Render() {
 
 	ibo_->Bind();
 
-	//glPolygonMode(GL_FRONT, GL_LINE);
 	glDrawElements(GL_TRIANGLE_STRIP, ibo_->GetSize(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-	//glPolygonMode(GL_FRONT, GL_FILL);
 
 	ibo_->UnBind();
 
