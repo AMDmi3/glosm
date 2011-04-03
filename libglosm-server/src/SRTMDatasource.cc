@@ -20,6 +20,7 @@
 
 #include <glosm/SRTMDatasource.hh>
 #include <glosm/Exception.hh>
+#include <glosm/Guard.hh>
 
 #include <glosm/geomath.h>
 
@@ -44,9 +45,13 @@ enum {
 
 SRTMDatasource::SRTMDatasource(const char* storage_path) : storage_path_(storage_path) {
 	generation_ = 0;
+	int errn;
+	if ((errn = pthread_mutex_init(&mutex_, 0)) != 0)
+		throw SystemError(errn) << "pthread_mutex_init failed";
 }
 
 SRTMDatasource::~SRTMDatasource() {
+	pthread_mutex_destroy(&mutex_);
 }
 
 SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
@@ -140,6 +145,8 @@ osmint_t SRTMDatasource::GetPointHeight(int x, int y) {
 }
 
 void SRTMDatasource::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) {
+	Guard guard(mutex_);
+
 	BBox<int> srtm_bbox; /* bbox in srtm point numbers, zero-based at bottom left corner */
 	BBox<int> srtm_chunks; /* bbox in srtm chunk numbers, zero-based at bottom left corner */
 
@@ -185,6 +192,8 @@ void SRTMDatasource::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap&
 }
 
 osmint_t SRTMDatasource::GetHeight(const Vector2i& where) {
+	Guard guard(mutex_);
+
 	BBox<int> srtm_bbox; /* bbox in srtm point numbers, zero-based at bottom left corner */
 	BBox<int> srtm_chunks; /* bbox in srtm chunk numbers, zero-based at bottom left corner */
 	BBoxi real_bbox;

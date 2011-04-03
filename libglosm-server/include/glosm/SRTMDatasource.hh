@@ -24,6 +24,7 @@
 #include <glosm/HeightmapDatasource.hh>
 
 #include <stdint.h>
+#include <pthread.h>
 
 #include <vector>
 #include <map>
@@ -53,6 +54,8 @@ protected:
 protected:
 	const char* storage_path_;
 	int generation_;
+
+	pthread_mutex_t mutex_;
 
 	mutable ChunksMap chunks_;
 
