@@ -32,6 +32,8 @@
 TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& datasource, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
 	HeightmapDatasource::Heightmap heightmap;
 
+	/* we request heightmap with extra 1-point margin so we can
+	 * calculate correct normals for edge vertices */
 	datasource.GetHeightmap(bbox, 1, heightmap);
 
 	int width = heightmap.width - 2;
@@ -44,7 +46,7 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 	vbo_.reset(new VertexBuffer<TerrainVertex>(GL_ARRAY_BUFFER));
 	vbo_->Data().resize(width * height);
 
-	/* project */
+	/* temporary array of projected points */
 	std::vector<Vector3f> projected;
 	projected.reserve(heightmap.width * heightmap.height);
 	for (int y = 0; y < heightmap.height; ++y) {
@@ -70,6 +72,8 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 			n++;
 		}
 	}
+
+	/* clamp grid edges with tile bounds */
 
 	double k1, k2;
 	double cellheight = ((double)heightmap.bbox.top - (double)heightmap.bbox.bottom) / (double)(heightmap.height - 1);
@@ -103,8 +107,9 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 		vbo_->Data()[y * width + width - 1].norm = vbo_->Data()[y * width + width - 1].norm * (1.0 - k2) + vbo_->Data()[y * width + width - 2].norm * (k2);
 	}
 
+	/* ought to be enough for anybody? test with hires hawaii heightmaps */
 	if (vbo_->GetSize() > 65536)
-		throw std::logic_error("error constructing TerrainTile: more than 65536 vertices were stored in a VBO which is indexed with SHORTs");
+		throw std::logic_error("error constructing TerrainTile: attempt to store more than 65536 vertices in a VBO indexed with SHORTs");
 
 	/* prepare indices */
 	ibo_.reset(new VertexBuffer<GLushort>(GL_ELEMENT_ARRAY_BUFFER));
