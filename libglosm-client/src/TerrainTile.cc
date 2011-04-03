@@ -31,15 +31,11 @@
 
 TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& datasource, const Vector2i& ref, const BBoxi& bbox) : Tile(ref) {
 	HeightmapDatasource::Heightmap heightmap;
-	//std::vector<osmint_t> terrain;
-	//BBoxi real_bbox;
-	//Vector2<int> resolution;
 
-	//datasource.GetHeights(terrain, real_bbox, resolution, bbox);
-	datasource.GetHeightmap(bbox, 0, heightmap);
+	datasource.GetHeightmap(bbox, 1, heightmap);
 
-	int& width = heightmap.width;
-	int& height = heightmap.height;
+	int width = heightmap.width - 2;
+	int height = heightmap.height - 2;
 
 	/* for each tile, we store position and normal for each
 	 * vertex in the grid; we also store index array which
@@ -48,30 +44,63 @@ TerrainTile::TerrainTile(const Projection& projection, HeightmapDatasource& data
 	vbo_.reset(new VertexBuffer<TerrainVertex>(GL_ARRAY_BUFFER));
 	vbo_->Data().resize(width * height);
 
-	/* prepare vertices */
-	int n = 0;
-	for (int y = 0; y < height; ++y) {
-		for (int x = 0; x < width; ++x) {
-			vbo_->Data()[n++].pos = projection.Project(Vector3i(
-								(osmint_t)((double)heightmap.bbox.left) + ((double)heightmap.bbox.right - (double)heightmap.bbox.left) * ((double)x / (double)(width - 1)),
-								(osmint_t)((double)heightmap.bbox.bottom) + ((double)heightmap.bbox.top - (double)heightmap.bbox.bottom) * ((double)y / (double)(height - 1)),
-								heightmap.points[y * width + x]
-							), ref);
+	/* project */
+	std::vector<Vector3f> projected;
+	projected.reserve(heightmap.width * heightmap.height);
+	for (int y = 0; y < heightmap.height; ++y) {
+		for (int x = 0; x < heightmap.width; ++x) {
+			projected.push_back(projection.Project(Vector3i(
+								(osmint_t)((double)heightmap.bbox.left) + ((double)heightmap.bbox.right - (double)heightmap.bbox.left) * ((double)x / (double)(heightmap.width - 1)),
+								(osmint_t)((double)heightmap.bbox.bottom) + ((double)heightmap.bbox.top - (double)heightmap.bbox.bottom) * ((double)y / (double)(heightmap.height - 1)),
+								heightmap.points[y * heightmap.width + x]
+							), ref));
 		}
 	}
 
-	/* prepare normals */
-	n = 0;
-	for (int y = 0; y < height; ++y) {
-		for (int x = 0; x < width; ++x) {
-			if (x > 0 && x < width - 1 && y > 0 && y < height - 1) {
-				Vector3f v1 = vbo_->Data()[y * width + x + 1].pos - vbo_->Data()[y * width + x - 1].pos;
-				Vector3f v2 = vbo_->Data()[(y + 1) * width + x].pos - vbo_->Data()[(y - 1) * width + x].pos;
-				vbo_->Data()[n++].norm = v1.CrossProduct(v2).Normalized();
-			} else {
-				vbo_->Data()[n++].norm = Vector3f(0.0f, 0.0f, 1.0f);
-			}
+	/* prepare vertices & normals */
+	int n = 0;
+	for (int y = 1; y < heightmap.height - 1; ++y) {
+		for (int x = 1; x < heightmap.width - 1; ++x) {
+			Vector3f v1 = projected[y * heightmap.width + x + 1] - projected[y * heightmap.width + x - 1];
+			Vector3f v2 = projected[(y + 1) * heightmap.width + x] - projected[(y - 1) * heightmap.width + x];
+
+			vbo_->Data()[n].pos = projected[y * heightmap.width + x];
+			vbo_->Data()[n].norm = v1.CrossProduct(v2).Normalized();
+
+			n++;
 		}
+	}
+
+	double k1, k2;
+	double cellheight = ((double)heightmap.bbox.top - (double)heightmap.bbox.bottom) / (double)(heightmap.height - 1);
+	double cellwidth = ((double)heightmap.bbox.right - (double)heightmap.bbox.left) / (double)(heightmap.width - 1);
+
+	/*
+	 * @todo this clamping is not quite correct: it doesn't
+	 * take the fact that terrain grid consists of triangles
+	 * into account
+	 */
+
+	/* clamp bottom & top */
+	k1 = ((double)bbox.bottom - (double)heightmap.bbox.bottom) / cellheight - 1.0;
+	k2 = ((double)heightmap.bbox.top - (double)bbox.top) / cellheight - 1.0;
+	for (int x = 0; x < width; ++x) {
+		vbo_->Data()[x].pos = vbo_->Data()[x].pos * (1.0 - k1) + vbo_->Data()[width + x].pos * (k1);
+		vbo_->Data()[x].norm = vbo_->Data()[x].norm * (1.0 - k1) + vbo_->Data()[width + x].norm * (k1);
+
+		vbo_->Data()[(height - 1) * width + x].pos = vbo_->Data()[(height - 1) * width + x].pos * (1.0 - k2) + vbo_->Data()[(height - 2) * width + x].pos * (k2);
+		vbo_->Data()[(height - 1) * width + x].norm = vbo_->Data()[(height - 1) * width + x].norm * (1.0 - k2) + vbo_->Data()[(height - 2) * width + x].norm * (k2);
+	}
+
+	/* clamp left & right */
+	k1 = ((double)bbox.left - (double)heightmap.bbox.left) / cellwidth - 1.0;
+	k2 = ((double)heightmap.bbox.right - (double)bbox.right) / cellwidth - 1.0;
+	for (int y = 0; y < height; ++y) {
+		vbo_->Data()[y * width].pos = vbo_->Data()[y * width].pos * (1.0 - k1) + vbo_->Data()[y * width + 1].pos * (k1);
+		vbo_->Data()[y * width].norm = vbo_->Data()[y * width].norm * (1.0 - k1) + vbo_->Data()[y * width + 1].norm * (k1);
+
+		vbo_->Data()[y * width + width - 1].pos = vbo_->Data()[y * width + width - 1].pos * (1.0 - k2) + vbo_->Data()[y * width + width - 2].pos * (k2);
+		vbo_->Data()[y * width + width - 1].norm = vbo_->Data()[y * width + width - 1].norm * (1.0 - k2) + vbo_->Data()[y * width + width - 2].norm * (k2);
 	}
 
 	if (vbo_->GetSize() > 65536)
@@ -111,7 +140,9 @@ void TerrainTile::Render() {
 
 	ibo_->Bind();
 
+	//glPolygonMode(GL_FRONT, GL_LINE);
 	glDrawElements(GL_TRIANGLE_STRIP, ibo_->GetSize(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+	//glPolygonMode(GL_FRONT, GL_FILL);
 
 	ibo_->UnBind();
 
