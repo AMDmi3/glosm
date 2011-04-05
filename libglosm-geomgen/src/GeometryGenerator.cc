@@ -325,18 +325,25 @@ static void CreateBuilding(Geometry& geom, HeightmapDatasource& hmds, const Vert
 			maxele = h;
 	}
 
-	minz += maxele;
-	maxz += maxele;
+	/* roof */
+	CreateRoof(geom, vertices, maxele + maxz, way);
+	CreateLines(geom, vertices, maxele + maxz, way);
 
-	CreateWalls(geom, vertices, minele, maxz, way);
-	CreateRoof(geom, vertices, maxz, way);
+	if (minz > 0) { /* floating */
+		/* ceiling */
+		CreateArea(geom, vertices, true, maxele + minz, way);
+		CreateLines(geom, vertices, maxele + minz, way);
 
-	CreateLines(geom, vertices, minz, way);
-	CreateLines(geom, vertices, maxz, way);
-	CreateSmartVerticalLines(geom, vertices, minele, maxz, 5.0, way);
+		/* walls */
+		CreateWalls(geom, vertices, maxele + minz, maxele + maxz, way);
+		CreateSmartVerticalLines(geom, vertices, maxele + minz, maxele + maxz, 5.0, way);
+	} else { /* on the ground */
+		/* walls */
+		CreateWalls(geom, vertices, minele, maxele + maxz, way);
+		CreateSmartVerticalLines(geom, vertices, minele, maxele + maxz, 5.0, way);
 
-	if (minz > 1)
-		CreateArea(geom, vertices, true, minz, way);
+		CreateLines(geom, vertices, maxele, way);
+	}
 }
 
 static void CreateRoad(Geometry& geom, const VertexVector& vertices, float width, const OsmDatasource::Way& /*unused*/) {
