@@ -28,17 +28,26 @@
 
 class Viewer;
 class GPXDatasource;
+class HeightmapDatasource;
 
 /**
  * Layer with 3D OpenStreetMap data.
  */
 class GPXLayer : public Layer, public TileManager, private NonCopyable {
+public:
+	enum Mode {
+		NORMAL = 0, /* use real track elevations */
+		FLAT = 1, /* place points on ground, don't use track elevations */
+		SUBSTRACT = 2, /* substract heightmap from track elevation */
+	};
+
 protected:
 	const Projection projection_;
 	const GPXDatasource& datasource_;
+	const HeightmapDatasource& heightmap_;
 
 public:
-	GPXLayer(const Projection projection, const GPXDatasource& datasource);
+	GPXLayer(const Projection projection, const GPXDatasource& datasource, const HeightmapDatasource& heightmap);
 	virtual ~GPXLayer();
 
 	void Render(const Viewer& viewer);

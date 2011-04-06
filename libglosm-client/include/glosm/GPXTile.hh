@@ -32,6 +32,8 @@ template <class T>
 class VertexBuffer;
 
 class Projection;
+class GPXDatasource;
+class HeightmapDatasource;
 
 /**
  * A tile of GPX points
@@ -53,7 +55,7 @@ public:
 	 * @param ref reference point of this tile
 	 * @param bbox bounding box of this tile
 	 */
-	GPXTile(const Projection& projection, const std::vector<Vector3i>& points, const Vector2i& ref, const BBoxi& bbox);
+	GPXTile(const Projection& projection, const GPXDatasource& datasource, const HeightmapDatasource& heightmap, const Vector2i& ref, const BBoxi& bbox);
 
 	/**
 	 * Destructor

@@ -21,13 +21,14 @@
 #include <glosm/GPXLayer.hh>
 
 #include <glosm/GPXDatasource.hh>
+#include <glosm/HeightmapDatasource.hh>
 #include <glosm/GPXTile.hh>
 #include <glosm/Projection.hh>
 #include <glosm/Viewer.hh>
 
 #include <glosm/util/gl.h>
 
-GPXLayer::GPXLayer(const Projection projection, const GPXDatasource& datasource): TileManager(projection), projection_(projection), datasource_(datasource) {
+GPXLayer::GPXLayer(const Projection projection, const GPXDatasource& datasource, const HeightmapDatasource& heightmap): TileManager(projection), projection_(projection), datasource_(datasource), heightmap_(heightmap) {
 }
 
 GPXLayer::~GPXLayer() {
@@ -66,7 +67,5 @@ void GPXLayer::Render(const Viewer& viewer) {
 }
 
 Tile* GPXLayer::SpawnTile(const BBoxi& bbox, int flags) const {
-	std::vector<Vector3i> points;
-	datasource_.GetPoints(points, bbox);
-	return new GPXTile(projection_, points, bbox.GetCenter(), bbox);
+	return new GPXTile(projection_, datasource_, heightmap_, bbox.GetCenter(), bbox);
 }

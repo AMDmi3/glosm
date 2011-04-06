@@ -20,17 +20,28 @@
 
 #include <glosm/util/gl.h>
 
+#include <glosm/GPXDatasource.hh>
+#include <glosm/HeightmapDatasource.hh>
+
 #include <glosm/GPXTile.hh>
 
 #include <glosm/Projection.hh>
 #include <glosm/VertexBuffer.hh>
 
-GPXTile::GPXTile(const Projection& projection, const std::vector<Vector3i>& points, const Vector2i& ref, const BBoxi& bbox) : Tile(ref), size_(0) {
+GPXTile::GPXTile(const Projection& projection, const GPXDatasource& datasource, const HeightmapDatasource& heightmap, const Vector2i& ref, const BBoxi& bbox) : Tile(ref), size_(0) {
+	std::vector<Vector3i> points;
+	datasource.GetPoints(points, bbox);
+
 	if (!points.empty()) {
 		points_.reset(new VertexBuffer<Vector3f>(GL_ARRAY_BUFFER));
-		projection.ProjectPoints(points, ref, points_->Data());
 
-		size_ += points_->GetFootprint();
+		points_->Data().reserve(2 * points.size());
+		for (std::vector<Vector3i>::const_iterator i = points.begin(); i != points.end(); ++i) {
+			points_->Data().push_back(projection.Project(*i, ref));
+			points_->Data().push_back(projection.Project(Vector3i(i->x, i->y, heightmap.GetHeight(*i)), ref));
+		}
+
+		size_ = points_->GetFootprint();
 	}
 }
 
@@ -47,9 +58,12 @@ void GPXTile::Render() {
 		points_->Bind();
 
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f), BUFFER_OFFSET(0));
 
-		glDrawArrays(GL_POINTS, 0, points_->GetSize());
+		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f)*2, BUFFER_OFFSET(0));
+		glDrawArrays(GL_POINTS, 0, points_->GetSize()/2);
+
+		glVertexPointer(3, GL_FLOAT, sizeof(Vector3f), BUFFER_OFFSET(0));
+		glDrawArrays(GL_LINES, 0, points_->GetSize());
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
