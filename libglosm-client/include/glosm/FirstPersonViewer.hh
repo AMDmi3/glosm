@@ -24,6 +24,7 @@
 #include <glosm/Viewer.hh>
 
 class Projection;
+class HeightmapDatasource;
 
 /**
  * Viewer describing perspective projection.
@@ -89,9 +90,17 @@ public:
 
 	Vector3d& MutablePos();
 
+	void SetHeightmapDatasource(const HeightmapDatasource* heightmap);
+
+protected:
+	const HeightmapDatasource* heightmap_;
+
 protected:
 	/** Eye position */
 	Vector3d pos_;
+
+	/** Terrain elevation at eye point */
+	osmint_t landscape_height_;
 
 	float yaw_;
 	float pitch_;

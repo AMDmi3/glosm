@@ -158,10 +158,12 @@ void GlosmViewer::Init(int argc, char** argv) {
 		}
 	}
 
-	if (srtmpath)
+	if (srtmpath) {
 		heightmap_datasource_.reset(new SRTMDatasource(srtmpath));
-	else
+		viewer_->SetHeightmapDatasource(heightmap_datasource_.get());
+	} else {
 		heightmap_datasource_.reset(new DummyHeightmap());
+	}
 
 	if (osm_datasource_.get() == NULL)
 		throw Exception() << "no osm dump specified";

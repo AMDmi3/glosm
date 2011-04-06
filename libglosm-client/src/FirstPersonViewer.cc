@@ -22,6 +22,7 @@
 
 #include <glosm/Math.hh>
 #include <glosm/Projection.hh>
+#include <glosm/HeightmapDatasource.hh>
 #include <glosm/geomath.h>
 
 #include "mglu.h"
@@ -30,13 +31,13 @@
 
 #include <stdio.h>
 
-FirstPersonViewer::FirstPersonViewer(): pos_(), yaw_(0), pitch_(0), fov_(90.0), aspect_(1.0) {
+FirstPersonViewer::FirstPersonViewer(): heightmap_(NULL), pos_(), landscape_height_(0), yaw_(0), pitch_(0), fov_(90.0), aspect_(1.0) {
 }
 
-FirstPersonViewer::FirstPersonViewer(const Vector3i& pos): pos_(pos), yaw_(0), pitch_(0), fov_(90.0), aspect_(1.0) {
+FirstPersonViewer::FirstPersonViewer(const Vector3i& pos): heightmap_(NULL), pos_(pos), landscape_height_(0), yaw_(0), pitch_(0), fov_(90.0), aspect_(1.0) {
 }
 
-FirstPersonViewer::FirstPersonViewer(const Vector3i& pos, float yaw, float pitch): pos_(pos), yaw_(yaw), pitch_(pitch), fov_(90.0), aspect_(1.0) {
+FirstPersonViewer::FirstPersonViewer(const Vector3i& pos, float yaw, float pitch): heightmap_(NULL), pos_(pos), landscape_height_(0), yaw_(yaw), pitch_(pitch), fov_(90.0), aspect_(1.0) {
 }
 
 void FirstPersonViewer::SetupViewerMatrix(const Projection& projection) const {
@@ -123,6 +124,10 @@ void FirstPersonViewer::Move(int flags, float speed, float time) {
 }
 
 void FirstPersonViewer::FixPosition() {
+	/* Update landscape height */
+	if (heightmap_)
+		landscape_height_ = heightmap_->GetHeight(Vector2d(pos_.x, pos_.y));
+
 	/* Wrap around */
 	if (pos_.x > GEOM_MAXLON)
 		pos_.x -= GEOM_LONSPAN;
@@ -136,8 +141,8 @@ void FirstPersonViewer::FixPosition() {
 		pos_.y = GEOM_MERCATOR_MINLAT;
 
 	/* Limit height */
-	if (pos_.z < 0.0)
-		pos_.z = 0.0;
+	if (pos_.z < landscape_height_ + 1)
+		pos_.z = landscape_height_ + 1;
 	if (pos_.z > std::numeric_limits<osmint_t>::max())
 		pos_.z = std::numeric_limits<osmint_t>::max();
 }
@@ -187,4 +192,8 @@ float FirstPersonViewer::GetAspect() const {
 
 Vector3d& FirstPersonViewer::MutablePos() {
 	return pos_;
+}
+
+void FirstPersonViewer::SetHeightmapDatasource(const HeightmapDatasource* heightmap) {
+	heightmap_ = heightmap;
 }
