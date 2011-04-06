@@ -31,8 +31,8 @@ public:
 	DummyHeightmap(osmint_t height = 0);
 	virtual ~DummyHeightmap();
 
-	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out);
-	virtual osmint_t GetHeight(const Vector2i& where);
+	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) const;
+	virtual osmint_t GetHeight(const Vector2i& where) const;
 };
 
 #endif

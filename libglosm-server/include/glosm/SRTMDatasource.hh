@@ -53,22 +53,22 @@ protected:
 
 protected:
 	const char* storage_path_;
-	int generation_;
+	mutable int generation_;
 
-	pthread_mutex_t mutex_;
+	mutable pthread_mutex_t mutex_;
 
 	mutable ChunksMap chunks_;
 
 protected:
-	Chunk& RequireChunk(int lon, int lat);
-	osmint_t GetPointHeight(int x, int y);
+	Chunk& RequireChunk(int lon, int lat) const;
+	osmint_t GetPointHeight(int x, int y) const;
 
 public:
 	SRTMDatasource(const char* storage_path);
 	virtual ~SRTMDatasource();
 
-	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out);
-	virtual osmint_t GetHeight(const Vector2i& where);
+	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) const;
+	virtual osmint_t GetHeight(const Vector2i& where) const;
 };
 
 #endif

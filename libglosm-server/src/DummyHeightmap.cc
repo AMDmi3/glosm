@@ -26,7 +26,7 @@ DummyHeightmap::DummyHeightmap(osmint_t height) : height_(height) {
 DummyHeightmap::~DummyHeightmap() {
 }
 
-void DummyHeightmap::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) {
+void DummyHeightmap::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) const {
 	out.width = 2 + extramargin * 2;
 	out.height = 2 + extramargin * 2;
 
@@ -43,6 +43,6 @@ void DummyHeightmap::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap&
 		*i = height_;
 }
 
-osmint_t DummyHeightmap::GetHeight(const Vector2i& /*unused*/) {
+osmint_t DummyHeightmap::GetHeight(const Vector2i& /*unused*/) const {
 	return height_;
 }

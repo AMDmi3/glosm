@@ -44,8 +44,8 @@ public:
 public:
 	virtual ~HeightmapDatasource() {}
 
-	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) = 0;
-	virtual osmint_t GetHeight(const Vector2i& where) = 0;
+	virtual void GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) const = 0;
+	virtual osmint_t GetHeight(const Vector2i& where) const = 0;
 };
 
 #endif

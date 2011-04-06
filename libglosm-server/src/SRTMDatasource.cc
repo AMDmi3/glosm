@@ -54,7 +54,7 @@ SRTMDatasource::~SRTMDatasource() {
 	pthread_mutex_destroy(&mutex_);
 }
 
-SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
+SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) const {
 	lon -= 180;
 	lat -= 90;
 
@@ -132,7 +132,7 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) {
 	return chunk->second;
 }
 
-osmint_t SRTMDatasource::GetPointHeight(int x, int y) {
+osmint_t SRTMDatasource::GetPointHeight(int x, int y) const {
 	int xchunk = x / DATA_WIDTH;
 	int ychunk = y / DATA_HEIGHT;
 
@@ -144,7 +144,7 @@ osmint_t SRTMDatasource::GetPointHeight(int x, int y) {
 	return chunk.data[(DATA_HEIGHT - 1 - line) * DATA_WIDTH + pos] * GEOM_UNITSINMETER;
 }
 
-void SRTMDatasource::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) {
+void SRTMDatasource::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap& out) const {
 	Guard guard(mutex_);
 
 	BBox<int> srtm_bbox; /* bbox in srtm point numbers, zero-based at bottom left corner */
@@ -191,7 +191,7 @@ void SRTMDatasource::GetHeightmap(const BBoxi& bbox, int extramargin, Heightmap&
 	}
 }
 
-osmint_t SRTMDatasource::GetHeight(const Vector2i& where) {
+osmint_t SRTMDatasource::GetHeight(const Vector2i& where) const {
 	Guard guard(mutex_);
 
 	BBox<int> srtm_bbox; /* bbox in srtm point numbers, zero-based at bottom left corner */
