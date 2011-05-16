@@ -214,10 +214,10 @@ osmint_t SRTMDatasource::GetHeight(const Vector2i& where) const {
 	/*
 	 * here we take into account that our heightmap is split
 	 * into triangles like this:
-	 * +-----+
-	 * |   / |
-	 * | /   |
-	 * +-----+
+	 * +--+
+	 * | /|
+	 * |/ |
+	 * +--+
 	 * but "true" height would be 4-point interpolation
 	 */
 
