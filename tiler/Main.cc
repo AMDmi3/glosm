@@ -72,7 +72,7 @@ static LevelInfo LevelInfos[] = {
 };
 
 void usage(const char* progname) {
-	fprintf(stderr, "Usage: %s [-0123456789] [-s skew] [-z minzoom] [-Z maxzoom] -x minlon -X maxlon -y minlat -Y maxlat infile.osm outdir\n", progname);
+	fprintf(stderr, "Usage: %s [-0123456789] [-s skew] [-z minzoom] [-Z maxzoom] [-m multisamples] -x minlon -X maxlon -y minlat -Y maxlat infile.osm outdir\n", progname);
 	exit(1);
 }
 
@@ -141,20 +141,23 @@ int real_main(int argc, char** argv) {
 
 	float skew = 1.0f;
 
+	int multisamples = 4;
+
 	int c;
-	while ((c = getopt(argc, argv, "0123456789s:z:Z:x:X:y:Y:")) != -1) {
+	while ((c = getopt(argc, argv, "0123456789s:z:Z:x:X:y:Y:m:")) != -1) {
 		switch (c) {
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
 				  pnglevel = c - '0';
 				  break;
 		case 's': skew = strtof(optarg, NULL); break;
-		case 'z': minzoom = strtol(optarg, NULL, 10); break;
-		case 'Z': maxzoom = strtol(optarg, NULL, 10); break;
+		case 'z': minzoom = (int)strtol(optarg, NULL, 10); break;
+		case 'Z': maxzoom = (int)strtol(optarg, NULL, 10); break;
 		case 'x': minlon = strtof(optarg, NULL); break;
 		case 'X': maxlon = strtof(optarg, NULL); break;
 		case 'y': minlat = strtof(optarg, NULL); break;
 		case 'Y': maxlat = strtof(optarg, NULL); break;
+		case 'm': multisamples = (int)strtol(optarg, NULL, 10); break;
 		default:
 			usage(progname);
 		}
@@ -175,7 +178,7 @@ int real_main(int argc, char** argv) {
 		usage(progname);
 
 	/* OpenGL init */
-	PBuffer pbuffer(256, 256, 4);
+	PBuffer pbuffer(256, 256, multisamples);
 	glClearColor(0.5, 0.5, 0.5, 0.0);
 
 	/* glosm init */

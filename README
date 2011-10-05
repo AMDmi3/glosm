@@ -167,6 +167,10 @@ Usage
     -s skew    - set skew for pseudo-3D effect (default = 1.0, 0 =
                  no skew = map without 3D effect)
 
+    -m samples - specify number of samples for multisample antialiasing
+                 (default = 4, use 1 if your drivers doesn't support
+                 multisampling)
+
   Note on optimizing tiles
   ------------------------
 
