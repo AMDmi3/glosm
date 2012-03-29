@@ -182,8 +182,16 @@ void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 				osmlong_t area = 0;
 				for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
 					cur = nodes_.find(*i);
-					if (cur == nodes_.end())
-						throw ParsingException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
+                                        if (cur == nodes_.end()) {
+                                            for (int j =0; last_way_->second.Nodes.size() > j; j++)
+                                                if (last_way_->second.Nodes.at(j) == *i) {
+                                                    last_way_->second.Nodes.erase(last_way_->second.Nodes.begin()+j);
+                                                    i--;
+                                                    break;
+                                                }
+                                            continue;
+                                        //	throw ParsingException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
+                                        }
 					if (i != last_way_->second.Nodes.begin())
 						area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
 					prev = cur;
@@ -194,9 +202,17 @@ void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 			} else {
 				for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
 					NodesMap::const_iterator cur = nodes_.find(*i);
-					if (cur == nodes_.end())
-						throw ParsingException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
-					last_way_->second.BBox.Include(cur->second.Pos);
+                                        if (cur == nodes_.end()) {
+                                            for (int j =0; last_way_->second.Nodes.size() > j; j++)
+                                                if (last_way_->second.Nodes.at(j) == *i) {
+                                                    last_way_->second.Nodes.erase(last_way_->second.Nodes.begin()+j);
+                                                    i--;
+                                                    break;
+                                                }
+                                            //throw ParsingException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
+                                        }
+                                        else
+                                            last_way_->second.BBox.Include(cur->second.Pos);
 				}
 			}
 			/* fallthrough */
