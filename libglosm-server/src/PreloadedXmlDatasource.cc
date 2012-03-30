@@ -175,19 +175,19 @@ static bool ConcatWays(OsmDatasource::Way &w1, const OsmDatasource::Way &w2)
 		w1.Nodes = w2.Nodes;
 	} else if (w2.Nodes.empty()) {
 	} else if (w1.Nodes.back() == w2.Nodes.front()) {
-		w1.Nodes.reserve(w1.Nodes.size() + w2.Nodes.size());
-		w1.Nodes.insert(w1.Nodes.end(), w2.Nodes.begin(), w2.Nodes.end());
+		w1.Nodes.reserve(w1.Nodes.size() + w2.Nodes.size() - 1);
+		w1.Nodes.insert(w1.Nodes.end(), w2.Nodes.begin() + 1, w2.Nodes.end());
 	} else if (w1.Nodes.back() == w2.Nodes.back()) {
-		w1.Nodes.reserve(w1.Nodes.size() + w2.Nodes.size());
-		w1.Nodes.insert(w1.Nodes.end(), w2.Nodes.rbegin(), w2.Nodes.rend());
+		w1.Nodes.reserve(w1.Nodes.size() + w2.Nodes.size() - 1);
+		w1.Nodes.insert(w1.Nodes.end(), w2.Nodes.rbegin() + 1, w2.Nodes.rend());
 	} else if (w1.Nodes.front() == w1.Nodes.front()) {
 		int size = w1.Nodes.size();
-		w1.Nodes.reserve(size + w2.Nodes.size());
+		w1.Nodes.reserve(size + w2.Nodes.size() - 1);
 		std::copy_backward(w1.Nodes.begin(), w1.Nodes.begin() + size, w1.Nodes.end());
 		std::copy(w2.Nodes.begin(), w2.Nodes.end(), w1.Nodes.begin());
 	} else if (w1.Nodes.front() == w1.Nodes.back()) {
 		int size = w1.Nodes.size();
-		w1.Nodes.reserve(size + w2.Nodes.size());
+		w1.Nodes.reserve(size + w2.Nodes.size() - 1);
 		std::copy_backward(w1.Nodes.begin(), w1.Nodes.begin() + size, w1.Nodes.end());
 		std::copy(w2.Nodes.rbegin(), w2.Nodes.rend(), w1.Nodes.begin());
 	} else
@@ -244,7 +244,6 @@ void PreloadedXmlDatasource::EndElement(const char* name) {
 						break;
 				}
 				if (m == r.Members.end()) {
-					w.Closed = true;
 					std::pair<WaysMap::iterator, bool> p = ways_.insert(std::make_pair(-last_relation_->first, w));
 					current_tag_ = WAY;
 					last_way_ = p.first;
