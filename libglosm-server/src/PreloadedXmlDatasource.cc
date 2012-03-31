@@ -169,27 +169,28 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 	++tag_level_;
 }
 
-static bool ConcatWays(OsmDatasource::Way &w1, const OsmDatasource::Way &w2)
+template <typename _Tp>
+static bool ConcatWays(std::vector<_Tp> &w1, const std::vector<_Tp> &w2)
 {
-	if (w1.Nodes.empty()) {
-		w1.Nodes = w2.Nodes;
-	} else if (w2.Nodes.empty()) {
-	} else if (w1.Nodes.back() == w2.Nodes.front()) {
-		w1.Nodes.reserve(w1.Nodes.size() + w2.Nodes.size() - 1);
-		w1.Nodes.insert(w1.Nodes.end(), w2.Nodes.begin() + 1, w2.Nodes.end());
-	} else if (w1.Nodes.back() == w2.Nodes.back()) {
-		w1.Nodes.reserve(w1.Nodes.size() + w2.Nodes.size() - 1);
-		w1.Nodes.insert(w1.Nodes.end(), w2.Nodes.rbegin() + 1, w2.Nodes.rend());
-	} else if (w1.Nodes.front() == w1.Nodes.front()) {
-		int size = w1.Nodes.size();
-		w1.Nodes.reserve(size + w2.Nodes.size() - 1);
-		std::copy_backward(w1.Nodes.begin(), w1.Nodes.begin() + size, w1.Nodes.end());
-		std::copy(w2.Nodes.begin(), w2.Nodes.end(), w1.Nodes.begin());
-	} else if (w1.Nodes.front() == w1.Nodes.back()) {
-		int size = w1.Nodes.size();
-		w1.Nodes.reserve(size + w2.Nodes.size() - 1);
-		std::copy_backward(w1.Nodes.begin(), w1.Nodes.begin() + size, w1.Nodes.end());
-		std::copy(w2.Nodes.rbegin(), w2.Nodes.rend(), w1.Nodes.begin());
+	if (w1.empty()) {
+		w1 = w2;
+	} else if (w2.empty()) {
+	} else if (w1.back() == w2.front()) {
+		w1.reserve(w1.size() + w2.size() - 1);
+		w1.insert(w1.end(), w2.begin() + 1, w2.end());
+	} else if (w1.back() == w2.back()) {
+		w1.reserve(w1.size() + w2.size() - 1);
+		w1.insert(w1.end(), w2.rbegin() + 1, w2.rend());
+	} else if (w1.front() == w2.back()) {
+		int size = w1.size();
+		w1.resize(size + w2.size() - 1);
+		std::copy_backward(w1.begin(), w1.begin() + size, w1.end());
+		std::copy(w2.begin(), w2.end(), w1.begin());
+	} else if (w1.front() == w2.front()) {
+		int size = w1.size();
+		w1.resize(size + w2.size() - 1);
+		std::copy_backward(w1.begin(), w1.begin() + size, w1.end());
+		std::copy(w2.rbegin(), w2.rend(), w1.begin());
 	} else
 		return false;
 	return true;
@@ -238,9 +239,10 @@ void PreloadedXmlDatasource::EndElement(const char* name) {
 				WaysMap::const_iterator cw;
 				for (m = r.Members.begin(); m != r.Members.end(); m++) {
 					if (m->Type != Relation::Member::WAY) break;
+					if (m->Role != "outer") break;
 					cw = ways_.find(m->Ref);
 					if (cw == ways_.end()) break;
-					if (!ConcatWays(w, cw->second))
+					if (!ConcatWays(w.Nodes, cw->second.Nodes))
 						break;
 				}
 				if (m == r.Members.end()) {
