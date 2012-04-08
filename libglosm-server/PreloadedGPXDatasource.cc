@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2011 Dmitry Marakasov
+ * Copyright (C) 2010-2012 Dmitry Marakasov
  *
  * This file is part of glosm.
  *
