@@ -11,7 +11,14 @@ SET(SOURCES
 	PixelBuffer.cc
 )
 
-INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${X11_INCLUDE_DIR} ${PNG_INCLUD_DIR} ../libglosm-client/include ../libglosm-server/include ../libglosm-geomgen/include)
+INCLUDE_DIRECTORIES(
+	${OPENGL_INCLUDE_DIR}
+	${PNG_INCLUDE_DIR}
+	${X11_INCLUDE_DIR}
+	../libglosm-client
+	../libglosm-geomgen
+	../libglosm-server
+)
 
 ADD_EXECUTABLE(glosm-tiler ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-tiler glosm-client glosm-server glosm-geomgen ${X11_X11_LIB} ${OPENGL_gl_LIBRARY} ${PNG_LIBRARIES})

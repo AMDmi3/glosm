@@ -1,5 +1,5 @@
 # Targets
-INCLUDE_DIRECTORIES(../libglosm-client/include ../libglosm-server/include)
+INCLUDE_DIRECTORIES(../libglosm-client ../libglosm-server)
 
 ADD_EXECUTABLE(ProjectionTest ProjectionTest.cc)
 TARGET_LINK_LIBRARIES(ProjectionTest glosm-server glosm-client)

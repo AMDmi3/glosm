@@ -1,14 +1,14 @@
 # Targets
 SET(SOURCES
-	src/GeometryGenerator.cc
-	src/MetricBasis.cc
+	GeometryGenerator.cc
+	MetricBasis.cc
 )
 
 SET(HEADERS
-	include/glosm/GeometryGenerator.hh
+	glosm/GeometryGenerator.hh
 )
 
-INCLUDE_DIRECTORIES(include ../libglosm-server/include)
+INCLUDE_DIRECTORIES(. ../libglosm-server)
 
 ADD_LIBRARY(glosm-geomgen SHARED ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-geomgen glosm-server)

@@ -22,9 +22,9 @@ IF(BUILD_VIEWER_SDL)
 		${SDL_INCLUDE_DIR}
 		${SDLGLES_INCLUDE_DIR}
 		${GL_INCLUDE_DIRS}
-		../libglosm-client/include
-		../libglosm-server/include
-		../libglosm-geomgen/include
+		../libglosm-client
+		../libglosm-server
+		../libglosm-geomgen
 	)
 
 	ADD_EXECUTABLE(glosm-viewer-sdl ${SOURCES})
@@ -55,9 +55,9 @@ IF(BUILD_VIEWER_GLUT)
 		${OPENGL_INCLUDE_DIR}
 		${GLUT_INCLUDE_DIR}
 		${GL_INCLUDE_DIRS}
-		../libglosm-client/include
-		../libglosm-server/include
-		../libglosm-geomgen/include
+		../libglosm-client
+		../libglosm-server
+		../libglosm-geomgen
 	)
 
 	ADD_EXECUTABLE(glosm-viewer-glut ${SOURCES})

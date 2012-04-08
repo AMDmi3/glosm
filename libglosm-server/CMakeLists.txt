@@ -5,7 +5,7 @@ FIND_PACKAGE(Threads REQUIRED)
 # Type size checks
 INCLUDE(CheckTypeSize)
 
-SET(CMAKE_EXTRA_INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/glosm/osmtypes.h")
+SET(CMAKE_EXTRA_INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/glosm/osmtypes.h")
 CHECK_TYPE_SIZE("osmid_t" OSMID_T_SIZE)
 CHECK_TYPE_SIZE("osmint_t" OSMINT_T_SIZE)
 CHECK_TYPE_SIZE("osmlong_t" OSMLONG_T_SIZE)
@@ -35,24 +35,24 @@ ENDIF(WITH_GLES)
 
 # Targets
 SET(SOURCES
-	src/BBox.cc
-	src/DummyHeightmap.cc
-	src/Exception.cc
-	src/Geometry.cc
-	src/GeometryOperations.cc
-	src/Guard.cc
-	src/ParsingHelpers.cc
-	src/PreloadedGPXDatasource.cc
-	src/PreloadedXmlDatasource.cc
-	src/SRTMDatasource.cc
-	src/Timer.cc
-	src/XMLParser.cc
+	BBox.cc
+	DummyHeightmap.cc
+	Exception.cc
+	Geometry.cc
+	GeometryOperations.cc
+	Guard.cc
+	ParsingHelpers.cc
+	PreloadedGPXDatasource.cc
+	PreloadedXmlDatasource.cc
+	SRTMDatasource.cc
+	Timer.cc
+	XMLParser.cc
 )
 
 SET(HEADERS
 )
 
-INCLUDE_DIRECTORIES(include ${EXPAT_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(. ${EXPAT_INCLUDE_DIR})
 
 ADD_LIBRARY(glosm-server SHARED ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-server ${EXPAT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})

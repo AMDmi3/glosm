@@ -17,20 +17,20 @@ ENDIF(HAVE_SINCOS)
 
 # Targets
 SET(SOURCES
-	src/CheckGL.cc
-	src/FirstPersonViewer.cc
-	src/GPXLayer.cc
-	src/GPXTile.cc
-	src/GeometryLayer.cc
-	src/GeometryTile.cc
-	src/MercatorProjection.cc
-	src/OrthoViewer.cc
-	src/Projection.cc
-	src/SphericalProjection.cc
-	src/TerrainLayer.cc
-	src/TerrainTile.cc
-	src/TileManager.cc
-	src/mglu.cc
+	CheckGL.cc
+	FirstPersonViewer.cc
+	GPXLayer.cc
+	GPXTile.cc
+	GeometryLayer.cc
+	GeometryTile.cc
+	MercatorProjection.cc
+	OrthoViewer.cc
+	Projection.cc
+	SphericalProjection.cc
+	TerrainLayer.cc
+	TerrainTile.cc
+	TileManager.cc
+	mglu.cc
 )
 
 # We check whether GL functions != NULL there. These funcions may
@@ -39,7 +39,7 @@ SET(SOURCES
 # be generated, while comparison still gives correct result).
 # We have to ignore the warning because there can be mix of both
 SET_SOURCE_FILES_PROPERTIES(
-	src/CheckGL.cc
+	CheckGL.cc
 	PROPERTIES
 	COMPILE_FLAGS "-Wno-address"
 )
@@ -47,7 +47,7 @@ SET_SOURCE_FILES_PROPERTIES(
 SET(HEADERS
 )
 
-INCLUDE_DIRECTORIES(include ../libglosm-server/include ${EXPAT_INCLUDE_DIR} ${GL_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(. ../libglosm-server ${EXPAT_INCLUDE_DIR} ${GL_INCLUDE_DIRS})
 
 ADD_LIBRARY(glosm-client SHARED ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-client glosm-server ${GL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
