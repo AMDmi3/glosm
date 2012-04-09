@@ -238,7 +238,7 @@ public:
 	};
 
 public:
-	id_map(size_t nbuckets = 1024) : count_(0), buckets_(hashtable(nbuckets, (hash_node*)NULL)) {
+	id_map(size_t nbuckets = 1024) : count_(0), buckets_(nbuckets, (hash_node*)NULL) {
 		assert(nbuckets > 0);
 		assert((nbuckets & (nbuckets - 1)) == 0); // power of two
 	}
