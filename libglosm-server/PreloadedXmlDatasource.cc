@@ -136,7 +136,7 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 	} else if (tag_level_ == 2 && current_tag_ == RELATION) {
 		if (last_relation_ != relations_.end()) {
 			if (StrEq<1>(name, "tag")) {
-//				ParseTag(last_relation_->second.Tags, atts);
+				ParseTag(last_relation_->second.Tags, atts);
 			} else if (StrEq<1>(name, "member")) {
 				int ref;
 				const char* role;
