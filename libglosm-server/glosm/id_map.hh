@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <cassert>
+#include <cstddef>
 
 /**
  * Custom std::map-like container for storing OSM data effeciently.
@@ -237,7 +238,9 @@ public:
 	};
 
 public:
-	id_map(int nbuckets = 1024) : count_(0), buckets_(nbuckets, NULL) {
+	id_map(size_t nbuckets = 1024) : count_(0), buckets_(hashtable(nbuckets, (hash_node*)NULL)) {
+		assert(nbuckets > 0);
+		assert((nbuckets & (nbuckets - 1)) == 0); // power of two
 	}
 
 	virtual ~id_map() {

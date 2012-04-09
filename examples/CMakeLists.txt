@@ -7,7 +7,7 @@ IF(WITH_GLEW)
 ENDIF(WITH_GLEW)
 
 # Targets
-INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ../libglosm-client/include ../libglosm-server/include ../libglosm-geomgen/include)
+INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ../libglosm-client ../libglosm-server ../libglosm-geomgen)
 ADD_DEFINITIONS(-DTESTDATA=\"${PROJECT_SOURCE_DIR}/testdata/glosm.osm\")
 
 ADD_EXECUTABLE(SimpleViewer SimpleViewer.cc)
