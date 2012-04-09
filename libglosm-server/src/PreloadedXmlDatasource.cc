@@ -130,7 +130,7 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 		}
 	} else if (tag_level_ == 2 && current_tag_ == RELATION) {
 		if (StrEq<1>(name, "tag")) {
-//			ParseTag(last_relation_->second.Tags, atts);
+			ParseTag(last_relation_->second.Tags, atts);
 		} else if (StrEq<1>(name, "member")) {
 			int ref;
 			const char* role;
@@ -169,7 +169,34 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 	++tag_level_;
 }
 
-void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
+template <typename _Tp>
+static bool ConcatWays(std::vector<_Tp> &w1, const std::vector<_Tp> &w2)
+{
+	if (w1.empty()) {
+		w1 = w2;
+	} else if (w2.empty()) {
+	} else if (w1.back() == w2.front()) {
+		w1.reserve(w1.size() + w2.size() - 1);
+		w1.insert(w1.end(), w2.begin() + 1, w2.end());
+	} else if (w1.back() == w2.back()) {
+		w1.reserve(w1.size() + w2.size() - 1);
+		w1.insert(w1.end(), w2.rbegin() + 1, w2.rend());
+	} else if (w1.front() == w2.back()) {
+		int size = w1.size();
+		w1.resize(size + w2.size() - 1);
+		std::copy_backward(w1.begin(), w1.begin() + size, w1.end());
+		std::copy(w2.begin(), w2.end(), w1.begin());
+	} else if (w1.front() == w2.front()) {
+		int size = w1.size();
+		w1.resize(size + w2.size() - 1);
+		std::copy_backward(w1.begin(), w1.begin() + size, w1.end());
+		std::copy(w2.rbegin(), w2.rend(), w1.begin());
+	} else
+		return false;
+	return true;
+}
+
+void PreloadedXmlDatasource::EndElement(const char* name) {
 	if (tag_level_ == 2) {
 		switch (current_tag_) {
 		case WAY:
@@ -201,7 +228,31 @@ void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 			}
 			/* fallthrough */
 		case NODE:
+			current_tag_ = OSM;
+			break;
 		case RELATION:
+			if (last_relation_->second.Tags["type"] == "multipolygon") {
+				Relation &r = last_relation_->second;
+				Way w;
+				w.Tags = r.Tags;
+				Relation::MemberList::const_iterator m;
+				WaysMap::const_iterator cw;
+				for (m = r.Members.begin(); m != r.Members.end(); m++) {
+					if (m->Type != Relation::Member::WAY) break;
+					if (m->Role != "outer") break;
+					cw = ways_.find(m->Ref);
+					if (cw == ways_.end()) break;
+					if (!ConcatWays(w.Nodes, cw->second.Nodes))
+						break;
+				}
+				if (m == r.Members.end()) {
+					std::pair<WaysMap::iterator, bool> p = ways_.insert(std::make_pair(-last_relation_->first, w));
+					current_tag_ = WAY;
+					last_way_ = p.first;
+					EndElement(name);
+					return;
+				}
+			}
 			current_tag_ = OSM;
 			break;
 		default:

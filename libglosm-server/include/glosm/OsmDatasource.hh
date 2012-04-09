@@ -78,7 +78,7 @@ public:
 		typedef std::vector<Member> MemberList;
 
 		MemberList Members;
-		//TagsMap Tags;
+		TagsMap Tags;
 	};
 
 public:
