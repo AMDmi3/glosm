@@ -85,6 +85,17 @@ protected:
 	 */
 	virtual void EndElement(const char* name);
 
+protected:
+	/**
+	 * Extra processing for ways
+	 */
+	void FinalizeWay();
+
+	/**
+	 * Extra processing for relations
+	 */
+	void FinalizeRelation();
+
 public:
 	/**
 	 * Constructs empty datasource

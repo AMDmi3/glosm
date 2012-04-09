@@ -179,48 +179,19 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 	if (tag_level_ == 2) {
 		switch (current_tag_) {
+		case NODE:
+			last_node_ = nodes_.end();
+			current_tag_ = OSM;
+			break;
 		case WAY:
-			if (last_way_ != ways_.end()) try {
-				/* check if a way is closed */
-				if (last_way_->second.Nodes.front() == last_way_->second.Nodes.back()) {
-					last_way_->second.Closed = true;
-
-					/* check if a way is clockwise */
-					NodesMap::const_iterator prev, cur;
-					osmlong_t area = 0;
-					for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
-						cur = nodes_.find(*i);
-						if (cur == nodes_.end())
-							throw DataException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
-						if (i != last_way_->second.Nodes.begin())
-							area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
-						prev = cur;
-						last_way_->second.BBox.Include(cur->second.Pos);
-					}
-
-					last_way_->second.Clockwise = area < 0;
-				} else {
-					for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
-						NodesMap::const_iterator cur = nodes_.find(*i);
-						if (cur == nodes_.end())
-							throw DataException() << "node " << *i << " referenced by way " << last_way_->first << " was not found in this dump";
-						last_way_->second.BBox.Include(cur->second.Pos);
-					}
-				}
-			} catch (DataException& e) {
-				std::cerr << "WARNING: " << e.what() << ", way dropped" << std::endl;
-				ways_.erase_last();
-			}
+			FinalizeWay();
 			last_way_ = ways_.end();
 			current_tag_ = OSM;
 			break;
-		case NODE:
-			current_tag_ = OSM;
-			last_node_ = nodes_.end();
-			break;
 		case RELATION:
-			current_tag_ = OSM;
+			FinalizeRelation();
 			last_relation_ = relations_.end();
+			current_tag_ = OSM;
 			break;
 		default:
 			break;
@@ -230,6 +201,49 @@ void PreloadedXmlDatasource::EndElement(const char* /*name*/) {
 	}
 
 	--tag_level_;
+}
+
+void PreloadedXmlDatasource::FinalizeWay() {
+	if (last_way_ == ways_.end())
+		return;
+
+	/* check if a way is closed */
+	if (last_way_->second.Nodes.front() == last_way_->second.Nodes.back()) {
+		last_way_->second.Closed = true;
+
+		/* check if a way is clockwise */
+		NodesMap::const_iterator prev, cur;
+		osmlong_t area = 0;
+		for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
+			cur = nodes_.find(*i);
+			if (cur == nodes_.end()) {
+				std::cerr << "WARNING: node " << *i << " referenced by way " << last_way_->first << " was not found in this dump, dropping way" << std::endl;
+				ways_.erase_last();
+				last_way_ = ways_.end();
+				return;
+			}
+			if (i != last_way_->second.Nodes.begin())
+				area += (osmlong_t)prev->second.Pos.x * cur->second.Pos.y - (osmlong_t)cur->second.Pos.x * prev->second.Pos.y;
+			prev = cur;
+			last_way_->second.BBox.Include(cur->second.Pos);
+		}
+
+		last_way_->second.Clockwise = area < 0;
+	} else {
+		for (Way::NodesList::const_iterator i = last_way_->second.Nodes.begin(); i != last_way_->second.Nodes.end(); ++i) {
+			NodesMap::const_iterator cur = nodes_.find(*i);
+			if (cur == nodes_.end()) {
+				std::cerr << "WARNING: node " << *i << " referenced by way " << last_way_->first << " was not found in this dump, dropping way" << std::endl;
+				ways_.erase_last();
+				last_way_ = ways_.end();
+				return;
+			}
+			last_way_->second.BBox.Include(cur->second.Pos);
+		}
+	}
+}
+
+void PreloadedXmlDatasource::FinalizeRelation() {
 }
 
 Vector2i PreloadedXmlDatasource::GetCenter() const {
