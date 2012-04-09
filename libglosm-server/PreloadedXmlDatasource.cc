@@ -207,6 +207,13 @@ void PreloadedXmlDatasource::FinalizeWay() {
 	if (last_way_ == ways_.end())
 		return;
 
+	if (last_way_->second.Nodes.size() < 2) {
+		std::cerr << "WARNING: way " << last_way_->first << " has < 2 nodes, dropping" << std::endl;
+		ways_.erase_last();
+		last_way_ = ways_.end();
+		return;
+	}
+
 	/* check if a way is closed */
 	if (last_way_->second.Nodes.front() == last_way_->second.Nodes.back()) {
 		last_way_->second.Closed = true;
