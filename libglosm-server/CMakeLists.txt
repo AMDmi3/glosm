@@ -47,6 +47,7 @@ SET(SOURCES
 	SRTMDatasource.cc
 	Timer.cc
 	XMLParser.cc
+	WayMerger.cc
 )
 
 SET(HEADERS
