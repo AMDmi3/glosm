@@ -43,11 +43,14 @@
  * - may store relation id(s) for ways - at least for multipolygons
  */
 
-#include <glosm/PreloadedXmlDatasource.hh>
-#include <glosm/ParsingHelpers.hh>
-
 #include <cstdlib>
 #include <iostream>
+
+#include <glosm/PreloadedXmlDatasource.hh>
+#include <glosm/ParsingHelpers.hh>
+#include <glosm/WayMerger.hh>
+
+osmid_t PreloadedXmlDatasource::next_synthetic_id_ = std::numeric_limits<osmid_t>::max();
 
 PreloadedXmlDatasource::PreloadedXmlDatasource() : XMLParser(XMLParser::HANDLE_ELEMENTS), bbox_(BBoxi::Empty()) {
 }
@@ -251,6 +254,44 @@ void PreloadedXmlDatasource::FinalizeWay() {
 }
 
 void PreloadedXmlDatasource::FinalizeRelation() {
+	if (last_relation_ == relations_.end())
+		return;
+
+	TagsMap::const_iterator type = last_relation_->second.Tags.find("type");
+	if (type == last_relation_->second.Tags.end() || type->second != "multipolygon")
+		return;
+
+	WayMerger merger;
+
+	/* first, fill the merger with "outer" parts */
+	for (Relation::MemberList::const_iterator member = last_relation_->second.Members.begin(); member != last_relation_->second.Members.end(); ++member) {
+		if (member->Type != Relation::Member::WAY || member->Role != "outer")
+			continue;
+
+		WaysMap::const_iterator way = ways_.find(member->Ref);
+		if (way == ways_.end()) {
+			std::cerr << "WARNING: way " << member->Ref << " referenced by relation " << last_relation_->first << " was not found in this dump, ignoring it" << std::endl;
+			continue;
+		}
+
+		merger.AddWay(way->second.Nodes);
+	}
+
+	/* next, extract all complete merged ways */
+	OsmDatasource::Way::NodesList tempnodes;
+	while (merger.GetNextWay(tempnodes)) {
+		std::pair<WaysMap::iterator, bool> p = ways_.insert(std::make_pair(next_synthetic_id_, Way()));
+		assert(p.second);
+
+		p.first->second.Nodes.swap(tempnodes);
+		p.first->second.Tags = last_relation_->second.Tags;
+
+		last_way_ = p.first;
+
+		FinalizeWay();
+
+		--next_synthetic_id_;
+	}
 }
 
 Vector2i PreloadedXmlDatasource::GetCenter() const {

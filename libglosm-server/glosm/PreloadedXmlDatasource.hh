@@ -74,6 +74,9 @@ protected:
 
 	BBoxi bbox_;
 
+	/* id counter for syntheric objects; goes down from max possible ID */
+	static osmid_t next_synthetic_id_;
+
 protected:
 	/**
 	 * Processes start XML element
