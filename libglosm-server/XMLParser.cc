@@ -22,6 +22,7 @@
 
 #include <fcntl.h>
 #include <expat.h>
+#include <unistd.h>
 
 #include <cstring>
 
