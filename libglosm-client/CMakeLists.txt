@@ -19,18 +19,18 @@ ENDIF(HAVE_SINCOS)
 SET(SOURCES
 	CheckGL.cc
 	FirstPersonViewer.cc
-	GPXLayer.cc
-	GPXTile.cc
 	GeometryLayer.cc
 	GeometryTile.cc
+	GPXLayer.cc
+	GPXTile.cc
 	MercatorProjection.cc
+	mglu.cc
 	OrthoViewer.cc
 	Projection.cc
 	SphericalProjection.cc
 	TerrainLayer.cc
 	TerrainTile.cc
 	TileManager.cc
-	mglu.cc
 )
 
 # We check whether GL functions != NULL there. These funcions may
@@ -45,6 +45,24 @@ SET_SOURCE_FILES_PROPERTIES(
 )
 
 SET(HEADERS
+	glosm/CheckGL.hh
+	glosm/FirstPersonViewer.hh
+	glosm/GeometryLayer.hh
+	glosm/GeometryTile.hh
+	glosm/GPXLayer.hh
+	glosm/GPXTile.hh
+	glosm/Layer.hh
+	glosm/MercatorProjection.hh
+	glosm/OrthoViewer.hh
+	glosm/Projection.hh
+	glosm/Renderable.hh
+	glosm/SphericalProjection.hh
+	glosm/TerrainLayer.hh
+	glosm/TerrainTile.hh
+	glosm/Tile.hh
+	glosm/TileManager.hh
+	glosm/VertexBuffer.hh
+	glosm/Viewer.hh
 )
 
 INCLUDE_DIRECTORIES(. ../libglosm-server ${EXPAT_INCLUDE_DIR} ${GL_INCLUDE_DIRS})
@@ -53,11 +71,9 @@ ADD_LIBRARY(glosm-client SHARED ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-client glosm-server ${GL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # Installation
-# We don't have even a sight of stable API, so don't use soversion
-# and don't install headers yet. May be enabled if there are any
-# third party users of libglosm
-#SET_TARGET_PROPERTIES(glosmclient PROPERTIES SOVERSION 1)
-#INSTALL(FILES ${HEADERS} DESTINATION include/glosm)
+# SET_TARGET_PROPERTIES(glosm-client PROPERTIES SOVERSION 1)
+INSTALL(FILES ${HEADERS} DESTINATION include/glosm)
+INSTALL(FILES glosm/util/gl.h DESTINATION include/glosm/util)
 
 IF(NOT CMAKE_CROSSCOMPILING)
 	INSTALL(TARGETS glosm-client LIBRARY DESTINATION ${LIBDIR})
