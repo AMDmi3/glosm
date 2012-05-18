@@ -46,11 +46,34 @@ SET(SOURCES
 	PreloadedXmlDatasource.cc
 	SRTMDatasource.cc
 	Timer.cc
-	XMLParser.cc
 	WayMerger.cc
+	XMLParser.cc
 )
 
 SET(HEADERS
+	glosm/BBox.hh
+	glosm/DummyHeightmap.hh
+	glosm/Exception.hh
+	glosm/geomath.h
+	glosm/Geometry.hh
+	glosm/GeometryDatasource.hh
+	glosm/GeometryOperations.hh
+	glosm/GPXDatasource.hh
+	glosm/Guard.hh
+	glosm/HeightmapDatasource.hh
+	glosm/id_map.hh
+	glosm/Math.hh
+	glosm/Misc.hh
+	glosm/NonCopyable.hh
+	glosm/OsmDatasource.hh
+	glosm/osmtypes.h
+	glosm/ParsingHelpers.hh
+	glosm/PreloadedGPXDatasource.hh
+	glosm/PreloadedXmlDatasource.hh
+	glosm/SRTMDatasource.hh
+	glosm/Timer.hh
+	glosm/WayMerger.hh
+	glosm/XMLParser.hh
 )
 
 INCLUDE_DIRECTORIES(. ${EXPAT_INCLUDE_DIR})
@@ -59,11 +82,8 @@ ADD_LIBRARY(glosm-server SHARED ${SOURCES})
 TARGET_LINK_LIBRARIES(glosm-server ${EXPAT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 # Installation
-# We don't have even a sight of stable API, so don't use soversion
-# and don't install headers yet. May be enabled if there are any
-# third party users of libglosm
-#SET_TARGET_PROPERTIES(glosmserver PROPERTIES SOVERSION 1)
-#INSTALL(FILES ${HEADERS} DESTINATION include/glosm)
+# SET_TARGET_PROPERTIES(glosm-server PROPERTIES SOVERSION 1)
+INSTALL(FILES ${HEADERS} DESTINATION include/glosm)
 
 IF(NOT CMAKE_CROSSCOMPILING)
 	INSTALL(TARGETS glosm-server LIBRARY DESTINATION ${LIBDIR})
