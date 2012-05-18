@@ -141,9 +141,9 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 			if (StrEq<1>(name, "tag")) {
 				ParseTag(last_relation_->second.Tags, atts);
 			} else if (StrEq<1>(name, "member")) {
-				int ref;
-				const char* role;
-				Relation::Member::Type_t type;
+				int ref = 0;
+				const char* role = 0;
+				Relation::Member::Type_t type = Relation::Member::UNKNOWN;
 
 				for (const char** att = atts; *att; ++att) {
 					if (StrEq<2>(*att, "ref"))
@@ -164,6 +164,9 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 						throw ParsingException() << "unexpected attribute in relation member";
 					}
 				}
+
+				if (ref == 0 || role == NULL || type == Relation::Member::UNKNOWN)
+					throw ParsingException() << "bad relation member";
 
 				last_relation_->second.Members.push_back(Relation::Member(type, ref, role));
 			} else {

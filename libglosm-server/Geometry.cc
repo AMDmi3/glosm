@@ -125,7 +125,7 @@ void Geometry::AddCroppedConvex(const Vector3i* v, unsigned int size, const BBox
 		VList* prev;
 		VList* next;
 
-		VList() {}
+		VList(): prev(NULL), next(NULL) {}
 		VList(const Vector3i& v, VList* p, VList* n): vertex(v), prev(p), next(n) {}
 	};
 

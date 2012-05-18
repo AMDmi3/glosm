@@ -67,6 +67,8 @@ public:
 				WAY,
 				NODE,
 				RELATION,
+
+				UNKNOWN,
 			} Type;
 
 			osmid_t Ref;
