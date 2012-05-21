@@ -50,7 +50,7 @@ void Geometry::AddQuad(const Vector3i& a, const Vector3i& b, const Vector3i& c, 
 }
 
 void Geometry::AddLine(const std::vector<Vector3i>& v) {
-	lines_vertices_.insert(convex_vertices_.end(), v.begin(), v.end());
+	lines_vertices_.insert(lines_vertices_.end(), v.begin(), v.end());
 	lines_lengths_.push_back(v.size());
 }
 
