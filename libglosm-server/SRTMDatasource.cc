@@ -21,6 +21,7 @@
 #include <glosm/SRTMDatasource.hh>
 #include <glosm/Exception.hh>
 #include <glosm/Guard.hh>
+#include <glosm/Misc.hh>
 
 #include <glosm/geomath.h>
 
@@ -112,11 +113,11 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) const {
 						readptr += nread;
 					}
 
-#if BYTE_ORDER != BIG_ENDIAN
-					/* SRTM data is in big-endian format */
-					for (uint16_t* val = (uint16_t*)current; val < (uint16_t*)current + DATA_WIDTH; ++val)
-						*val = (*val >> 8) | (*val << 8);
-#endif
+					/* SRTM data is in big-endian format, convert it if needed */
+					if (!IsBigEndian()) {
+						for (uint16_t* val = (uint16_t*)current; val < (uint16_t*)current + DATA_WIDTH; ++val)
+							*val = (*val >> 8) | (*val << 8);
+					}
 
 					if (lseek(f, 2 * (FILE_WIDTH - DATA_WIDTH), SEEK_CUR) == -1)
 						throw SystemError() << "cannot seek SRTM file " << filename.str();

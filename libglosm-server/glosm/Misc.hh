@@ -27,4 +27,26 @@
 #define COMPILE_TIME_ASSERT(V) \
 	{ typedef int __libglosm_compile_time_assert_fail[1 - 2*!(V)]; }
 
+static inline bool IsBigEndian() {
+	static const union {
+		unsigned char bytes[4];
+		uint32_t value;
+	} endianess_checker = {
+		{ 0, 1, 2, 3 }
+	};
+
+	return endianess_checker.value == 0x00010203UL;
+}
+
+static inline bool IsLittleEndian() {
+	static const union {
+		unsigned char bytes[4];
+		uint32_t value;
+	} endianess_checker = {
+		{ 0, 1, 2, 3 }
+	};
+
+	return endianess_checker.value == 0x03020100UL;
+}
+
 #endif
