@@ -34,6 +34,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstdio>
+#include <cerrno>
 
 enum {
 	FILE_HEIGHT = 1201,
@@ -94,12 +95,22 @@ SRTMDatasource::Chunk& SRTMDatasource::RequireChunk(int lon, int lat) const {
 				int16_t* current = chunk->second.data.data();
 
 				for (int line = 0; line < DATA_HEIGHT; line++) {
-					int nread;
-					if ((nread = read(f, current, 2 * DATA_WIDTH)) == -1)
-						throw SystemError() << "read error on SRTM file " << filename.str();
+					size_t toread = 2 * DATA_WIDTH;
+					char* readptr = reinterpret_cast<char*>(current);
 
-					if (nread != 2 * DATA_WIDTH)
-						throw Exception() << "short read on SRTM file " << filename.str();
+					while (toread > 0) {
+						ssize_t nread = read(f, readptr, toread);
+
+						if (nread == -1 && errno == EINTR)
+							continue;
+						else if (nread == -1)
+							throw SystemError() << "read error on SRTM file " << filename.str();
+						else if (nread == 0)
+							throw Exception() << "unexpected EOF in SRTM file " << filename.str();
+
+						toread -= nread;
+						readptr += nread;
+					}
 
 #if BYTE_ORDER != BIG_ENDIAN
 					/* SRTM data is in big-endian format */
