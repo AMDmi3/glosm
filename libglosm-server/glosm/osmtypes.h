@@ -21,10 +21,10 @@
 #ifndef OSMTYPES_H
 #define OSMTYPES_H
 
-/* Should be enough to hold max id for any osm object;
- * currently that's over 1'000'000'000 for nodes, so the type would
- * become 64bit in some years */
-typedef unsigned int osmid_t;
+#include <stdint.h>
+
+/* Should be enough to hold max id for any osm object */
+typedef int64_t osmid_t;
 
 /* Holds fixed point coordinate in range [-1'800'000'000; 1'800'000'000]
  * 32 bit is not enough to hold difference between coordinates so
