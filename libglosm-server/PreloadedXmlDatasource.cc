@@ -75,12 +75,12 @@ static void ParseTag(OsmDatasource::TagsMap& map, const char** atts) {
 
 void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 	if (tag_level_ == 1 && current_tag_ == OSM) {
-		int id = 0;
-		int lat = 0;
-		int lon = 0;
+		osmid_t id = 0;
+		osmint_t lat = 0;
+		osmint_t lon = 0;
 		for (const char** att = atts; *att; ++att) {
 			if (StrEq<1>(*att, "id"))
-				id = strtol(*(++att), NULL, 10);
+				id = strtoll(*(++att), NULL, 10);
 			else if (StrEq<2>(*att, "lat"))
 				lat = ParseCoord(*(++att));
 			else if (StrEq<2>(*att, "lon"))
@@ -124,10 +124,10 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 			if (StrEq<1>(name, "tag")) {
 				ParseTag(last_way_->second.Tags, atts);
 			} else if (StrEq<1>(name, "nd")) {
-				int id;
+				osmid_t id;
 
 				if (**atts && StrEq<0>(*atts, "ref"))
-					id = strtol(*(atts+1), NULL, 10);
+					id = strtoll(*(atts+1), NULL, 10);
 				else
 					throw ParsingException() << "no ref attribute for nd tag";
 
@@ -141,13 +141,13 @@ void PreloadedXmlDatasource::StartElement(const char* name, const char** atts) {
 			if (StrEq<1>(name, "tag")) {
 				ParseTag(last_relation_->second.Tags, atts);
 			} else if (StrEq<1>(name, "member")) {
-				int ref = 0;
+				osmid_t ref = 0;
 				const char* role = 0;
 				Relation::Member::Type_t type = Relation::Member::UNKNOWN;
 
 				for (const char** att = atts; *att; ++att) {
 					if (StrEq<2>(*att, "ref"))
-						ref = strtol(*(++att), NULL, 10);
+						ref = strtoll(*(++att), NULL, 10);
 					else if (StrEq<1>(*att, "type")) {
 						++att;
 						if (StrEq<1>(*att, "node"))
