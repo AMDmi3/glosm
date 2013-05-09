@@ -154,9 +154,9 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 
 	OsmDatasource::TagsMap::const_iterator shape, tag;
 
-	if ((tag = way.Tags.find("building:roof:angle")) != way.Tags.end())
+	if ((tag = way.Tags.find("roof:angle")) != way.Tags.end())
 		slope = strtof(tag->second.c_str(), NULL);
-	if ((tag = way.Tags.find("building:roof:orientation")) != way.Tags.end() && tag->second == "across")
+	if ((tag = way.Tags.find("roof:orientation")) != way.Tags.end() && tag->second == "across")
 		along = false;
 
 	std::vector<Vector3i> vert;
@@ -165,7 +165,7 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 		vert.push_back(Vector3i(*i, z));
 
 	if (vert.size() > 3 && way.Closed &&
-				(shape = way.Tags.find("building:roof:shape")) != way.Tags.end() &&
+				(shape = way.Tags.find("roof:shape")) != way.Tags.end() &&
 				(shape->second == "pyramidal" || shape->second == "conical")
 			) {
 		/* calculate center */
@@ -190,7 +190,7 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 	}
 
 	/* only 4-vert buildings are supported for other types, yet */
-	if (vert.size() == 5 && way.Closed && (shape = way.Tags.find("building:roof:shape")) != way.Tags.end()) {
+	if (vert.size() == 5 && way.Closed && (shape = way.Tags.find("roof:shape")) != way.Tags.end()) {
 		float length1 = ToLocalMetric(vert[0], vert[1]).Length();
 		float length2 = ToLocalMetric(vert[1], vert[2]).Length();
 
