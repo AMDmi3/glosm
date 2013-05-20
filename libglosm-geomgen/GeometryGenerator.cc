@@ -203,7 +203,7 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 				geom.AddLine(vert[i], center);
 			}
 			return;
-		} else if (shape->second == "pitched") {
+		} else if (shape->second == "gabled") {
 			if (!!(length1 < length2) ^ !along) {
 				osmint_t height = (tan(slope/180.0*M_PI) * length1 * 0.5) * GEOM_UNITSINMETER;
 
