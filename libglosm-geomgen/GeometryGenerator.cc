@@ -308,7 +308,7 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 			}
 			return;
 		} else if (shape->second == "skillion") {
-			if (length1 < length2) {
+			if (!!(length1 < length2) ^ !along) {
 				Vector3i extension1 = vert[1];
 				extension1.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
 				Vector3i extension2 = vert[0];
