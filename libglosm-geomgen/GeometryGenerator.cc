@@ -307,6 +307,42 @@ static void CreateRoof(Geometry& geom, const VertexVector& vertices, int z, cons
 				geom.AddLine(vert[i], center);
 			}
 			return;
+		} else if (shape->second == "skillion") {
+			if (length1 < length2) {
+				Vector3i extension1 = vert[1];
+				extension1.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
+				Vector3i extension2 = vert[0];
+				extension2.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
+
+				geom.AddTriangle(vert[1], extension1, vert[2]);
+				geom.AddLine(vert[1], extension1);
+				geom.AddLine(vert[2], extension1);
+
+				geom.AddTriangle(vert[0], vert[3], extension2);
+				geom.AddLine(vert[0], extension2);
+				geom.AddLine(vert[3], extension2);
+
+				geom.AddLine(extension1, extension2);
+				geom.AddQuad(vert[1], vert[0], extension2, extension1);
+				geom.AddQuad(vert[2], extension1, extension2, vert[3]);
+			} else {
+				Vector3i extension1 = vert[0];
+				extension1.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
+				Vector3i extension2 = vert[3];
+				extension2.z += (tan(slope/180.0*M_PI) * std::min(length1, length2) * 0.5) * GEOM_UNITSINMETER;
+
+				geom.AddTriangle(vert[0], extension1, vert[1]);
+				geom.AddLine(vert[0], extension1);
+				geom.AddLine(vert[1], extension1);
+
+				geom.AddTriangle(vert[3], vert[2], extension2);
+				geom.AddLine(vert[3], extension2);
+				geom.AddLine(vert[2], extension2);
+
+				geom.AddLine(extension1, extension2);
+				geom.AddQuad(vert[0], vert[3], extension2, extension1);
+				geom.AddQuad(vert[1], extension1, extension2, vert[2]);
+			}
 		}
 	}
 
