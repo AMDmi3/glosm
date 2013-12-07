@@ -13,6 +13,7 @@ ENDIF(UNIX)
 
 IF(WIN32)
 	SET(WITH_GLEW_DEFAULT ON)
+	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_FIND_ROOT_PATH}) #workaround against CMake "feature" http://www.cmake.org/Bug/view.php?id=14619
 ELSE(WIN32)
 	SET(WITH_GLEW_DEFAULT OFF)
 ENDIF(WIN32)
